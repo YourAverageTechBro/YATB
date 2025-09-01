@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/accordion";
 import { MobileNav } from "./components/MobileNav";
 import Image from "next/image";
-import { CheckoutButton } from "./components/CheckoutButton";
 
 export default function Home() {
   return (
@@ -64,13 +63,18 @@ export default function Home() {
       {/* Hero Section */}
       <section className="container max-w-3xl mx-auto py-16 flex flex-col items-center text-center px-4">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8">
-          I will help you build + market your app
+          Currently Not Accepting New Clients
         </h1>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-12 font-mono">
-          Work with me 1:1 to learn how to build + market your own app
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8 font-mono">
+          I'm at capacity with my current clients. Join the waitlist to be notified when spots open up.
+        </p>
+        <p className="text-lg text-muted-foreground max-w-2xl mb-12 font-mono">
+          You'll get priority access when I start accepting new clients again.
         </p>
         <Button size="lg" className="px-10 py-6 text-base font-mono">
-          <a href="#pricing">Get Started</a>
+          <a href="https://forms.gle/TVb8TurNGyiqss3g6" target="_blank" rel="noopener noreferrer">
+            Join the Waitlist
+          </a>
         </Button>
       </section>
 
@@ -212,98 +216,52 @@ export default function Home() {
         id="pricing"
         className="container max-w-3xl mx-auto py-20 px-4 bg-muted/30 rounded-lg my-8"
       >
-        <h2 className="text-3xl font-bold mb-12 text-center">Pricing</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <h2 className="text-3xl font-bold mb-12 text-center">Currently Not Available</h2>
+        <div className="max-w-2xl mx-auto text-center">
           <Card className="border-2 border-primary">
             <CardHeader>
-              <CardTitle className="text-2xl">One-off Call</CardTitle>
-              <CardDescription className="text-xl font-bold">
-                $299.00
+              <CardTitle className="text-2xl">Join the Waitlist</CardTitle>
+              <CardDescription className="text-lg">
+                Be the first to know when spots open up
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 font-mono">
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>
-                  1-hour call to discuss anything related to building or
-                  marketing your app
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>Get personalized advice for your specific situation</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>
-                  Perfect if you're stuck on a specific problem or need
-                  direction
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>No commitment required</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>
-                  100% refund guaranteed if you're not satisfied with the
-                  service
-                </p>
+              <p className="text-lg mb-4">
+                I'm currently at capacity with my existing clients and not accepting new ones at the moment.
+              </p>
+              <p className="text-md text-muted-foreground mb-4">
+                Join the waitlist to get priority access when I start accepting new clients again. You'll be notified as soon as spots become available.
+              </p>
+              <div className="pt-4 space-y-4">
+                <h3 className="font-bold text-lg">What you'll get access to when spots open:</h3>
+                <div className="flex items-start gap-2 text-left">
+                  <div className="mt-1">✓</div>
+                  <p>One-off coaching calls for specific problems</p>
+                </div>
+                <div className="flex items-start gap-2 text-left">
+                  <div className="mt-1">✓</div>
+                  <p>Monthly coaching with 4 calls per month</p>
+                </div>
+                <div className="flex items-start gap-2 text-left">
+                  <div className="mt-1">✓</div>
+                  <p>24/7 messaging support via Discord or WhatsApp</p>
+                </div>
+                <div className="flex items-start gap-2 text-left">
+                  <div className="mt-1">✓</div>
+                  <p>Personalized advice on building and marketing your app</p>
+                </div>
               </div>
             </CardContent>
             <CardFooter>
               <Button className="w-full font-mono" size="lg">
                 <a
-                  href="https://cal.com/youraveragetechbro/60min"
+                  href="https://forms.gle/TVb8TurNGyiqss3g6"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Book a Call
+                  Join the Waitlist →
                 </a>
               </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="border-2 border-primary">
-            <CardHeader>
-              <CardTitle className="text-2xl">Monthly Coaching</CardTitle>
-              <CardDescription className="text-xl font-bold">
-                $499.00 / month
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 font-mono">
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>
-                  Work 1:1 with me to get advice on how to build + market your
-                  app
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>
-                  Get 4 calls a month to ask me anything you want about building
-                  an app
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>
-                  Message me as much as you want 24/7 to get my help on
-                  building/marketing
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="mt-1">✓</div>
-                <p>
-                  100% refund guaranteed if you're not satisfied with the
-                  service
-                </p>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <CheckoutButton />
             </CardFooter>
           </Card>
         </div>
