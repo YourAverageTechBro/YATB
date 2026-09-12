@@ -96,4 +96,25 @@ export async function getStudioSession(): Promise<StudioSession | null> {
   return session
 }
 
+export async function requireStudioSession(): Promise<StudioSession> {
+  const session = await getStudioSession()
+  if (!session) {
+    throw new Response('Unauthorized', {
+      status: 401,
+      headers: { 'Cache-Control': PRIVATE_NO_STORE },
+    })
+  }
+  return session
+}
+
+export function requireStudioMutationOrigin(): void {
+  const origin = getRequestHeaders().get('origin')
+  if (origin !== new URL(bindings.APP_ORIGIN).origin) {
+    throw new Response('Forbidden', {
+      status: 403,
+      headers: { 'Cache-Control': PRIVATE_NO_STORE },
+    })
+  }
+}
+
 export { PRIVATE_NO_STORE }
