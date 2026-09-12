@@ -18,9 +18,9 @@ comparison workflow on the production D1 database and private R2 bucket.
 - `AUTH_EMAIL` accepts only the two allowlisted destinations and sender
   `studio@studio-mail.youraveragetechbro.com`.
 - The cleanup schedule runs every 15 minutes.
-- Workers Logs retain errors and explicit application logs, redact URL query
-  strings, and disable invocation logs so auth query tokens are not stored in
-  request URLs.
+- Workers Logs retain errors and explicit application logs. The configuration
+  requests query-string redaction and disables invocation logs, which is the
+  proven boundary that keeps auth tokens out of stored request URLs.
 
 ## Drive
 

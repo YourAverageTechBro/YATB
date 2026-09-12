@@ -27,12 +27,16 @@ npx wrangler r2 bucket info yatb-studio-media --cwd apps/studio
 
 ## Prepare
 
-Install a unique production Better Auth secret once. Never reuse a local value
-or put the secret on a command line.
+Confirm that the encrypted production Better Auth secret exists.
 
 ```sh
-npx wrangler secret put BETTER_AUTH_SECRET --cwd apps/studio
+npx wrangler secret list --name yatb-studio --cwd apps/studio
 ```
+
+To rotate the secret during an incident, generate a unique value and pipe it to
+`wrangler secret put`. Never reuse a local value or put the value on a command
+line. A rotation invalidates existing auth state and requires a session smoke
+test.
 
 Validate the exact source that will be deployed. This builds and performs a
 Wrangler dry run. It does not migrate D1, deploy a Worker, or attach a domain.

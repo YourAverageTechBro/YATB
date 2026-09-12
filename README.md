@@ -42,7 +42,7 @@ EMAIL_FROM=studio@studio-mail.youraveragetechbro.com npm run dev:studio
 Set a random `BETTER_AUTH_SECRET` with at least 32 characters. Open
 `http://localhost:3001`. Local authentication messages are stored in the
 `email_outbox` D1 table. Production sends them through the restricted
-`AUTH_EMAIL` Cloudflare Email Routing binding.
+`AUTH_EMAIL` Cloudflare Email Sending binding.
 
 ## Check a change
 
