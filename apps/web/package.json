@@ -14,22 +14,13 @@
     "deploy": "npm run check && npm run build && CLOUDFLARE_ACCOUNT_ID=32967fffa44c1d38bc86ab6e4e419edb wrangler deploy"
   },
   "dependencies": {
-    "@fontsource-variable/geist": "^5.2.8",
-    "@fontsource-variable/geist-mono": "^5.2.8",
-    "@radix-ui/react-accordion": "^1.2.3",
-    "@radix-ui/react-dialog": "^1.1.6",
-    "@radix-ui/react-separator": "^1.1.2",
-    "@radix-ui/react-slot": "^1.1.2",
+    "@yatb/ui": "*",
     "@tanstack/react-router": "1.170.35",
     "@tanstack/react-start": "1.168.52",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "lucide-react": "^0.479.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "stripe": "17.7.0",
-    "tailwind-merge": "^3.0.2",
-    "tailwindcss-animate": "^1.0.7"
+    "stripe": "17.7.0"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.54.8",

@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
+import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -14,16 +15,16 @@ function readTheme(): Theme {
 }
 
 export function ThemeControl({ compact = false }: { compact?: boolean }) {
-  const select = useRef<HTMLSelectElement>(null)
+  const [theme, setPreference] = useState<Theme>('system')
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (select.current) {
-      select.current.value = readTheme()
-      select.current.dataset.ready = ''
-    }
+    setPreference(readTheme())
+    setReady(true)
   }, [])
 
   function setTheme(theme: Theme) {
+    setPreference(theme)
     document.documentElement.dataset.theme = theme
     try {
       localStorage.setItem(THEME_KEY, theme)
@@ -33,16 +34,13 @@ export function ThemeControl({ compact = false }: { compact?: boolean }) {
   return (
     <label className={compact ? 'theme-control compact' : 'theme-control'}>
       <span>Theme</span>
-      <select
-        ref={select}
-        aria-label="Color theme"
-        defaultValue="system"
-        onChange={(event) => setTheme(event.target.value as Theme)}
-      >
-        <option value="system">System</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-      </select>
+      <span className="theme-select-shell" data-ready={ready ? '' : undefined}>
+        <NativeSelect aria-label="Color theme" value={theme} onChange={(event) => setTheme(event.target.value as Theme)}>
+          <NativeSelectOption value="system">System</NativeSelectOption>
+          <NativeSelectOption value="light">Light</NativeSelectOption>
+          <NativeSelectOption value="dark">Dark</NativeSelectOption>
+        </NativeSelect>
+      </span>
     </label>
   )
 }

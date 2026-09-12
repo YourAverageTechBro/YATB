@@ -47,7 +47,9 @@ and authenticated media delivery. The production custom domain is
 `studio.youraveragetechbro.com`.
 
 The root workspace adds explicit Studio commands. Root check and build commands
-continue to discover every workspace.
+continue to discover every workspace. A source-distributed `@yatb/ui` package
+owns shared shadcn primitives, fonts, and semantic monochrome tokens. It has no
+server code, framework adapter, or deployment boundary.
 
 ```text
 apps/studio/
@@ -77,11 +79,20 @@ apps/studio/
   package.json
   vite.config.ts
   wrangler.jsonc
+packages/ui/
+  components.json
+  src/
+    components/
+    lib/utils.ts
+    styles.css
+  package.json
 .agents/skills/verify-studio/
 ```
 
-No shared package is added. Small app bootstrap code remains duplicated until a
-second real consumer needs the same contract.
+Both TanStack applications compile the UI package's TSX source directly into
+their Workers. Explicit component subpath exports keep the public surface
+small. Product components, route shells, theme preference state, server code,
+and Cloudflare bindings stay in their owning applications.
 
 ## Domain model
 
@@ -262,6 +273,10 @@ modify views, but it makes them per-user and single-workspace.
   is measured.
 - A custom collaborative editor adds conflict and synchronization machinery
   beyond the requested two-person workflow.
+- App-local shadcn copies duplicate tokens and primitive upgrades now that Web
+  and Studio are both real consumers.
+- A compiled or published UI library adds a release boundary without hiding
+  useful complexity inside this private npm workspace.
 
 ## Sources
 
@@ -273,3 +288,5 @@ modify views, but it makes them per-user and single-workspace.
 - [Cloudflare Email Service pricing](https://developers.cloudflare.com/email-service/platform/pricing/)
 - [Better Auth TanStack integration](https://better-auth.com/docs/integrations/tanstack)
 - [Better Auth hooks](https://better-auth.com/docs/concepts/hooks)
+- [shadcn monorepo guidance](https://ui.shadcn.com/docs/monorepo)
+- [shadcn Tailwind v4 guidance](https://ui.shadcn.com/docs/tailwind-v4)

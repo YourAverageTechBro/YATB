@@ -10,12 +10,14 @@
     "cssVariables": true,
     "prefix": ""
   },
+  "iconLibrary": "lucide",
+  "rtl": false,
   "aliases": {
-    "components": "@/components",
+    "components": "@yatb/ui",
     "utils": "@yatb/ui/lib/utils",
     "ui": "@yatb/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
+    "lib": "@yatb/ui/lib",
+    "hooks": "@yatb/ui/hooks"
   },
-  "iconLibrary": "lucide"
+  "registries": {}
 }

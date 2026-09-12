@@ -1,6 +1,6 @@
 ---
 name: verify-studio
-description: Drive the local YATB Studio authentication, planning, and private footage UI. Use after changes to Studio routes, sessions, email callbacks, planning data, rich scripts, saved views, multipart uploads, media delivery, or Cloudflare bindings.
+description: Drive the local YATB Studio authentication, planning, private footage, and shared UI used by Studio and Web. Use after changes to routes, sessions, email callbacks, planning data, rich scripts, saved views, multipart uploads, media delivery, shared primitives, responsive navigation, themes, or Cloudflare bindings.
 ---
 
 # Verify YATB Studio
@@ -20,6 +20,9 @@ EMAIL_FROM=studio@youraveragetechbro.com npm run dev:studio
 
 Wait for `Local: http://localhost:3001/`. Keep the terminal session ID. Stop
 that session with `Ctrl-C` after the last drive.
+
+For shared UI changes, also launch Web with `npm run dev:web` and wait for
+`Local: http://localhost:3000/`. Keep and stop that separate terminal session.
 
 ## Doctor
 
@@ -44,6 +47,9 @@ accessibility tree before each action. Use these stable accessible names:
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
 - `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, and `Download` identify private media delivery.
 - `Color theme` selects `System`, `Light`, or `Dark` on public and private pages.
+- `Toggle menu` opens Web's mobile navigation; `Frequently Asked Questions`
+  contains the Web accordion.
+- `Add link` opens the script link dialog; `HTTPS URL` and `Add link` submit it.
 
 Use `npx wrangler d1 execute yatb-studio --local --cwd apps/studio --command
 "<read-only SQL>"` to confirm D1 side effects. Read captured links from

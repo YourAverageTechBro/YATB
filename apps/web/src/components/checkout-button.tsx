@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@yatb/ui/button'
 import { beginMonthlyCoachingCheckout } from "@/server/stripe.functions";
 
 export function CheckoutButton() {

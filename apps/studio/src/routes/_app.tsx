@@ -1,5 +1,6 @@
 import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { Clapperboard, LogOut } from 'lucide-react'
+import { Button } from '@yatb/ui/button'
 import { ThemeControl } from '#/components/theme-control'
 import { authClient } from '#/lib/auth-client'
 import { loadSession } from '#/server/auth.functions'
@@ -33,9 +34,9 @@ function AppLayout() {
         <div className="account">
           <span>{session.user.name}</span>
           <small>{session.user.email}</small>
-          <button className="quiet-button" type="button" onClick={() => void signOut()}>
+          <Button className="quiet-button" variant="ghost" type="button" onClick={() => void signOut()}>
             <LogOut size={15} /> Sign out
-          </button>
+          </Button>
         </div>
       </aside>
       <Outlet />

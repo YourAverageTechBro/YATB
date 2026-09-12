@@ -2,7 +2,7 @@
 
 This program adds a private video production workspace at
 `studio.youraveragetechbro.com`. It uses TanStack Start, Better Auth,
-Cloudflare Workers, D1, R2, and Email Service. Six PRs land in order. Each PR
+Cloudflare Workers, D1, R2, and Email Service. Seven PRs land in order. Each PR
 must preserve `apps/web`, enforce the private boundary, and carry direct live
 evidence before merge.
 
@@ -24,7 +24,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 ### Arm the program
 
 - [ ] State this protocol and plan to the operator, then stop. Start execution only on explicit go.
-- [ ] On go, write this exact text into the standing orders and restate it in the task list. "Run `/Users/tkim/Developer/YATB/docs/studio/plan.md`. Land STUDIO-01 through STUDIO-06 in order. Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. The root reviews automated evidence and merges. Done means the production Studio origin passes every mapped feature with only Cloudflare runtime products."
+- [ ] On go, write this exact text into the standing orders and restate it in the task list. "Run `/Users/tkim/Developer/YATB/docs/studio/plan.md`. Land STUDIO-01 through STUDIO-07 in order. Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. The root reviews automated evidence and merges. Done means the production Studio origin passes every mapped feature with only Cloudflare runtime products."
 - [ ] Read these files from the installed plugin at program start and again at every tick.
   - [ ] `skills/poteto-mode/playbooks/autopilot-full.md`
   - [ ] `skills/swarm/SKILL.md`
@@ -42,8 +42,8 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 - [ ] Assign one owner to the active PR. Use a fresh worktree and preserve one writer per branch.
 - [ ] Follow the merge-then-branch dependency graph. STUDIO-01 starts from `main`. Each later PR starts only after its predecessor merges.
-- [ ] Keep product edits inside `apps/studio`, root workspace files, Studio documentation, and `.agents/skills/verify-studio`.
-- [ ] Hold all six interaction review gates. The operator delegated each evidence review and merge to the root.
+- [ ] Keep product edits inside the assigned app, `packages/ui` for shared primitives, root workspace files, Studio documentation, and `.agents/skills/verify-studio`.
+- [ ] Hold all seven interaction review gates. The operator delegated each evidence review and merge to the root.
 
 ### PR mechanics for every PR
 
@@ -246,9 +246,66 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 - [ ] Confirm Ponytail, direct Prove It Works, Maintain Verification Skill, review triage, byte receipts, and CI receipts.
 - [ ] Confirm the root squash-merges STUDIO-03 before STUDIO-04 branches.
 
-## Add versioned draft review (STUDIO-04)
+## Establish the shared shadcn system (STUDIO-04)
 
 **Depends on.** STUDIO-03.
+
+**Files.**
+
+- [ ] Create `packages/ui` with source-owned shadcn primitives, semantic tokens, component configuration, explicit exports, and package checks.
+- [ ] Edit both app manifests, styles, and component callers. Delete app-local primitive copies and stale dependencies.
+- [ ] Edit the Studio architecture, program plan, monochrome checks, and verification map.
+
+**Build.**
+
+- [ ] Make `@yatb/ui` the sole owner of reusable primitives, Geist fonts, and black-and-white light and dark tokens.
+- [ ] Migrate every current raw button, input, select, progress, card, alert, dialog, badge, accordion, separator, and sheet use when the shared primitive fits.
+- [ ] Preserve product components, route ownership, Cloudflare boundaries, and Studio's pre-paint light, dark, and system preference.
+- [ ] Add a deterministic ownership and emitted-palette guard so app-local primitive drift fails CI.
+
+**You see.**
+
+- [ ] Web and Studio retain their product identity while controls, focus states, dialogs, cards, and responsive overlays use one monochrome interaction language.
+
+**Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
+
+- [ ] Run the shared package typecheck, Studio's focused suite, the UI ownership guard, and `npm run check && npm run build` from the repository root.
+- [ ] Confirm one compatible React graph, unified `radix-ui`, shared source compilation, no duplicate app-local UI directory, and no Vercel runtime or configuration.
+
+**Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on the configured `swarm workers` model at the PR head drive both local Cloudflare Workers.
+
+- [ ] Lane 1. Regression lane against trunk. Drive Web desktop and Studio login at trunk and head. Save `ui-regression.png`. Pass when content, routes, and auth entry behavior remain unchanged while shared controls render at head.
+- [ ] Lane 2. Drive Web at 390 px. Save `web-mobile-sheet.png`. Pass when Toggle menu exposes every navigation link, Escape closes the Sheet, and focus returns to the trigger.
+- [ ] Lane 3. Drive the first Web FAQ item. Save `web-accordion.png`. Pass when it collapses and re-expands with keyboard and pointer input.
+- [ ] Lane 4. Drive Web waitlist, billing, and protected success paths. Save `web-actions.png`. Pass when every destination and redirect matches trunk.
+- [ ] Lane 5. Drive Studio's System, Light, and Dark selections through reload. Save `studio-themes.png`. Pass when persistence, focus, contrast, and grayscale appearance hold on public and private surfaces.
+- [ ] Lane 6. Drive New Video and Save View dialogs. Save `studio-dialogs.png`. Pass when each validates, persists its intended result, closes, and restores focus.
+- [ ] Lane 7. Select script text with the keyboard, reject HTTP, and apply HTTPS. Save `studio-rich-link.png`. Pass when selection survives portal focus, the anchor persists after Save and reload, and link submit alone does not trigger the outer video form.
+- [ ] Lane 8. Drive the conflict Alert and delete AlertDialog. Save `studio-alerts.png`. Pass when stale state is visible, Load latest preserves the winner, and Cancel returns without deletion.
+- [ ] Lane 9. Upload two files together, then rename and download one. Save `studio-footage.png`. Pass when independent Progress rows become cards and all media actions retain authenticated behavior.
+- [ ] Lane 10. Inspect accessibility trees and emitted CSS. Save `shared-ui-accessibility.png`. Pass when labels, disabled states, destructive copy, portal contrast, package utilities, and an entirely grayscale palette are present.
+
+**Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
+
+- [ ] Metric. Compare production client CSS gzip and route-chunk gzip totals with the STUDIO-03 head, plus local landing and authenticated shell response p95.
+- [ ] Probe. Build an exact detached STUDIO-03 worktree and the PR head, then interleave 20 successful production-preview requests per app after five warmups while recording client gzip output from each build.
+- [ ] Baseline. Record STUDIO-03 Web and Studio client asset totals and successful response p95 before measuring the head.
+- [ ] Rule. Fail if either app adds more than 20 KiB gzip to its initial route assets or if local response p95 regresses by more than 25 ms. Record any lazy dialog chunks separately.
+
+**Review gate.** The operator delegated automated evidence review and merge authority to the root.
+
+- [ ] Save Web desktop and mobile plus Studio login, planning, dialog, upload, and theme screenshots under `artifacts/studio/STUDIO-04-*`.
+- [ ] The operator delegated review to the root. Post the exact-head browser, screenshot, video, and build evidence for the root to check before merge.
+
+**Merge.**
+
+- [ ] Obtain the root clean verdict at the exact head SHA.
+- [ ] Confirm Ponytail, direct Prove It Works, Maintain Verification Skill, review triage, palette receipts, and CI receipts.
+- [ ] Confirm the root squash-merges STUDIO-04 before STUDIO-05 branches.
+
+## Add versioned draft review (STUDIO-05)
+
+**Depends on.** STUDIO-04.
 
 **Files.**
 
@@ -294,19 +351,19 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 **Review gate.** The operator delegated automated evidence review and merge authority to the root.
 
-- [ ] Copy version, player, point, range, seek, and attachment screenshots into `artifacts/studio/STUDIO-04-review-*.png`.
-- [ ] Record a 30 to 60 second video of draft upload, speed change, point and range comments, timestamp seek, and attachment reuse at `artifacts/studio/STUDIO-04-review.mp4`.
+- [ ] Copy version, player, point, range, seek, and attachment screenshots into `artifacts/studio/STUDIO-05-review-*.png`.
+- [ ] Record a 30 to 60 second video of draft upload, speed change, point and range comments, timestamp seek, and attachment reuse at `artifacts/studio/STUDIO-05-review.mp4`.
 - [ ] The operator delegated review to the root. Post every screenshot and the video in chat for the root to check before merge.
 
 **Merge.**
 
 - [ ] Obtain the root clean verdict at the exact head SHA.
 - [ ] Confirm Ponytail, direct Prove It Works, Maintain Verification Skill, codec fixture, review triage, and CI receipts.
-- [ ] Confirm the root squash-merges STUDIO-04 before STUDIO-05 branches.
+- [ ] Confirm the root squash-merges STUDIO-05 before STUDIO-06 branches.
 
-## Add two-version comparison (STUDIO-05)
+## Add two-version comparison (STUDIO-06)
 
-**Depends on.** STUDIO-04.
+**Depends on.** STUDIO-05.
 
 **Files.**
 
@@ -351,19 +408,19 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 **Review gate.** The operator delegated automated evidence review and merge authority to the root.
 
-- [ ] Copy layout, independent playback, comments, seek, and responsive screenshots into `artifacts/studio/STUDIO-05-review-*.png`.
-- [ ] Record a 30 to 60 second video of draft selection, independent playback, comments on both sides, and timestamp seek at `artifacts/studio/STUDIO-05-review.mp4`.
+- [ ] Copy layout, independent playback, comments, seek, and responsive screenshots into `artifacts/studio/STUDIO-06-review-*.png`.
+- [ ] Record a 30 to 60 second video of draft selection, independent playback, comments on both sides, and timestamp seek at `artifacts/studio/STUDIO-06-review.mp4`.
 - [ ] The operator delegated review to the root. Post every screenshot and the video in chat for the root to check before merge.
 
 **Merge.**
 
 - [ ] Obtain the root clean verdict at the exact head SHA.
 - [ ] Confirm Ponytail, direct Prove It Works, Maintain Verification Skill, review triage, and CI receipts.
-- [ ] Confirm the root squash-merges STUDIO-05 before STUDIO-06 branches.
+- [ ] Confirm the root squash-merges STUDIO-06 before STUDIO-07 branches.
 
-## Launch Studio on Cloudflare (STUDIO-06)
+## Launch Studio on Cloudflare (STUDIO-07)
 
-**Depends on.** STUDIO-05.
+**Depends on.** STUDIO-06.
 
 **Files.**
 
@@ -409,15 +466,15 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 **Review gate.** The operator delegated automated evidence review and merge authority to the root.
 
-- [ ] Copy production login, email, planning, footage, review, comparison, and resource screenshots into `artifacts/studio/STUDIO-06-review-*.png`.
-- [ ] Record a 45 to 90 second production video from signed-out login through comparison at `artifacts/studio/STUDIO-06-review.mp4`.
+- [ ] Copy production login, email, planning, footage, review, comparison, and resource screenshots into `artifacts/studio/STUDIO-07-review-*.png`.
+- [ ] Record a 45 to 90 second production video from signed-out login through comparison at `artifacts/studio/STUDIO-07-review.mp4`.
 - [ ] The operator delegated review to the root. Post every screenshot and the video in chat for the root to check before merge.
 
 **Merge.**
 
 - [ ] Obtain the root clean verdict at the exact deployed head SHA.
 - [ ] Confirm Ponytail, direct Prove It Works, final Maintain Verification Skill, production resource audit, review triage, and CI receipts.
-- [ ] Confirm the root squash-merges STUDIO-06 and production still serves that merged patch.
+- [ ] Confirm the root squash-merges STUDIO-07 and production still serves that merged patch.
 
 ## Close the program
 
@@ -434,10 +491,10 @@ The Cloudflare dashboard inspection on 2026-09-12 proved that Email Service is
 present in account `32967fffa44c1d38bc86ab6e4e419edb`. Email Sending showed
 no eligible zones. Email Routing showed that the domain is not onboarded. The
 official Email Service documentation proves that Workers may send to verified
-destination addresses on the current plan. STUDIO-06 keeps onboarding and both
+destination addresses on the current plan. STUDIO-07 keeps onboarding and both
 verification clicks as explicit production prerequisites.
 
-The playback question remains deliberately unproven. STUDIO-04 runs real editor
+The playback question remains deliberately unproven. STUDIO-05 runs real editor
 export fixtures. A failure stops execution for a Cloudflare Stream decision.
 
 ## Appendix B. Alternatives rejected
@@ -460,9 +517,9 @@ export fixtures. A failure stops execution for a Cloudflare Stream decision.
   its D1 schema from that configuration, and prove hooks and cookies live.
 - STUDIO-03 spans D1 and R2 without a shared transaction. The upload session,
   immutable key, unique constraints, and completion recovery are mandatory.
-- STUDIO-04 may find browser-incompatible production codecs. Stop for a
+- STUDIO-05 may find browser-incompatible production codecs. Stop for a
   Cloudflare Stream decision rather than silently changing providers or formats.
-- STUDIO-06 requires user clicks for both Cloudflare destination verification
+- STUDIO-07 requires user clicks for both Cloudflare destination verification
   emails. This is the only known external coordination gate.
 - Production media can be large. Every part must stay within current Worker and
   R2 limits, and tests must include cancellation and retry.

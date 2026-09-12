@@ -1,5 +1,12 @@
 import { createFileRoute, notFound, useNavigate, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { Alert, AlertDescription, AlertTitle } from '@yatb/ui/alert'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@yatb/ui/alert-dialog'
+import { Button } from '@yatb/ui/button'
+import { Card } from '@yatb/ui/card'
+import { Input } from '@yatb/ui/input'
+import { Label } from '@yatb/ui/label'
+import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
 import { FootageSection } from '#/components/footage-section'
 import { RichEditor } from '#/components/rich-editor'
 import {
@@ -87,7 +94,6 @@ function VideoDetail() {
   }
 
   async function erase() {
-    if (!window.confirm('Delete this video?')) return
     const result = await removeVideo({
       data: { id: video.id, expectedRevision: video.revision },
     })
@@ -101,21 +107,32 @@ function VideoDetail() {
     <main className="video-detail">
       <a href="/videos">← Videos</a>
       <header><p className="eyebrow">Production video</p><h1>{video.title}</h1></header>
-      {conflict && <aside className="conflict">
-        <strong>This video changed in another session.</strong>
-        <button type="button" onClick={() => loadLatest(conflict)}>Load latest version</button>
-      </aside>}
-      <form onSubmit={(event) => void submit(event)}>
-        <label>Title<input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} required /></label>
-        <div className="field-grid">
-          <label>Format<select value={format} onChange={(event) => { const next = event.target.value as VideoFormat; setFormat(next); setPromotion('organic') }}><option value="short">Short</option><option value="long">Long</option></select></label>
-          <label>Promotion<select value={promotion} onChange={(event) => setPromotion(event.target.value as typeof promotion)}>{legalPromotions(format).map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-          <label>Status<select value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>{Object.entries(STATUS).map(([key, item]) => <option key={key} value={key}>{item.label}</option>)}</select></label>
-          <label>Publish date<input type="date" value={publishDate} onChange={(event) => setPublishDate(event.target.value)} /></label>
-        </div>
-        <label>Script<RichEditor value={script} onChange={setScript} /></label>
-        <footer><button className="primary-button" type="submit">Save changes</button><button className="danger-button" type="button" onClick={() => void erase()}>Delete video</button></footer>
-      </form>
+      {conflict && <Alert className="conflict">
+        <AlertTitle>This video changed in another session.</AlertTitle>
+        <AlertDescription><Button variant="outline" size="sm" type="button" onClick={() => loadLatest(conflict)}>Load latest version</Button></AlertDescription>
+      </Alert>}
+      <Card className="video-form-card">
+        <form onSubmit={(event) => void submit(event)}>
+          <Label>Title<Input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} required /></Label>
+          <div className="field-grid">
+            <Label>Format<NativeSelect value={format} onChange={(event) => { const next = event.target.value as VideoFormat; setFormat(next); setPromotion('organic') }}><NativeSelectOption value="short">Short</NativeSelectOption><NativeSelectOption value="long">Long</NativeSelectOption></NativeSelect></Label>
+            <Label>Promotion<NativeSelect value={promotion} onChange={(event) => setPromotion(event.target.value as typeof promotion)}>{legalPromotions(format).map((item) => <NativeSelectOption key={item} value={item}>{item}</NativeSelectOption>)}</NativeSelect></Label>
+            <Label>Status<NativeSelect value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>{Object.entries(STATUS).map(([key, item]) => <NativeSelectOption key={key} value={key}>{item.label}</NativeSelectOption>)}</NativeSelect></Label>
+            <Label>Publish date<Input type="date" value={publishDate} onChange={(event) => setPublishDate(event.target.value)} /></Label>
+          </div>
+          <Label>Script<RichEditor value={script} onChange={setScript} /></Label>
+          <footer>
+            <Button type="submit">Save changes</Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild><Button variant="destructive" type="button">Delete video</Button></AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader><AlertDialogTitle>Delete {video.title}?</AlertDialogTitle><AlertDialogDescription>This hides the task immediately and schedules its footage for permanent removal.</AlertDialogDescription></AlertDialogHeader>
+                <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => void erase()}>Delete video</AlertDialogAction></AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </footer>
+        </form>
+      </Card>
       <FootageSection videoId={video.id} />
     </main>
   )

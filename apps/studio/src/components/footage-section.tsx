@@ -1,5 +1,10 @@
 import { Download, FileVideo, Pencil, Upload, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { Button, buttonVariants } from '@yatb/ui/button'
+import { Card } from '@yatb/ui/card'
+import { Input } from '@yatb/ui/input'
+import { Label } from '@yatb/ui/label'
+import { Progress } from '@yatb/ui/progress'
 import { uploadFile, type UploadProgress } from '#/client/upload'
 import type { MediaFile } from '#/domain/media'
 
@@ -102,15 +107,17 @@ export function FootageSection({ videoId }: { videoId: string }) {
     <section className="footage-section" aria-labelledby="footage-heading">
       <header>
         <div><p className="eyebrow">Original media</p><h2 id="footage-heading">Footage upload</h2></div>
-        <label className="upload-button"><Upload size={16} /> Add footage<input type="file" multiple disabled={pending.some((item) => item.state !== 'failed')} onChange={choose} /></label>
+        <Label className={buttonVariants()}><Upload /> Add footage<Input className="sr-only" type="file" multiple disabled={pending.some((item) => item.state !== 'failed')} onChange={choose} /></Label>
       </header>
       {pending.length > 0 && <div className="upload-list" aria-label="Uploads">
         {pending.map((item) => {
           const percent = Math.round(item.progress.sentBytes / item.progress.totalBytes * 100)
           return <article key={item.id} className="upload-row">
             <div><strong>{item.file.name}</strong><small>{item.state === 'failed' ? item.error : `${percent}% · ${formatBytes(item.progress.sentBytes)} of ${formatBytes(item.progress.totalBytes)}`}</small></div>
-            <progress max={item.progress.totalBytes} value={item.progress.sentBytes} aria-label={`${item.file.name} upload progress`} />
-            <button
+            <Progress value={percent} aria-label={`${item.file.name} upload progress`} />
+            <Button
+              variant="ghost"
+              size="icon-sm"
               type="button"
               aria-label={`${item.state === 'failed' ? 'Retry' : 'Cancel'} ${item.file.name}`}
               onClick={() => {
@@ -118,24 +125,26 @@ export function FootageSection({ videoId }: { videoId: string }) {
                 setPending((current) => current.map((entry) => entry.id === item.id ? { ...entry, state: 'queued', error: undefined } : entry))
                 void runQueue([item])
               }}
-            >{item.state === 'failed' ? 'Retry' : <X size={15} />}</button>
-            {item.state === 'failed' && <button
+            >{item.state === 'failed' ? 'Retry' : <X />}</Button>
+            {item.state === 'failed' && <Button
+              variant="ghost"
+              size="icon-sm"
               type="button"
               aria-label={`Dismiss ${item.file.name}`}
               onClick={() => setPending((current) => current.filter((entry) => entry.id !== item.id))}
-            ><X size={15} /></button>}
+            ><X /></Button>}
           </article>
         })}
       </div>}
       {files.length === 0 && pending.length === 0
         ? <p className="footage-empty">Drop in camera originals, audio, screen recordings, and references.</p>
-        : <div className="footage-grid">{files.map((file) => <article key={file.id} className="footage-card">
+        : <div className="footage-grid">{files.map((file) => <Card key={file.id} className="footage-card gap-0 py-0 shadow-none">
           {file.contentType.startsWith('video/')
             ? <video controls preload="metadata" src={`/api/videos/${videoId}/media/${file.id}`} />
             : <div className="file-placeholder"><FileVideo size={24} /></div>}
           {rename?.fileId === file.id
             ? <form className="footage-rename" onSubmit={(event) => void saveRename(event, file)}>
-              <label>File name<input
+              <Label>File name<Input
                 aria-label={`New name for ${file.displayName}`}
                 value={rename.value}
                 onChange={(event) => setRename({ ...rename, value: event.target.value, error: undefined })}
@@ -144,18 +153,18 @@ export function FootageSection({ videoId }: { videoId: string }) {
                 disabled={rename.pending}
                 required
                 autoFocus
-              /></label>
+              /></Label>
               {rename.error && <small role="alert">{rename.error}</small>}
-              <div><button type="submit" disabled={rename.pending}>{rename.pending ? 'Saving…' : 'Save filename'}</button><button type="button" disabled={rename.pending} onClick={() => setRename(null)}>Cancel rename</button></div>
+              <div><Button size="sm" type="submit" disabled={rename.pending}>{rename.pending ? 'Saving…' : 'Save filename'}</Button><Button size="sm" variant="outline" type="button" disabled={rename.pending} onClick={() => setRename(null)}>Cancel rename</Button></div>
             </form>
             : <>
               <div><strong>{file.displayName}</strong><small>{formatBytes(file.byteSize)}</small></div>
               <footer>
-                <button type="button" onClick={() => setRename({ fileId: file.id, value: file.displayName, pending: false })}><Pencil size={14} /> Rename</button>
-                <a href={`/api/videos/${videoId}/media/${file.id}?download=1`}><Download size={14} /> Download</a>
+                <Button variant="ghost" size="sm" type="button" onClick={() => setRename({ fileId: file.id, value: file.displayName, pending: false })}><Pencil /> Rename</Button>
+                <Button asChild variant="ghost" size="sm"><a href={`/api/videos/${videoId}/media/${file.id}?download=1`}><Download /> Download</a></Button>
               </footer>
             </>}
-        </article>)}</div>}
+        </Card>)}</div>}
     </section>
   )
 }

@@ -1,6 +1,11 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { Alert, AlertDescription } from '@yatb/ui/alert'
+import { Button } from '@yatb/ui/button'
+import { Card } from '@yatb/ui/card'
+import { Input } from '@yatb/ui/input'
+import { Label } from '@yatb/ui/label'
 import { authClient } from '#/lib/auth-client'
 import { loadSession } from '#/server/auth.functions'
 import { ThemeControl } from '#/components/theme-control'
@@ -88,34 +93,36 @@ function Login() {
           <p className="private-note"><CheckCircle2 size={16} /> Invitation-only access</p>
         </div>
         <div className="auth-block">
-          <form className="auth-card" key={mode} onSubmit={submit}>
-            <div>
-              <p className="eyebrow">Your Average Tech Bro</p>
-              <h2>{heading}</h2>
-              <p className="form-intro">Use your approved email address to continue.</p>
-            </div>
-            {mode === 'sign-up' && <label>Name<input name="name" autoComplete="name" required /></label>}
-            {mode !== 'reset' && <label>Email<input name="email" type="email" autoComplete="email" required /></label>}
-            {mode !== 'forgot' && (
-              <label>Password
-                <span className="password-field">
-                  <input name="password" type={showPassword ? 'text' : 'password'} minLength={8} autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} required />
-                  <button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button>
-                </span>
-              </label>
-            )}
-            {message && <p className="form-message" role="status">{message}</p>}
-            <button className="submit-button" disabled={busy} type="submit">
-              {busy ? 'Working…' : mode === 'sign-up' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : mode === 'reset' ? 'Update password' : 'Sign in'}
-              {!busy && <ArrowRight size={17} />}
-            </button>
-            <div className="form-links">
-              {mode === 'sign-in' && <button type="button" onClick={() => changeMode('forgot')}>Forgot password?</button>}
-              <button type="button" onClick={() => changeMode(mode === 'sign-up' ? 'sign-in' : 'sign-up')}>
-                {mode === 'sign-up' ? 'Already have an account? Sign in' : 'Need an account? Request access'}
-              </button>
-            </div>
-          </form>
+          <Card className="auth-card">
+            <form key={mode} onSubmit={submit}>
+              <div>
+                <p className="eyebrow">Your Average Tech Bro</p>
+                <h2>{heading}</h2>
+                <p className="form-intro">Use your approved email address to continue.</p>
+              </div>
+              {mode === 'sign-up' && <Label>Name<Input name="name" autoComplete="name" required /></Label>}
+              {mode !== 'reset' && <Label>Email<Input name="email" type="email" autoComplete="email" required /></Label>}
+              {mode !== 'forgot' && (
+                <Label>Password
+                  <span className="password-field">
+                    <Input name="password" type={showPassword ? 'text' : 'password'} minLength={8} autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} required />
+                    <Button variant="ghost" size="icon-sm" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</Button>
+                  </span>
+                </Label>
+              )}
+              {message && <Alert className="form-message" role="status"><AlertDescription>{message}</AlertDescription></Alert>}
+              <Button className="submit-button" disabled={busy} type="submit">
+                {busy ? 'Working…' : mode === 'sign-up' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : mode === 'reset' ? 'Update password' : 'Sign in'}
+                {!busy && <ArrowRight size={17} />}
+              </Button>
+              <div className="form-links">
+                {mode === 'sign-in' && <Button variant="link" type="button" onClick={() => changeMode('forgot')}>Forgot password?</Button>}
+                <Button variant="link" type="button" onClick={() => changeMode(mode === 'sign-up' ? 'sign-in' : 'sign-up')}>
+                  {mode === 'sign-up' ? 'Already have an account? Sign in' : 'Need an account? Request access'}
+                </Button>
+              </div>
+            </form>
+          </Card>
         </div>
       </section>
     </main>

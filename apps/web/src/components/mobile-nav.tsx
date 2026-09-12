@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Button } from '@yatb/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@yatb/ui/sheet'
 import { Menu } from 'lucide-react'
 import { useState } from 'react'
 
