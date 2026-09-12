@@ -113,7 +113,7 @@ const cookie = await signIn()
 const database = localDatabase()
 const videoIds = await serverFunctionIds('videos')
 const reviewIds = await serverFunctionIds('reviews')
-const run = `STUDIO-05 ${Date.now()}`
+const run = `STUDIO-06 ${Date.now()}`
 const empty = { type: 'doc', content: [{ type: 'paragraph' }] }
 
 for (const title of [`${run} review`, `${run} isolation`]) {
@@ -130,6 +130,22 @@ const drafts = await Promise.all([1, 2, 3].map((version) => upload(
 assert(drafts.every((result) => result.kind === 'draft'), 'Draft upload returned footage')
 const versions = drafts.map((result) => result.draft.version).sort((left, right) => left - right)
 assert(JSON.stringify(versions) === '[1,2,3]', `Draft versions were ${versions.join(',')}`)
+const newestDrafts = [...drafts].sort((left, right) => right.draft.version - left.draft.version)
+const foreignDraft = await upload(cookie, other.id, fixture, { kind: 'draft', durationMs: 2000 }, 'foreign-draft.mp4', 'video/mp4')
+assert(foreignDraft.kind === 'draft', 'Foreign comparison fixture returned footage')
+
+const comparison = await call(reviewIds, cookie, 'loadComparison', { videoId: owner.id })
+assert(comparison.includes(newestDrafts[0].draft.id) && comparison.includes(newestDrafts[1].draft.id), 'Default comparison omitted a newest draft')
+const reversedComparison = await call(reviewIds, cookie, 'loadComparison', {
+  videoId: owner.id, left: drafts[0].draft.id, right: drafts[2].draft.id,
+})
+assert(reversedComparison.includes(drafts[0].draft.id) && reversedComparison.includes(drafts[2].draft.id), 'Explicit comparison omitted a selected draft')
+await call(reviewIds, cookie, 'loadComparison', {
+  videoId: owner.id, left: drafts[0].draft.id, right: drafts[0].draft.id,
+}, 'Comparison is unavailable.')
+await call(reviewIds, cookie, 'loadComparison', {
+  videoId: owner.id, left: drafts[0].draft.id, right: foreignDraft.draft.id,
+}, 'Comparison is unavailable.')
 
 const attachment = await upload(cookie, owner.id, Buffer.from('review-image'), { kind: 'footage' }, 'reference.png', 'image/png')
 assert(attachment.kind === 'footage', 'Attachment upload did not use footage')
@@ -224,6 +240,35 @@ if (process.env.STUDIO_REVIEW_PERF === '1') {
     ])
     workspaceLoads.push(performance.now() - started)
   }
+  const comparisonLoads = []
+  const leftComparisonSeeks = []
+  const rightComparisonSeeks = []
+  for (let index = 0; index < 10; index += 1) {
+    const started = performance.now()
+    await Promise.all([
+      call(reviewIds, cookie, 'loadComparison', {
+        videoId: owner.id, left: drafts[0].draft.id, right: drafts[1].draft.id,
+      }),
+      call(reviewIds, cookie, 'loadComments', { videoId: owner.id, draftId: drafts[0].draft.id }),
+      call(reviewIds, cookie, 'loadComments', { videoId: owner.id, draftId: drafts[1].draft.id }),
+    ])
+    comparisonLoads.push(performance.now() - started)
+
+    const offset = Math.min(fixture.length - 33, index * 401)
+    const seek = async (draft, samples) => {
+      const seekStarted = performance.now()
+      const response = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${draft.file.id}`, {
+        headers: { Cookie: cookie, Range: `bytes=${offset}-${offset + 31}` },
+      })
+      await response.arrayBuffer()
+      assert(response.status === 206, `Comparison seek returned ${response.status}`)
+      samples.push(performance.now() - seekStarted)
+    }
+    await Promise.all([
+      seek(drafts[0].draft, leftComparisonSeeks),
+      seek(drafts[1].draft, rightComparisonSeeks),
+    ])
+  }
   const insert = database.prepare(`INSERT INTO review_comment (
     id, video_id, draft_id, author_user_id, anchor_kind, start_ms, end_ms, body_json, revision, created_at, updated_at
   ) VALUES (?, ?, ?, (SELECT id FROM user WHERE email = ?), 'point', ?, NULL, ?, 1, ?, ?)`)
@@ -237,10 +282,15 @@ if (process.env.STUDIO_REVIEW_PERF === '1') {
   const playerP95 = p95(rangeLoads)
   const seekP95 = p95(seeks)
   const workspaceP95 = p95(workspaceLoads)
+  const comparisonP95 = p95(comparisonLoads)
+  const leftComparisonSeekP95 = p95(leftComparisonSeeks)
+  const rightComparisonSeekP95 = p95(rightComparisonSeeks)
   assert(playerP95 <= 1500, `Player first-byte p95 ${playerP95.toFixed(1)} ms exceeded 1500 ms`)
   assert(seekP95 <= 1500, `Seek p95 ${seekP95.toFixed(1)} ms exceeded 1500 ms`)
   assert(comments500Ms <= 500, `500 comments loaded in ${comments500Ms.toFixed(1)} ms`)
-  console.log(`player_range_p95_ms=${playerP95.toFixed(1)} seek_p95_ms=${seekP95.toFixed(1)} workspace_p95_ms=${workspaceP95.toFixed(1)} comments_500_ms=${comments500Ms.toFixed(1)}`)
+  assert(comparisonP95 <= workspaceP95 * 2 + 500 && comparisonP95 <= 2500, `Comparison p95 ${comparisonP95.toFixed(1)} ms exceeded its bound`)
+  assert(leftComparisonSeekP95 <= 1500 && rightComparisonSeekP95 <= 1500, 'A comparison seek exceeded 1500 ms')
+  console.log(`player_range_p95_ms=${playerP95.toFixed(1)} seek_p95_ms=${seekP95.toFixed(1)} workspace_p95_ms=${workspaceP95.toFixed(1)} comparison_p95_ms=${comparisonP95.toFixed(1)} left_comparison_seek_p95_ms=${leftComparisonSeekP95.toFixed(1)} right_comparison_seek_p95_ms=${rightComparisonSeekP95.toFixed(1)} comments_500_ms=${comments500Ms.toFixed(1)}`)
 }
 
 await call(videoIds, cookie, 'removeVideo', { id: owner.id, expectedRevision: owner.revision })
@@ -253,6 +303,7 @@ database.close()
 
 console.log(`run=${run}`)
 console.log(`draft_versions=${versions.join(',')} completion_replay=same_result`)
+console.log('comparison_default=newest_two explicit_pair=preserved identical_and_cross_task=rejected')
 console.log('point_ms=750 range_ms=1000-1500 rich_body=persisted author=joined comment_replay=no_duplicate')
 console.log('image_and_video_reused_as_footage=true invalid_anchor=rejected invalid_purpose_and_cross_task_attachments=rejected')
 console.log('draft_range_status=206 cross_task_status=404 optimistic_comment_conflict=rejected cleanup=complete')
