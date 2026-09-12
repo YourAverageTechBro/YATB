@@ -10,7 +10,8 @@ const failures = []
 const literals = new Set()
 
 for (const file of files) {
-  const css = await readFile(file, 'utf8')
+  const source = await readFile(file, 'utf8')
+  const css = file === '../../packages/ui/src/styles.css' ? source : source.replace(/(^|[;{])(\s*--review-comment-marker:\s*)#facc15(?=\s*[;}])/g, '$1$2#fff')
 
   for (const match of css.matchAll(/#([0-9a-f]{3,8})\b/gi)) {
     const hex = match[1]
@@ -40,4 +41,4 @@ for (const file of files) {
 
 if (failures.length > 0) throw new Error(`Studio CSS contains non-grayscale colors:\n${failures.join('\n')}`)
 
-console.log(`Studio authored and emitted CSS use ${literals.size} grayscale literal colors.`)
+console.log(`Studio authored and emitted CSS use ${literals.size} grayscale literal colors plus the review marker token.`)

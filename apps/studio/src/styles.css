@@ -136,10 +136,31 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .review-pane { display: grid; min-width: 0; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 18px; align-items: start; }
 .review-pane > * { min-width: 0; }
 .review-player { grid-column: 1; position: sticky; top: 20px; }
-.review-player > video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--sidebar); border-radius: 10px; }
+.custom-player { --review-comment-marker: #facc15; min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+.custom-player > video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--sidebar); }
+.custom-player:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.custom-player-controls { padding: 8px 12px 10px; }
+.custom-player-control-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.custom-player-control-row output { font: 500 11px 'Geist Mono Variable', monospace; white-space: nowrap; }
+.custom-player-control-row [data-slot='native-select'] { font-size: 12px; }
+.custom-player input[type='range'] { appearance: none; min-width: 0; height: 28px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; cursor: pointer; }
+.custom-player input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--muted-foreground); }
+.custom-player input[type='range']::-moz-range-track { height: 4px; border-radius: 2px; background: var(--muted-foreground); }
+.custom-player input[type='range']::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: var(--foreground); border: 2px solid var(--card); }
+.custom-player input[type='range']::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: var(--foreground); border: 2px solid var(--card); }
+.custom-player input[type='range']:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.custom-player .custom-player-volume { flex: 0 1 64px; width: 64px; }
+.custom-player-timeline { position: relative; }
+.comment-marker-layer { position: absolute; inset: 9px 7px; pointer-events: none; }
+.comment-range-marker, .comment-point-marker { position: absolute; top: 0; height: 10px; background: var(--review-comment-marker); }
+.comment-range-marker { min-width: 2px; opacity: .55; }
+.comment-point-marker { transform: translateX(-50%); border-radius: 1px; }
+.comment-marker-legend { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 10px; color: var(--muted-foreground); }
+.comment-marker-key { flex-shrink: 0; width: 3px; height: 10px; background: var(--review-comment-marker); }
+.custom-player-message { margin: 8px 0 0; font-size: 12px; }
+.custom-player:fullscreen { display: flex; flex-direction: column; border: 0; border-radius: 0; }
+.custom-player:fullscreen > video { flex: 1; min-height: 0; aspect-ratio: auto; }
 .player-state { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; padding-top: 10px; }
-.player-state output { font: 600 14px 'Geist Mono Variable', monospace; }
-.player-state label { display: flex; align-items: center; gap: 8px; }
 .review-rail { grid-column: 2; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 18px; min-width: 0; height: min(48rem, calc(100dvh - 40px)); position: sticky; top: 20px; }
 .comment-composer { gap: 0; }
 .comment-composer form { display: grid; min-width: 0; gap: 14px; padding: 0 18px; }
