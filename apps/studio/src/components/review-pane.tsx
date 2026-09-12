@@ -1,4 +1,4 @@
-import { MessageSquare, X } from 'lucide-react'
+import { Download, MessageSquare, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@yatb/ui/alert-dialog'
 import { Badge } from '@yatb/ui/badge'
@@ -35,6 +35,7 @@ function milliseconds(value: string): number {
 }
 
 export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootageChanged?: () => void }) {
+  const draftMediaUrl = `/api/videos/${draft.videoId}/media/${draft.file.id}`
   const video = useRef<HTMLVideoElement>(null)
   const [comments, setComments] = useState<ReviewComment[]>([])
   const [currentMs, setCurrentMs] = useState(0)
@@ -102,10 +103,11 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
 
   return <div className="review-pane">
     <div className="review-player">
-      <video ref={video} controls preload="metadata" src={`/api/videos/${draft.videoId}/media/${draft.file.id}`} onTimeUpdate={(event) => setCurrentMs(Math.round(event.currentTarget.currentTime * 1000))} />
+      <video ref={video} controls preload="metadata" src={draftMediaUrl} onTimeUpdate={(event) => setCurrentMs(Math.round(event.currentTarget.currentTime * 1000))} />
       <div className="player-state">
         <output aria-label="Current playback time">{formatTimestamp(currentMs)}</output>
         <Label>Playback speed<NativeSelect value={rate} onChange={(event) => { setRate(event.target.value); if (video.current) video.current.playbackRate = Number(event.target.value) }}>{['0.5', '0.75', '1', '1.25', '1.5', '2'].map((value) => <NativeSelectOption key={value} value={value}>{value}×</NativeSelectOption>)}</NativeSelect></Label>
+        <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=1`} aria-label={`Download version ${draft.version}: ${draft.file.displayName}`}><Download /> Download</a></Button>
       </div>
     </div>
     <Card className="comment-composer">
@@ -118,12 +120,12 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
         </div>
         <RichEditor ariaLabel="Review comment" value={body} onChange={setBody} />
         <Label className={buttonVariants({ variant: 'outline', className: 'upload-button' })}>Attach images or video<Input className="sr-only" type="file" accept="image/*,video/*" multiple onChange={(event) => { setAttachments([...(event.target.files ?? [])].slice(0, 12).map((file) => ({ id: crypto.randomUUID(), file }))); event.target.value = '' }} /></Label>
-        {attachments.length > 0 && <ul className="attachment-selection">{attachments.map((attachment) => <li key={attachment.id}>{attachment.file.name}<Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${attachment.file.name}`} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><X /></Button></li>)}</ul>}
+        {attachments.length > 0 && <ul className="attachment-selection" aria-label="Selected attachments" tabIndex={0}>{attachments.map((attachment) => <li key={attachment.id}><span>{attachment.file.name}</span><Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${attachment.file.name}`} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><X /></Button></li>)}</ul>}
         {error && <p role="alert" className="dialog-error">{error}</p>}
         <Button type="submit" disabled={saving}><MessageSquare /> {saving ? 'Saving…' : 'Add comment'}</Button>
       </form>
     </Card>
-    <section className="review-comments" aria-label={`Comments for version ${draft.version}`}>
+    <section className="review-comments" aria-label={`Comments for version ${draft.version}`} tabIndex={0}>
       <h3>Comments <Badge variant="secondary">{comments.length}</Badge></h3>
       {comments.length === 0 ? <p className="footage-empty">No review notes yet.</p> : comments.map((comment) => <CommentCard key={comment.id} comment={comment} onSeek={seek} onChanged={refresh} />)}
     </section>
