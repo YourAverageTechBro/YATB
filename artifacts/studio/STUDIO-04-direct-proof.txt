@@ -5,6 +5,10 @@ Base: 2542f3aa6fe69c8243658901c2fbf1d6eb461c64
 Checks
 
 - `npm run check`: PASS.
+- Clean `npm ci`: PASS after declaring Rollup's macOS ARM and Linux x64 native
+  packages as root optional dependencies. The first GitHub run exposed npm CLI
+  optional-dependency bug 4828 by omitting the Linux binary; the corrected lock
+  now contains both execution platforms explicitly.
 - Shared ownership guard: both apps import `@yatb/ui/styles.css`, declare the
   workspace dependency, contain no app-local primitive copies, raw interactive
   elements, or browser prompt/alert/confirm calls.
