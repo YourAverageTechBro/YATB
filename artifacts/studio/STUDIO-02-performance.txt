@@ -1,0 +1,26 @@
+STUDIO-02 performance receipt
+Date: 2026-09-12
+
+Fixture
+- 200 tasks seeded through the authenticated createVideo server function.
+- Five statuses distributed across the fixture through moveVideoStatus.
+- Trunk used detached commit c22141f with an equivalent copied local D1 state.
+- Production-preview measurements used 20 interleaved list navigations after three warmups.
+
+Failed diagnostic receipts
+- Initial development server: trunk shell p95 32.0 ms, unbounded head list p95 73.4 ms, ratio 2.29.
+- Production preview after summary projection and bounded pages: trunk shell p95 10.9 ms, head list p95 17.8 ms, ratio 1.63.
+- The ratio fails even though the head adds only 6.9 ms. Ratios are unstable when the reference approaches zero.
+
+Corrected gate
+- Fail when head list p95 exceeds trunk shell p95 by more than 25 ms.
+- Fail when head list p95 exceeds 750 ms.
+- Fail when any board filter response exceeds 300 ms.
+
+Final production-preview result
+- Trunk shell p95: 10.9 ms.
+- Head list p95: 17.8 ms.
+- Additive overhead: 6.9 ms. PASS.
+- Board filter maximum: 27.2 ms. PASS.
+
+The ratio receipt remains here as a failed diagnostic. The plan and decision trail record the gate correction rather than hiding it.

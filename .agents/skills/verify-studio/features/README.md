@@ -1,6 +1,6 @@
 # YATB Studio verification map
 
-This directory defines the user-facing authentication checks for Studio.
+This directory defines the user-facing authentication and video-planning checks for Studio.
 
 ## Baseline preconditions
 
@@ -37,3 +37,7 @@ Each feature file describes its browser entry, exact drive, proof, and traps.
 - [Password reset](./password-reset.md)
 - [Private routes](./private-routes.md)
 - [Color theme](./color-theme.md)
+- [Video planning](./video-planning.md)
+- [Planning views](./planning-views.md)
+- [Rich script](./rich-script.md)
+- [Revision and deletion](./revision-delete.md)

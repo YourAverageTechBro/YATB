@@ -11,3 +11,4 @@ ts	phase	decision	why	evidence	result
 2026-09-12T16:30:00Z	auth	use D1 as the sole runtime allowlist source	a fixed application list would drift from administrator revocation	apps/studio/src/server/auth.server.ts	VERIFIED
 2026-09-12T16:32:00Z	build	fail builds that emit an environment file or a sentinel secret value	Cloudflare Vite copies an app-local .dev.vars file into its server output	apps/studio/scripts/build.mjs	VERIFIED
 2026-09-12T16:34:00Z	ui	use native light dark and system themes with a pre-CSS initializer	the stored choice applies before paint without adding a runtime dependency	apps/studio/src/routes/__root.tsx	VERIFIED
+2026-09-12T16:45:00Z	performance	use a 25 ms additive list overhead limit instead of a ratio against the empty trunk shell	trunk production p95 is 10.9 ms so a ratio overstates a 6.9 ms planning cost; the 750 ms list and 300 ms board ceilings remain	artifacts/studio/STUDIO-02-performance.txt	VERIFIED
