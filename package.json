@@ -3,13 +3,15 @@
   "private": true,
   "packageManager": "npm@11.6.0",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspace @yatb/web",
     "dev:studio": "npm run dev --workspace @yatb/studio",
-    "check": "npm run check --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present",
+    "check:ui": "node scripts/check-shared-ui.mjs",
+    "check": "npm run check:ui && npm run check --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present && node scripts/check-emitted-ui.mjs",
     "preview": "npm run preview --workspace @yatb/web",
     "preview:studio": "npm run preview --workspace @yatb/studio",
     "deploy:web": "npm run deploy --workspace @yatb/web",

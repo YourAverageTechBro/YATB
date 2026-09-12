@@ -1,6 +1,6 @@
 import { readdir, readFile } from 'node:fs/promises'
 
-const files = ['src/styles.css']
+const files = ['src/styles.css', '../../packages/ui/src/styles.css']
 for (const directory of ['dist/client/assets', 'dist/server/assets']) {
   const entries = await readdir(directory)
   files.push(...entries.filter((entry) => entry.endsWith('.css')).map((entry) => `${directory}/${entry}`))
@@ -30,6 +30,11 @@ for (const file of files) {
     const saturation = match[2].split('/')[0].trim().split(/[\s,]+/)[1]
     literals.add(match[0])
     if (saturation !== '0' && saturation !== '0%') failures.push(`${file}: ${match[0]}`)
+  }
+
+  for (const match of css.matchAll(/oklch\(\s*[^\s)]+\s+([^\s/)]+)/gi)) {
+    literals.add(match[0])
+    if (Number.parseFloat(match[1]) !== 0) failures.push(`${file}: ${match[0]}`)
   }
 }
 

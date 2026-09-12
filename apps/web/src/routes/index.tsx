@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@yatb/ui/button'
 import {
   Card,
   CardContent,
@@ -6,14 +6,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from '@yatb/ui/card'
+import { Separator } from '@yatb/ui/separator'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from '@yatb/ui/accordion'
 import { MobileNav } from "@/components/mobile-nav";
 import { createFileRoute } from "@tanstack/react-router";
 

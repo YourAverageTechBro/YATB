@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@yatb/ui/button'
 import { loadPaidOnboarding } from '@/server/stripe.functions'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { ExternalLink } from 'lucide-react'

@@ -1,7 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Button } from '@yatb/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@yatb/ui/dialog'
+import { Input } from '@yatb/ui/input'
+import { Label } from '@yatb/ui/label'
 import { emptyRichDocument, type RichDocument, type RichInline, type RichMark } from '#/server/rich-document'
 
 type Props = Readonly<{ value: RichDocument; onChange: (value: RichDocument) => void }>
+type SelectionPoint = Readonly<{ path: readonly number[]; offset: number }>
+type SelectionSnapshot = Readonly<{ start: SelectionPoint; end: SelectionPoint; text: string }>
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] ?? character)
@@ -76,22 +82,66 @@ function readDocument(root: HTMLElement): RichDocument {
   return content.length ? { type: 'doc', content } : emptyRichDocument()
 }
 
+function selectionPoint(root: HTMLElement, node: Node, offset: number): SelectionPoint | null {
+  const path: number[] = []
+  let current: Node | null = node
+  while (current && current !== root) {
+    const parentNode: ParentNode | null = current.parentNode
+    if (!parentNode) return null
+    const index = Array.prototype.indexOf.call(parentNode.childNodes, current) as number
+    if (index < 0) return null
+    path.unshift(index)
+    current = parentNode
+  }
+  return current === root ? { path, offset } : null
+}
+
+function resolveSelectionPoint(root: HTMLElement, point: SelectionPoint): Node | null {
+  let current: Node = root
+  for (const index of point.path) {
+    const child = current.childNodes.item(index)
+    if (!child) return null
+    current = child
+  }
+  return current
+}
+
 export function RichEditor({ value, onChange }: Props) {
   const editor = useRef<HTMLDivElement>(null)
-  const lastHtml = useRef('')
+  const renderedHtml = useRef('')
+  const pendingLocalHtml = useRef<string | null>(null)
+  const linkSelection = useRef<SelectionSnapshot | null>(null)
+  const [linkOpen, setLinkOpen] = useState(false)
+  const [linkValue, setLinkValue] = useState('')
+  const [linkError, setLinkError] = useState('')
 
   useEffect(() => {
     const html = documentHtml(value)
-    if (editor.current && html !== lastHtml.current) {
+    if (pendingLocalHtml.current !== null) {
+      if (html === pendingLocalHtml.current) {
+        renderedHtml.current = html
+        pendingLocalHtml.current = null
+      }
+      return
+    }
+    if (editor.current && html !== renderedHtml.current) {
       editor.current.innerHTML = html
-      lastHtml.current = html
+      renderedHtml.current = html
     }
   }, [value])
+
+  useEffect(() => {
+    const remember = () => rememberLinkSelection()
+    document.addEventListener('selectionchange', remember)
+    return () => document.removeEventListener('selectionchange', remember)
+  }, [])
 
   function emitChange() {
     if (!editor.current) return
     const next = readDocument(editor.current)
-    lastHtml.current = documentHtml(next)
+    const html = documentHtml(next)
+    renderedHtml.current = html
+    pendingLocalHtml.current = html
     onChange(next)
   }
 
@@ -101,27 +151,75 @@ export function RichEditor({ value, onChange }: Props) {
     emitChange()
   }
 
-  function addLink() {
-    const href = window.prompt('HTTPS link')
-    if (!href) return
+  function rememberLinkSelection() {
+    const selection = window.getSelection()
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null
+    const root = editor.current
+    if (!range || !root || range.collapsed || !root.contains(range.startContainer) || !root.contains(range.endContainer)) return
+    const start = selectionPoint(root, range.startContainer, range.startOffset)
+    const end = selectionPoint(root, range.endContainer, range.endOffset)
+    if (!start || !end) return
+    linkSelection.current = {
+      start,
+      end,
+      text: range.toString(),
+    }
+  }
+
+  function openLink() {
+    setLinkValue('')
+    setLinkError(linkSelection.current ? '' : 'Select text in the script first.')
+    setLinkOpen(true)
+  }
+
+  function addLink(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    event.stopPropagation()
     try {
-      if (new URL(href).protocol === 'https:') {
-        command('createLink', href)
+      if (new URL(linkValue).protocol === 'https:') {
+        const snapshot = linkSelection.current
+        const root = editor.current
+        if (!snapshot || !root) {
+          setLinkError('Select text in the script first.')
+          return
+        }
+        const start = resolveSelectionPoint(root, snapshot.start)
+        const end = resolveSelectionPoint(root, snapshot.end)
+        if (!start || !end) {
+          setLinkError('The selected text changed. Select it again.')
+          return
+        }
+        const range = document.createRange()
+        range.setStart(start, snapshot.start.offset)
+        range.setEnd(end, snapshot.end.offset)
+        if (range.toString() !== snapshot.text) {
+          setLinkError('The selected text changed. Select it again.')
+          return
+        }
+        const anchor = document.createElement('a')
+        anchor.href = linkValue
+        anchor.rel = 'noreferrer'
+        anchor.appendChild(range.extractContents())
+        range.insertNode(anchor)
+        editor.current?.normalize()
+        emitChange()
+        linkSelection.current = null
+        setLinkOpen(false)
         return
       }
     } catch {}
-    window.alert('Links must use HTTPS.')
+    setLinkError('Links must use HTTPS.')
   }
 
   return (
     <section className="rich-editor" aria-label="Video script">
       <div className="rich-toolbar" aria-label="Script formatting">
-        <button type="button" onClick={() => command('formatBlock', 'h2')}>Heading</button>
-        <button type="button" onClick={() => command('insertUnorderedList')}>Bullets</button>
-        <button type="button" onClick={() => command('insertOrderedList')}>Numbered</button>
-        <button type="button" onClick={() => command('bold')}>Bold</button>
-        <button type="button" onClick={() => command('italic')}>Italic</button>
-        <button type="button" onClick={addLink}>Link</button>
+        <Button variant="outline" size="sm" type="button" onClick={() => command('formatBlock', 'h2')}>Heading</Button>
+        <Button variant="outline" size="sm" type="button" onClick={() => command('insertUnorderedList')}>Bullets</Button>
+        <Button variant="outline" size="sm" type="button" onClick={() => command('insertOrderedList')}>Numbered</Button>
+        <Button variant="outline" size="sm" type="button" onClick={() => command('bold')}>Bold</Button>
+        <Button variant="outline" size="sm" type="button" onClick={() => command('italic')}>Italic</Button>
+        <Button variant="outline" size="sm" type="button" onPointerDown={(event) => { event.preventDefault(); rememberLinkSelection() }} onClick={openLink}>Link</Button>
       </div>
       <div
         ref={editor}
@@ -130,8 +228,20 @@ export function RichEditor({ value, onChange }: Props) {
         role="textbox"
         aria-multiline="true"
         suppressContentEditableWarning
+        onKeyUp={rememberLinkSelection}
+        onPointerUp={rememberLinkSelection}
         onInput={emitChange}
       />
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add link</DialogTitle><DialogDescription>Attach a secure HTTPS reference to the selected text.</DialogDescription></DialogHeader>
+          <form className="dialog-form" onSubmit={addLink}>
+            <Label>HTTPS URL<Input type="url" value={linkValue} onChange={(event) => { setLinkValue(event.target.value); setLinkError('') }} aria-invalid={Boolean(linkError)} required autoFocus /></Label>
+            {linkError && <p className="dialog-error" role="alert">{linkError}</p>}
+            <DialogFooter><Button variant="outline" type="button" onClick={() => setLinkOpen(false)}>Cancel</Button><Button type="submit">Add link</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }
