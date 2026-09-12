@@ -1,6 +1,6 @@
 # YATB Studio verification map
 
-This directory defines the user-facing authentication, video-planning, private-footage, and shared-interface checks for Studio and Web.
+This directory defines the user-facing authentication, video-planning, private-footage, versioned-review, and shared-interface checks for Studio and Web.
 
 ## Baseline preconditions
 
@@ -42,4 +42,5 @@ Each feature file describes its browser entry, exact drive, proof, and traps.
 - [Rich script](./rich-script.md)
 - [Revision and deletion](./revision-delete.md)
 - [Footage delivery](./footage-delivery.md)
+- [Draft review](./draft-review.md)
 - [Shared UI system](./shared-ui-system.md)

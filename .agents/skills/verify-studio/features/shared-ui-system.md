@@ -40,7 +40,7 @@ Preconditions:
   and open and cancel `Delete video`. Confirm the delete dialog names the task
   and returns focus without deleting it.
 - **Drive the editor link.** Select exact script text with the keyboard, open
-  `Add link` from the keyboard, and submit a non-HTTPS URL. Confirm the dialog
+  `Link` from the keyboard, and submit a non-HTTPS URL through the `Add link` dialog. Confirm the dialog
   remains open with an error. Submit an HTTPS URL, save, reload, and confirm the
   selected text is still an anchor. Opening the dialog without a selection must
   report `Select text in the script first.` rather than succeeding.

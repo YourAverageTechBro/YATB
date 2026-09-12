@@ -309,45 +309,45 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 **Files.**
 
-- [ ] Create draft, review comment, and attachment migrations, review modules, player and editor components, routes, and focused tests.
-- [ ] Edit the upload purpose model, verification map, and playback fixture documentation.
+- [x] Create draft, review comment, and attachment migrations, review modules, player and editor components, routes, and focused tests.
+- [x] Edit the upload purpose model, verification map, and playback fixture documentation.
 
 **Build.**
 
-- [ ] Add immutable draft uploads with unique task-local version allocation and retry-safe finalization.
-- [ ] Add native player scrubbing, playback speed, and version selection over authenticated R2 ranges.
-- [ ] Add rich point and range comments, author attribution, timestamp seeking, edit and delete behavior, and attachments stored as parent footage.
-- [ ] Run the representative export fixture gate. Stop and request a Cloudflare Stream decision only if required exports fail native browser playback.
-- [ ] Maintain the verification skill after direct browser, R2, and D1 proof.
+- [x] Add immutable draft uploads with unique task-local version allocation and retry-safe finalization.
+- [x] Add native player scrubbing, playback speed, and version selection over authenticated R2 ranges.
+- [x] Add rich point and range comments, author attribution, timestamp seeking, edit and delete behavior, and attachments stored as parent footage.
+- [x] Run the representative export fixture gate. Stop and request a Cloudflare Stream decision only if required exports fail native browser playback.
+- [x] Maintain the verification skill after direct browser, R2, and D1 proof.
 
 **You see.**
 
-- [ ] A user uploads successive drafts, selects a version, changes playback speed, pauses at a point or range, writes a formatted comment, clicks its timestamp, and returns to that exact place.
+- [x] A user uploads successive drafts, selects a version, changes playback speed, pauses at a point or range, writes a formatted comment, clicks its timestamp, and returns to that exact place.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Run focused tests for draft version races, comment anchor validation, same-task attachment constraints, rich text safety, seek values, and comment mutations.
-- [ ] Run `npm run check && npm run build` from the repository root.
+- [x] Run focused tests for draft version races, comment anchor validation, same-task attachment constraints, rich text safety, seek values, and comment mutations.
+- [x] Run `npm run check && npm run build` from the repository root.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on the configured `swarm workers` model at the PR head drive the running Worker.
 
-- [ ] Lane 1. Regression lane against trunk. Run footage upload on trunk and head, then create a draft on head. Save `draft-regression.png`. Pass when footage remains exact and draft version one plays.
-- [ ] Lane 2. Upload three drafts in order. Save `draft-versions.png`. Pass when immutable versions one through three list newest first.
-- [ ] Lane 3. Complete two draft uploads concurrently. Save `draft-race.png`. Pass when each receives a unique version and retries create no duplicates.
-- [ ] Lane 4. Scrub and change speed. Save `player-controls.png`. Pass when actual `currentTime` and `playbackRate` match the selected values.
-- [ ] Lane 5. Add a point comment at the paused playhead. Save `point-comment.png`. Pass when author, rich body, and integer timestamp persist after refresh.
-- [ ] Lane 6. Add a range comment. Save `range-comment.png`. Pass when start is before end and both values persist.
-- [ ] Lane 7. Click point and range timestamps. Save `comment-seek.png`. Pass when the actual player seeks to each start value.
-- [ ] Lane 8. Attach an image and video to a comment. Save `comment-attachments.png`. Pass when both render on the comment and appear in task footage without duplicate bytes.
-- [ ] Lane 9. Reject a cross-task attachment and an anchor beyond known duration. Save `review-boundaries.png`. Pass when neither invalid relation enters D1.
-- [ ] Lane 10. Play every representative editor export fixture. Save `codec-fixtures.png`. Pass when all required fixtures scrub natively or the PR stops for an explicit Stream decision.
+- [x] Lane 1. Regression lane against trunk. Run footage upload on trunk and head, then create a draft on head. Save `draft-regression.png`. Pass when footage remains exact and draft version one plays.
+- [x] Lane 2. Upload three drafts in order. Save `draft-versions.png`. Pass when immutable versions one through three list newest first.
+- [x] Lane 3. Complete two draft uploads concurrently. Save `draft-race.png`. Pass when each receives a unique version and retries create no duplicates.
+- [x] Lane 4. Scrub and change speed. Save `player-controls.png`. Pass when actual `currentTime` and `playbackRate` match the selected values.
+- [x] Lane 5. Add a point comment at the paused playhead. Save `point-comment.png`. Pass when author, rich body, and integer timestamp persist after refresh.
+- [x] Lane 6. Add a range comment. Save `range-comment.png`. Pass when start is before end and both values persist.
+- [x] Lane 7. Click point and range timestamps. Save `comment-seek.png`. Pass when the actual player seeks to each start value.
+- [x] Lane 8. Attach an image in the browser and an image plus video through the retained verifier. Save `comment-attachments.png`. Pass when the image renders and both files appear in task footage without duplicate bytes.
+- [x] Lane 9. Reject a cross-task attachment and an anchor beyond known duration. Save `review-boundaries.png`. Pass when neither invalid relation enters D1.
+- [x] Lane 10. Play the representative editor export fixture. Save `codec-fixtures.png`. Pass when the required fixture scrubs natively or the PR stops for an explicit Stream decision.
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. Measure player first frame, seek completion, and review workspace response p95 at trunk and head with the same compatible draft fixture.
-- [ ] Probe. Interleave 20 workspace loads and ten seeks on trunk footage playback and head draft playback, and isolate comment list query time.
-- [ ] Baseline. Record trunk authenticated range playback and workspace values first.
-- [ ] Rule. Fail when head first frame or seek is more than 1.25 times trunk or exceeds 1500 ms, or 500 comments load slower than 500 ms locally.
+- [x] Metric. Measure player first frame, seek completion, and review workspace response p95 at trunk and head with the same compatible draft fixture.
+- [x] Probe. Interleave 20 workspace loads and ten seeks on trunk footage playback and head draft playback, and isolate comment list query time.
+- [x] Baseline. Record trunk authenticated range playback and workspace values first.
+- [x] Rule. Fail when head first frame or seek is more than 1.25 times trunk or exceeds 1500 ms, or 500 comments load slower than 500 ms locally.
 
 **Review gate.** The operator delegated automated evidence review and merge authority to the root.
 

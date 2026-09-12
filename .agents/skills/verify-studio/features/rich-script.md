@@ -18,7 +18,7 @@ Preconditions:
 
 - A video exists and its editor is open.
 
-- **Format a script.** Enter a heading, list, bold text, and italic text. Select an exact word with the keyboard, keyboard-activate `Add link`, and submit an HTTPS URL. Continue typing after the dialog closes; the editor retains both the link and new text without resetting the caret.
+- **Format a script.** Enter a heading, list, bold text, and italic text. Select an exact word with the keyboard, keyboard-activate `Link`, and submit an HTTPS URL through the `Add link` dialog. Continue typing after the dialog closes; the editor retains both the link and new text without resetting the caret.
 - **Require a selection.** Open `Add link` without selected text. The dialog reports `Select text in the script first.` and does not close as though it succeeded.
 - **Persist.** Choose `Save changes`, reload the direct video URL, and confirm every format and the linked selection remain.
 - **Reject an unsafe link.** Select text and attempt a non-HTTPS link. The editor reports that links must use HTTPS and D1 remains unchanged.

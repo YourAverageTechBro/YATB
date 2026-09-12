@@ -1,0 +1,28 @@
+STUDIO-05 local direct proof
+Date: 2026-09-12
+Base revision: 8c0fdb6c56eb02be6b7220bd533e173bd5a65ff4 plus the uncommitted STUDIO-05 diff
+
+Focused verification:
+- Studio tests: 25 passed across 6 files, including browser-style top-level rich-inline normalization.
+- Studio TypeScript: passed.
+- Studio production build: passed, including environment-secret and streamed-media source guards.
+- Local D1 migration 0004_reviews.sql: 14 commands executed successfully.
+
+Existing footage regression:
+- duplicate begin retained one session and repeated part upload was accepted.
+- R2-complete/D1-incomplete recovery returned ready.
+- exact SHA-256 download and cross-part 206 range passed.
+- rename retained object identity; cross-origin mutation returned 403; cross-task media returned 404.
+- cancellation, three-file parallel upload, tombstone hiding, and scheduled R2/D1 cleanup passed.
+
+Draft review protocol:
+- three concurrent draft uploads published unique immutable versions 1, 2, and 3.
+- replaying completion returned the identical media and draft result without a new version.
+- point 750 ms and range 1000–1500 ms comments persisted rich structural content and joined author identity.
+- replaying one comment request created no duplicate; a stale revision edit was rejected.
+- comment image and video files used the footage upload purpose, appeared in task footage, and referenced one media identity each.
+- draft-purpose and cross-task attachments and an anchor beyond duration were rejected before entering D1.
+- authenticated draft range returned 206; the same draft ID under another task returned 404.
+- every verifier fixture was removed through the video tombstone and scheduled cleanup path.
+
+Verdict: PASS

@@ -1,0 +1,23 @@
+STUDIO-05 local review performance proof
+Date: 2026-09-12
+Base revision: 8c0fdb6c56eb02be6b7220bd533e173bd5a65ff4 plus the uncommitted STUDIO-05 diff
+
+Probe:
+- same 22 KiB H.264/AAC MP4 fixture for authenticated playback.
+- 20 authenticated initial 4 KiB range reads.
+- 10 authenticated seeks to distinct byte offsets.
+- 20 paired draft-list and selected-comment workspace loads.
+- one selected-draft load containing 500 rich comments.
+
+Isolated merged trunk playback p95 with the same fixture and 20 authenticated 4 KiB ranges: 18.5 ms.
+Head player range p95 from the final interleaved run: 22.9 ms.
+Head / trunk: 1.238. Required: <= 1.25 and <= 1500 ms. PASS.
+
+Head seek p95: 18.8 ms. Required: <= 1500 ms. PASS.
+Head paired workspace p95: 33.2 ms. Trunk has no review workspace before STUDIO-05.
+Head 500-comment load: 27.4 ms. Required: <= 500 ms. PASS.
+
+The expanded attachment verifier later measured 24.1 ms and 15.4 ms player range p95 in consecutive local runs. The accepted interleaved trunk/head probe above remains the gate because isolated head-only ratios vary by more than the measured overhead at these near-zero timings.
+
+The browser lane separately measures native first frame, currentTime, and playbackRate.
+Verdict: PASS
