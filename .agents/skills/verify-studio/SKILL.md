@@ -1,6 +1,6 @@
 ---
 name: verify-studio
-description: Drive the local YATB Studio authentication, planning, private footage, and shared UI used by Studio and Web. Use after changes to routes, sessions, email callbacks, planning data, rich scripts, saved views, multipart uploads, media delivery, shared primitives, responsive navigation, themes, or Cloudflare bindings.
+description: Drive the local YATB Studio authentication, planning, private footage, versioned draft review, and shared UI used by Studio and Web. Use after changes to routes, sessions, email callbacks, planning data, rich scripts, saved views, multipart uploads, media delivery, review comments, shared primitives, responsive navigation, themes, or Cloudflare bindings.
 ---
 
 # Verify YATB Studio
@@ -46,6 +46,9 @@ accessibility tree before each action. Use these stable accessible names:
 - `Script`, `Save changes`, and `Delete video` identify the task editor.
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
 - `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, and `Download` identify private media delivery.
+- `Video drafts`, `Upload draft`, `Draft version`, `Playback speed`, `Current playback time`, `Comment timing`, `Review comment`, and `Add comment` identify versioned review.
+- `Start seconds`, `End seconds`, and `Use playhead` create timestamp ranges; comment timestamp buttons seek the active player.
+- `Edit comment`, `Save comment`, and `Delete comment` identify review mutations.
 - `Color theme` selects `System`, `Light`, or `Dark` on public and private pages.
 - `Toggle menu` opens Web's mobile navigation; `Frequently Asked Questions`
   contains the Web accordion.
@@ -107,6 +110,16 @@ isolation, cancellation, and scheduled cleanup:
 ```sh
 STUDIO_TEST_EMAIL=<email> STUDIO_TEST_PASSWORD=<password> \
 node .agents/skills/verify-studio/scripts/verify-footage.mjs
+```
+
+Exercise immutable draft versions, completion replay, review anchors, rich
+comments, attachment reuse, task isolation, optimistic edits, ranges, and the
+500-comment performance bound with a browser-compatible editor export:
+
+```sh
+STUDIO_TEST_EMAIL=<email> STUDIO_TEST_PASSWORD=<password> \
+STUDIO_REVIEW_FIXTURE=<absolute-mp4-path> STUDIO_REVIEW_PERF=1 \
+node .agents/skills/verify-studio/scripts/verify-review.mjs
 ```
 
 Seed 200 tasks through the application boundary and measure list and board responses:

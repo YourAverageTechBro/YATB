@@ -1,0 +1,20 @@
+STUDIO-05 root browser proof
+Date: 2026-09-12
+Base revision: 8c0fdb6c56eb02be6b7220bd533e173bd5a65ff4 plus the uncommitted STUDIO-05 diff
+
+The root drove the current local Worker through Codex computer control and emitted tool-native screenshots.
+
+Passed scenarios:
+- two immutable versions rendered newest first and kept version-specific comments isolated.
+- the native H.264 player reported a two-second duration, played and paused, set actual playbackRate to 1.5, and sought to the clicked 0.5-second comment timestamp.
+- point and range comments persisted; reversed and out-of-duration ranges showed rejection alerts.
+- a PNG attachment rendered inside its comment and appeared exactly once in parent Footage.
+- comment edit cancel returned safely; Delete comment opened an AlertDialog and Cancel returned safely.
+- page reload retained drafts, comments, anchors, attachments, and edited rich text.
+- a browser-produced top-level bold node (`<b>Bold body survives</b>`) rendered as strong after submit and reload.
+- editing that comment to italic `Edited body persists` rendered as emphasis after save and reload.
+- comment Dialog and form operations did not submit or revise the outer task form.
+
+The destructive browser confirmation was not executed; direct authenticated deletion behavior and database cleanup cover the mutation while the browser passed AlertDialog open/cancel/focus/copy.
+
+Verdict: PASS

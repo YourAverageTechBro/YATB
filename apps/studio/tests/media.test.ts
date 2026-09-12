@@ -24,13 +24,14 @@ describe('footage domain', () => {
     expect(expectedPartBytes(size, 2)).toBe(UPLOAD_PART_SIZE)
     expect(expectedPartBytes(size, 3)).toBe(17)
     expect(() => expectedPartBytes(size, 4)).toThrow('Part number')
-    expect(() => parseBeginUpload({ videoId, clientRequestId: requestId, displayName: 'x', byteSize: MAX_UPLOAD_BYTES + 1, contentType: 'video/mp4' })).toThrow('size')
+    expect(() => parseBeginUpload({ videoId, clientRequestId: requestId, displayName: 'x', byteSize: MAX_UPLOAD_BYTES + 1, contentType: 'video/mp4', purpose: { kind: 'footage' } })).toThrow('size')
   })
 
   it('treats an idempotency key as reusable only for identical metadata', () => {
-    const input = parseBeginUpload({ videoId, clientRequestId: requestId, displayName: 'take.mp4', byteSize: 20, contentType: 'video/mp4' })
+    const input = parseBeginUpload({ videoId, clientRequestId: requestId, displayName: 'take.mp4', byteSize: 20, contentType: 'video/mp4', purpose: { kind: 'footage' } })
     expect(sameUpload(input, input)).toBe(true)
     expect(sameUpload(input, { ...input, displayName: 'other.mp4' })).toBe(false)
+    expect(sameUpload(input, { ...input, purpose: { kind: 'draft', durationMs: 1000 } })).toBe(false)
   })
 
   it('parses one satisfiable byte range and rejects multiple or impossible ranges', () => {

@@ -99,7 +99,7 @@ async function begin(cookie, videoId, clientRequestId, name, bytes, contentType 
   return json(await fetch(`${baseUrl}/api/videos/${videoId}/uploads`, {
     method: 'POST',
     headers: requestHeaders(cookie, { 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ clientRequestId, displayName: name, byteSize: bytes.length, contentType }),
+    body: JSON.stringify({ clientRequestId, displayName: name, byteSize: bytes.length, contentType, purpose: { kind: 'footage' } }),
   }))
 }
 
@@ -163,13 +163,14 @@ await sendParts(cookie, owner.id, first, multipartBytes, true)
 let completed = await json(await fetch(`${baseUrl}/api/videos/${owner.id}/uploads/${first.id}/complete`, {
   method: 'POST', headers: requestHeaders(cookie),
 }))
-assert(completed.state === 'ready' && completed.file, 'Multipart upload did not become ready')
+assert(completed.state === 'ready' && completed.result?.kind === 'footage', 'Multipart upload did not become ready')
 assert(!JSON.stringify(completed).match(/object_key|r2_upload_id|initializer_token|etag/i), 'Private R2 state leaked')
+const completedFile = completed.result.file
 
 const storedBefore = database.prepare(
   'SELECT object_key, object_etag FROM media_file WHERE id = ?',
-).get(completed.file.id)
-database.prepare('DELETE FROM media_file WHERE id = ?').run(completed.file.id)
+).get(completedFile.id)
+database.prepare('DELETE FROM media_file WHERE id = ?').run(completedFile.id)
 database.prepare("UPDATE upload_session SET state = 'completing', object_etag = NULL, completed_at = NULL, updated_at = 0 WHERE id = ?").run(first.id)
 completed = await json(await fetch(`${baseUrl}/api/videos/${owner.id}/uploads/${first.id}/complete`, {
   method: 'POST', headers: requestHeaders(cookie),
@@ -177,37 +178,37 @@ completed = await json(await fetch(`${baseUrl}/api/videos/${owner.id}/uploads/${
 assert(completed.state === 'ready', 'R2-complete D1 retry did not recover')
 
 const sourceHash = createHash('sha256').update(multipartBytes).digest('hex')
-const download = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completed.file.id}?download=1`, {
+const download = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completedFile.id}?download=1`, {
   headers: { Cookie: cookie },
 })
 assert(download.ok, `Download returned ${download.status}`)
 const downloadedHash = createHash('sha256').update(Buffer.from(await download.arrayBuffer())).digest('hex')
 assert(downloadedHash === sourceHash, 'Downloaded bytes differ from the source')
 
-const range = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completed.file.id}`, {
+const range = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completedFile.id}`, {
   headers: { Cookie: cookie, Range: 'bytes=33554420-33554450' },
 })
 assert(range.status === 206, `Range returned ${range.status}`)
 assert(range.headers.get('content-range') === `bytes 33554420-33554450/${multipartBytes.length}`, 'Range header is incorrect')
 assert(Buffer.from(await range.arrayBuffer()).equals(multipartBytes.subarray(33554420, 33554451)), 'Range bytes differ')
 
-const renamed = await json(await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completed.file.id}`, {
+const renamed = await json(await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completedFile.id}`, {
   method: 'PATCH',
   headers: requestHeaders(cookie, { 'Content-Type': 'application/json' }),
   body: JSON.stringify({ displayName: 'camera-a-renamed.mp4' }),
 }))
 assert(renamed.displayName === 'camera-a-renamed.mp4', 'Rename did not persist')
-const storedAfter = database.prepare('SELECT object_key, object_etag FROM media_file WHERE id = ?').get(completed.file.id)
+const storedAfter = database.prepare('SELECT object_key, object_etag FROM media_file WHERE id = ?').get(completedFile.id)
 assert(storedAfter.object_key === storedBefore.object_key && storedAfter.object_etag === storedBefore.object_etag, 'Rename changed object identity')
 
-const crossOrigin = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completed.file.id}`, {
+const crossOrigin = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completedFile.id}`, {
   method: 'PATCH',
   headers: { Cookie: cookie, Origin: 'https://attacker.example', 'Content-Type': 'application/json' },
   body: JSON.stringify({ displayName: 'attacker-name.mp4' }),
 })
 assert(crossOrigin.status === 403, `Cross-origin mutation returned ${crossOrigin.status}`)
 
-const isolated = await fetch(`${baseUrl}/api/videos/${other.id}/media/${completed.file.id}`, { headers: { Cookie: cookie } })
+const isolated = await fetch(`${baseUrl}/api/videos/${other.id}/media/${completedFile.id}`, { headers: { Cookie: cookie } })
 assert(isolated.status === 404, `Cross-task media request returned ${isolated.status}`)
 
 const cancelledBytes = Buffer.alloc(34 * 1024 * 1024, 0x5c)
@@ -252,7 +253,7 @@ if (process.env.STUDIO_FOOTAGE_PERF === '1') {
   }
 
   const rangeStarted = performance.now()
-  const firstByte = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completed.file.id}`, {
+  const firstByte = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completedFile.id}`, {
     headers: { Cookie: cookie, Range: 'bytes=0-0' },
   })
   const firstRangeByteMs = performance.now() - rangeStarted
@@ -267,7 +268,7 @@ if (process.env.STUDIO_FOOTAGE_PERF === '1') {
 }
 
 await callServerFunction(ids, cookie, 'removeVideo', { id: owner.id, expectedRevision: owner.revision })
-const hidden = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completed.file.id}`, { headers: { Cookie: cookie } })
+const hidden = await fetch(`${baseUrl}/api/videos/${owner.id}/media/${completedFile.id}`, { headers: { Cookie: cookie } })
 assert(hidden.status === 404, `Tombstoned media returned ${hidden.status}`)
 const scheduled = await fetch(`${baseUrl}/cdn-cgi/local/scheduled?cron=*/15+*+*+*+*`)
 assert(scheduled.ok, `Scheduled cleanup returned ${scheduled.status}`)
