@@ -25,6 +25,8 @@ comparison workflow on the production D1 database and private R2 bucket.
 ## Drive
 
 - Run `apps/studio/scripts/audit-production.sh` before authenticated changes.
+- Run `npm run validate:studio:production` for a dry run. Never append dry-run
+  flags to the production deploy command.
 - Complete one real verification email and one password-reset email. Confirm
   acceptance in Cloudflare Email logs without recording either token.
 - Sign in and run each mapped planning, footage, draft review, and comparison

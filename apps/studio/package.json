@@ -15,7 +15,7 @@
     "deploy": "npm run production:deploy",
     "production:validate": "npm run check && npm run build && wrangler deploy --dry-run",
     "production:migrate": "wrangler d1 migrations apply yatb-studio --remote",
-    "production:deploy": "wrangler deploy"
+    "production:deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.35",

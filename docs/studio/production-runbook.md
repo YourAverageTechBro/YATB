@@ -45,6 +45,9 @@ Wrangler dry run. It does not migrate D1, deploy a Worker, or attach a domain.
 npm run validate:studio:production
 ```
 
+This is the only supported dry-run command. Do not append Wrangler flags to a
+deploy script; npm does not reliably forward them through compound scripts.
+
 Stop here unless the operator has explicitly authorized deployment. Record the
 authorized commit SHA before continuing. The operator delegated deployment and
 cutover authority to the root for STUDIO-07.
@@ -59,8 +62,11 @@ npm run migrate:studio:production
 npm run deploy:studio
 ```
 
-The deploy command only deploys. It does not hide validation or migration. The
-custom-domain entry in `wrangler.jsonc` attaches
+The deploy command always rebuilds before invoking Wrangler, so it cannot reuse
+stale `dist` output. It does not hide validation or migration. Cloudflare
+Workers Builds may build once during its build phase and again here; the second
+build is intentionally redundant and keeps the same command safe for people
+and automation. The custom-domain entry in `wrangler.jsonc` attaches
 `studio.youraveragetechbro.com` and lets Cloudflare own its DNS record and
 certificate.
 
