@@ -1,7 +1,6 @@
 import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { Clapperboard, LogOut } from 'lucide-react'
-import { Button } from '@yatb/ui/button'
-import { ThemeControl } from '#/components/theme-control'
+import { SidebarProvider, SidebarTrigger } from '@yatb/ui/sidebar'
+import { AppSidebar } from '#/components/app-sidebar'
 import { authClient } from '#/lib/auth-client'
 import { loadSession } from '#/server/auth.functions'
 
@@ -24,22 +23,12 @@ function AppLayout() {
   }
 
   return (
-    <div className="workspace-shell">
-      <aside className="sidebar">
-        <a className="wordmark compact" href="/videos"><span>YATB</span> Studio</a>
-        <ThemeControl compact />
-        <nav aria-label="Studio navigation">
-          <a className="nav-item active" href="/videos"><Clapperboard size={17} /> Videos</a>
-        </nav>
-        <div className="account">
-          <span>{session.user.name}</span>
-          <small>{session.user.email}</small>
-          <Button className="quiet-button" variant="ghost" type="button" onClick={() => void signOut()}>
-            <LogOut size={15} /> Sign out
-          </Button>
-        </div>
-      </aside>
-      <Outlet />
-    </div>
+    <SidebarProvider defaultOpen>
+      <AppSidebar user={session.user} onSignOut={() => void signOut()} />
+      <div className="studio-content">
+        <header className="studio-mobile-header"><SidebarTrigger aria-label="Open Studio navigation" /><a className="wordmark" href="/videos"><span>YATB</span> Studio</a></header>
+        <Outlet />
+      </div>
+    </SidebarProvider>
   )
 }

@@ -24,7 +24,9 @@ Preconditions:
 - **Load current state.** Choose `Load latest version` and confirm the winning title is not overwritten.
 - **Delete.** Confirm `Delete video`. The list no longer includes the task.
 - **Probe directly.** Reopen the copied video URL and confirm a 404 response.
-- **Proof.** Capture the conflict, loaded latest state, post-delete list, and not-found page. Query revision and `deleted_at` in D1.
+- **Proof.** Capture the conflict, loaded latest state, post-delete list, and
+  not-found page. Query revision and `deleted_at` in D1 before scheduled cleanup,
+  then run cleanup and confirm the row is absent.
 
 ## Gotchas
 

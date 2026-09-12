@@ -5,8 +5,8 @@ import { Alert, AlertDescription, AlertTitle } from '@yatb/ui/alert'
 import { Button, buttonVariants } from '@yatb/ui/button'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
-import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
 import { Progress } from '@yatb/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { uploadFile, type UploadProgress } from '#/client/upload'
 import { type Draft } from '#/domain/reviews'
 import { loadDrafts } from '#/server/reviews.functions'
@@ -115,7 +115,7 @@ export function ReviewWorkspace({ videoId, onFootageChanged }: { videoId: string
     {drafts.length === 0 && uploads.length === 0
       ? <p className="footage-empty">Upload the first edit to start a timestamped review.</p>
       : <>
-        {selected && <div className="draft-selector"><Label>Draft version<NativeSelect value={selected.id} onChange={(event) => setSelectedId(event.target.value)}>{drafts.map((draft) => <NativeSelectOption key={draft.id} value={draft.id}>Version {draft.version} · {draft.file.displayName}</NativeSelectOption>)}</NativeSelect></Label><div className="draft-selector-actions"><small>{drafts.length} immutable {drafts.length === 1 ? 'version' : 'versions'} · newest first</small>{drafts.length >= 2 && <Link className={buttonVariants({ variant: 'outline' })} to="/videos/$videoId/compare" params={{ videoId }}>Compare versions</Link>}</div></div>}
+        {selected && <div className="draft-selector"><Label>Draft version<Select value={selected.id} onValueChange={setSelectedId}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{drafts.map((draft) => <SelectItem key={draft.id} value={draft.id}>Version {draft.version} · {draft.file.displayName}</SelectItem>)}</SelectContent></Select></Label><div className="draft-selector-actions"><small>{drafts.length} immutable {drafts.length === 1 ? 'version' : 'versions'} · newest first</small>{drafts.length >= 2 && <Link className={buttonVariants({ variant: 'outline' })} to="/videos/$videoId/compare" params={{ videoId }}>Compare versions</Link>}</div></div>}
         {selected && <ReviewPane key={selected.id} draft={selected} onFootageChanged={onFootageChanged} />}
       </>}
   </section>

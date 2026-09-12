@@ -1,5 +1,5 @@
 import { Button } from '@yatb/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@yatb/ui/sheet'
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@yatb/ui/sheet'
 import { Menu } from 'lucide-react'
 import { useState } from 'react'
 
@@ -22,6 +22,7 @@ export function MobileNav() {
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-[250px] sm:w-[300px]">
+        <SheetTitle className="sr-only">Site navigation</SheetTitle>
         <nav className="flex flex-col gap-6 ml-6 mt-10">
           {links.map((link) => (
             <a

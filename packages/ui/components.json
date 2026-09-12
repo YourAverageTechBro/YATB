@@ -13,11 +13,11 @@
   "iconLibrary": "lucide",
   "rtl": false,
   "aliases": {
-    "components": "@yatb/ui",
-    "utils": "@yatb/ui/lib/utils",
-    "ui": "@yatb/ui",
-    "lib": "@yatb/ui/lib",
-    "hooks": "@yatb/ui/hooks"
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
   },
   "registries": {}
 }

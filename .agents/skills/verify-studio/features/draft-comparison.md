@@ -25,7 +25,10 @@ An authenticated user reviews two distinct immutable drafts of one video side by
 - **Playback.** Play and seek only the left player. Change only the right `Playback speed`, volume, and mute. Read both media elements' actual `paused`, `currentTime`, `playbackRate`, `volume`, and `muted` values. Fullscreen either player and exit with Escape without changing the other side.
 - **Markers.** Add distinct point and range comments on each side. Confirm only that side's timeline gains the corresponding ticks and spans. Seek with each comment timestamp button and confirm only its own player moves. Switch one draft and confirm its markers change while the other side's playback stays intact.
 - **Comments.** Add a rich point comment on the left and a rich range comment on the right. Confirm each appears only under its selected version. Edit and cancel deletion through the same controls as single review.
-- **Scroll.** Overflow both comment lists at desktop width. Scroll each named comments region and confirm the other region and both composers stay still. At 390 pixels, confirm both panes return to natural page scrolling.
+- **Scroll.** Overflow both comment lists at desktop width. Scroll each named
+  comments region and confirm the other region and both composers stay still.
+  At 390 pixels, confirm the panes stack and each bounded comments region still
+  scrolls independently.
 - **Download.** Download each side and confirm attachment disposition, exact filename, and bytes match that selected draft. Change one selector and confirm only that side's download target changes.
 - **Identity.** Type unfinished comment text on the right, switch the left draft, and confirm the right text and player state remain. Switch back and confirm persisted comments remain on their original draft.
 - **Boundaries.** Request an identical pair and a pair containing a draft from another task. Confirm both return the generic unavailable result without foreign metadata.

@@ -10,7 +10,8 @@ An authenticated user uploads immutable edit versions, reviews them with custom 
 - `draft-playback` supports authenticated media delivery, play and pause, timeline scrubbing, elapsed time, volume, mute, playback speed, and fullscreen.
 - `comment-markers` paints yellow point ticks and range spans on the saved draft timeline. Coincident points share one thicker tick.
 - `draft-download` downloads the selected version through the authenticated media route with its exact filename and bytes.
-- `review-layout` places the player beside a fixed composer and independently scrollable comments on desktop. Mobile uses page scrolling.
+- `review-layout` places the player beside a fixed composer and independently
+  scrollable comments on desktop. Mobile stacks the same bounded comment region.
 - `comment-point` stores a rich comment at one bounded integer millisecond timestamp with author identity.
 - `comment-range` stores a rich comment whose start is before its end and whose end does not exceed the draft duration.
 - `comment-seek` moves the active player to a clicked point or range start.
@@ -41,7 +42,10 @@ Preconditions:
 - **Download.** Select each version and activate its `Download version <number>: <filename>` link. Confirm HTTP `200`, `Content-Disposition: attachment`, the exact filename, and bytes identical to that version's upload. Request the same URL without a session and confirm `401`.
 - **Desktop rail.** At desktop width, confirm the player is left of the composer and comments. Add enough comments to overflow `Comments for version <number>`. Scroll that region and confirm the player and composer positions stay fixed. Focus the region with Tab and scroll it with the keyboard.
 - **Containment.** Use range timing, paste a long unbroken URL into the editor, and select 12 attachments with long names. Confirm the editor and attachment list stay bounded, every form control remains reachable, and no horizontal page overflow appears. Exercise edit and delete controls on a long comment.
-- **Mobile flow.** At 390 and 320 pixels wide, confirm player controls wrap without horizontal overflow or covering the timeline. Confirm the player, composer, and comments stack in that order and the page scrolls naturally.
+- **Mobile flow.** At 390 and 320 pixels wide, confirm player controls wrap
+  without horizontal overflow or covering the timeline. Confirm the player,
+  composer, and comments stack in that order and the bounded comments region
+  scrolls independently.
 - **Point.** Pause the player, choose point timing, format a rich `Review comment`, attach an image, and choose `Add comment`. Reload and confirm author, timestamp, rich body, and attachment persist.
 - **Range.** Choose range timing, capture start and end with `Use playhead`, and save. Reject an end before start and a timestamp beyond known duration; confirm D1 contains neither invalid row.
 - **Seek.** Click each comment timestamp. Confirm actual player time equals the point or range start.

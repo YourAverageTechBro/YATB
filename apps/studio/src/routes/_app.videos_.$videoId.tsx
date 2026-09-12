@@ -6,7 +6,7 @@ import { Button } from '@yatb/ui/button'
 import { Card } from '@yatb/ui/card'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
-import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { FootageSection } from '#/components/footage-section'
 import { RichEditor } from '#/components/rich-editor'
 import { ReviewWorkspace } from '#/components/review-workspace'
@@ -117,9 +117,9 @@ function VideoDetail() {
         <form onSubmit={(event) => void submit(event)}>
           <Label>Title<Input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} required /></Label>
           <div className="field-grid">
-            <Label>Format<NativeSelect value={format} onChange={(event) => { const next = event.target.value as VideoFormat; setFormat(next); setPromotion('organic') }}><NativeSelectOption value="short">Short</NativeSelectOption><NativeSelectOption value="long">Long</NativeSelectOption></NativeSelect></Label>
-            <Label>Promotion<NativeSelect value={promotion} onChange={(event) => setPromotion(event.target.value as typeof promotion)}>{legalPromotions(format).map((item) => <NativeSelectOption key={item} value={item}>{item}</NativeSelectOption>)}</NativeSelect></Label>
-            <Label>Status<NativeSelect value={status} onChange={(event) => setStatus(event.target.value as typeof status)}>{Object.entries(STATUS).map(([key, item]) => <NativeSelectOption key={key} value={key}>{item.label}</NativeSelectOption>)}</NativeSelect></Label>
+            <Label>Format<Select value={format} onValueChange={(value) => { const next = value as VideoFormat; setFormat(next); setPromotion('organic') }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select></Label>
+            <Label>Promotion<Select value={promotion} onValueChange={(value) => setPromotion(value as typeof promotion)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{legalPromotions(format).map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Label>
+            <Label>Status<Select value={status} onValueChange={(value) => setStatus(value as typeof status)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS).map(([key, item]) => <SelectItem key={key} value={key}>{item.label}</SelectItem>)}</SelectContent></Select></Label>
             <Label>Publish date<Input type="date" value={publishDate} onChange={(event) => setPublishDate(event.target.value)} /></Label>
           </div>
           <Label>Script<RichEditor value={script} onChange={setScript} /></Label>

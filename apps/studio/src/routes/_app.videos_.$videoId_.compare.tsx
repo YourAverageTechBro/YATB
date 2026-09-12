@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@yatb/ui/alert'
 import { Label } from '@yatb/ui/label'
-import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { useEffect } from 'react'
 import { ReviewPane } from '#/components/review-pane'
 import { parseComparisonQuery, partitionComparison, type ComparisonSelection, type Draft } from '#/domain/reviews'
@@ -52,11 +52,11 @@ function ComparisonPage() {
       ? <Alert><AlertTitle>Comparison unavailable</AlertTitle><AlertDescription>Upload at least two drafts to compare versions.</AlertDescription></Alert>
       : <div className="comparison-grid">
         <section className="comparison-side" aria-labelledby="left-draft-heading">
-          <header><div><p className="eyebrow">Left side</p><h2 id="left-draft-heading">Version {pair.left.version}</h2></div><Label>Left draft<NativeSelect value={pair.left.id} onChange={(event) => select(pair, 'left', event.target.value)}>{model.drafts.map((draft) => <NativeSelectOption key={draft.id} value={draft.id} disabled={draft.id === pair.right.id}>Version {draft.version} · {draft.file.displayName}</NativeSelectOption>)}</NativeSelect></Label></header>
+          <header><div><p className="eyebrow">Left side</p><h2 id="left-draft-heading">Version {pair.left.version}</h2></div><Label>Left draft<Select value={pair.left.id} onValueChange={(value) => select(pair, 'left', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{model.drafts.map((draft) => <SelectItem key={draft.id} value={draft.id} disabled={draft.id === pair.right.id}>Version {draft.version} · {draft.file.displayName}</SelectItem>)}</SelectContent></Select></Label></header>
           <ReviewPane key={`left:${pair.left.id}`} draft={pair.left} />
         </section>
         <section className="comparison-side" aria-labelledby="right-draft-heading">
-          <header><div><p className="eyebrow">Right side</p><h2 id="right-draft-heading">Version {pair.right.version}</h2></div><Label>Right draft<NativeSelect value={pair.right.id} onChange={(event) => select(pair, 'right', event.target.value)}>{model.drafts.map((draft) => <NativeSelectOption key={draft.id} value={draft.id} disabled={draft.id === pair.left.id}>Version {draft.version} · {draft.file.displayName}</NativeSelectOption>)}</NativeSelect></Label></header>
+          <header><div><p className="eyebrow">Right side</p><h2 id="right-draft-heading">Version {pair.right.version}</h2></div><Label>Right draft<Select value={pair.right.id} onValueChange={(value) => select(pair, 'right', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{model.drafts.map((draft) => <SelectItem key={draft.id} value={draft.id} disabled={draft.id === pair.left.id}>Version {draft.version} · {draft.file.displayName}</SelectItem>)}</SelectContent></Select></Label></header>
           <ReviewPane key={`right:${pair.right.id}`} draft={pair.right} />
         </section>
       </div>}
