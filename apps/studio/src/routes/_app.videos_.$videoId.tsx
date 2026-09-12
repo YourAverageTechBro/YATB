@@ -9,6 +9,7 @@ import { Label } from '@yatb/ui/label'
 import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
 import { FootageSection } from '#/components/footage-section'
 import { RichEditor } from '#/components/rich-editor'
+import { ReviewWorkspace } from '#/components/review-workspace'
 import {
   DEFAULT_LIST_CONFIG,
   STATUS,
@@ -47,6 +48,7 @@ function VideoDetail() {
   const [publishDate, setPublishDate] = useState(loaded.publishDate ?? '')
   const [script, setScript] = useState<RichDocument>(loaded.script)
   const [conflict, setConflict] = useState<Video | null>(null)
+  const [footageRevision, setFootageRevision] = useState(0)
 
   useEffect(() => {
     setVideo(loaded)
@@ -133,7 +135,8 @@ function VideoDetail() {
           </footer>
         </form>
       </Card>
-      <FootageSection videoId={video.id} />
+      <ReviewWorkspace videoId={video.id} onFootageChanged={() => setFootageRevision((value) => value + 1)} />
+      <FootageSection videoId={video.id} refreshToken={footageRevision} />
     </main>
   )
 }

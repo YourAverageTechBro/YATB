@@ -3,9 +3,10 @@ import { Button } from '@yatb/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@yatb/ui/dialog'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
-import { emptyRichDocument, type RichDocument, type RichInline, type RichMark } from '#/server/rich-document'
+import { type RichDocument, type RichInline, type RichMark } from '#/server/rich-document'
+import { assembleRichDocument, type RichEditorFlowNode } from './rich-editor-model'
 
-type Props = Readonly<{ value: RichDocument; onChange: (value: RichDocument) => void }>
+type Props = Readonly<{ value: RichDocument; onChange: (value: RichDocument) => void; ariaLabel?: string }>
 type SelectionPoint = Readonly<{ path: readonly number[]; offset: number }>
 type SelectionSnapshot = Readonly<{ start: SelectionPoint; end: SelectionPoint; text: string }>
 
@@ -75,11 +76,14 @@ function block(element: Element): RichDocument['content'][number] | null {
 }
 
 function readDocument(root: HTMLElement): RichDocument {
-  const content = Array.from(root.children).flatMap((element) => {
-    const parsed = block(element)
-    return parsed ? [parsed] : []
+  const flow = Array.from(root.childNodes).map((node): RichEditorFlowNode => {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const parsed = block(node as Element)
+      if (parsed) return { kind: 'block', value: parsed }
+    }
+    return { kind: 'inline', value: inlines([node]) }
   })
-  return content.length ? { type: 'doc', content } : emptyRichDocument()
+  return assembleRichDocument(flow)
 }
 
 function selectionPoint(root: HTMLElement, node: Node, offset: number): SelectionPoint | null {
@@ -106,7 +110,7 @@ function resolveSelectionPoint(root: HTMLElement, point: SelectionPoint): Node |
   return current
 }
 
-export function RichEditor({ value, onChange }: Props) {
+export function RichEditor({ value, onChange, ariaLabel = 'Video script' }: Props) {
   const editor = useRef<HTMLDivElement>(null)
   const renderedHtml = useRef('')
   const pendingLocalHtml = useRef<string | null>(null)
@@ -212,8 +216,8 @@ export function RichEditor({ value, onChange }: Props) {
   }
 
   return (
-    <section className="rich-editor" aria-label="Video script">
-      <div className="rich-toolbar" aria-label="Script formatting">
+    <section className="rich-editor" aria-label={ariaLabel}>
+      <div className="rich-toolbar" aria-label={`${ariaLabel} formatting`}>
         <Button variant="outline" size="sm" type="button" onClick={() => command('formatBlock', 'h2')}>Heading</Button>
         <Button variant="outline" size="sm" type="button" onClick={() => command('insertUnorderedList')}>Bullets</Button>
         <Button variant="outline" size="sm" type="button" onClick={() => command('insertOrderedList')}>Numbered</Button>

@@ -29,7 +29,7 @@ function formatBytes(bytes: number): string {
   return `${Math.ceil(bytes / 1024)} KB`
 }
 
-export function FootageSection({ videoId }: { videoId: string }) {
+export function FootageSection({ videoId, refreshToken = 0 }: { videoId: string; refreshToken?: number }) {
   const [files, setFiles] = useState<MediaFile[]>([])
   const [pending, setPending] = useState<Pending[]>([])
   const [rename, setRename] = useState<{ fileId: string; value: string; pending: boolean; error?: string } | null>(null)
@@ -40,7 +40,7 @@ export function FootageSection({ videoId }: { videoId: string }) {
     setFiles(await json<MediaFile[]>(await fetch(`/api/videos/${videoId}/media`, { credentials: 'same-origin' })))
   }
 
-  useEffect(() => { void refresh() }, [videoId])
+  useEffect(() => { void refresh() }, [videoId, refreshToken])
 
   async function runQueue(items: Pending[]) {
     queue.current.push(...items)
@@ -54,10 +54,12 @@ export function FootageSection({ videoId }: { videoId: string }) {
         try {
           const file = await uploadFile(videoId, item.file, {
             clientRequestId: item.id,
+            purpose: { kind: 'footage' },
             signal: item.controller.signal,
             onProgress: (progress) => setPending((current) => current.map((entry) => entry.id === item.id ? { ...entry, progress } : entry)),
           })
-          setFiles((current) => [file, ...current.filter((entry) => entry.id !== file.id)])
+          if (file.kind !== 'footage') throw new Error('Footage upload returned an invalid result.')
+          setFiles((current) => [file.file, ...current.filter((entry) => entry.id !== file.file.id)])
           setPending((current) => current.filter((entry) => entry.id !== item.id))
         } catch (error) {
           if (item.controller.signal.aborted) {
