@@ -1,11 +1,17 @@
 import { parseVideoId, type VideoId } from './videos'
+import type { Draft } from './reviews'
 
 export const UPLOAD_PART_SIZE = 32 * 1024 * 1024
 export const MAX_UPLOAD_PARTS = 10_000
 export const MAX_UPLOAD_BYTES = UPLOAD_PART_SIZE * MAX_UPLOAD_PARTS
+export const MAX_DRAFT_DURATION_MS = 24 * 60 * 60 * 1000
 
 export type UploadSessionId = string
 export type MediaFileId = string
+export type MediaPurpose = 'footage' | 'draft'
+export type UploadPurpose =
+  | Readonly<{ kind: 'footage' }>
+  | Readonly<{ kind: 'draft'; durationMs: number }>
 export type UploadState =
   | 'initializing'
   | 'uploading'
@@ -17,6 +23,7 @@ export type UploadState =
 export type MediaFile = Readonly<{
   id: MediaFileId
   videoId: VideoId
+  purpose: MediaPurpose
   displayName: string
   byteSize: number
   contentType: string
@@ -24,19 +31,27 @@ export type MediaFile = Readonly<{
   updatedAt: number
 }>
 
-export type UploadSnapshot = Readonly<{
+type UploadSnapshotBase = Readonly<{
   id: UploadSessionId
   fileId: MediaFileId
   videoId: VideoId
   displayName: string
   byteSize: number
   contentType: string
+  purpose: UploadPurpose
   partSize: number
   partCount: number
   uploadedParts: readonly number[]
-  state: UploadState
-  file: MediaFile | null
 }>
+
+export type ReadyUpload =
+  | Readonly<{ kind: 'footage'; file: MediaFile }>
+  | Readonly<{ kind: 'draft'; file: MediaFile; draft: Draft }>
+
+export type UploadSnapshot = UploadSnapshotBase & (
+  | Readonly<{ state: Exclude<UploadState, 'ready'>; result: null }>
+  | Readonly<{ state: 'ready'; result: ReadyUpload }>
+)
 
 export type BeginUpload = Readonly<{
   videoId: VideoId
@@ -44,6 +59,7 @@ export type BeginUpload = Readonly<{
   displayName: string
   byteSize: number
   contentType: string
+  purpose: UploadPurpose
 }>
 
 export type ByteRange = Readonly<{ offset: number; length: number }>
@@ -82,6 +98,23 @@ export function parseContentType(value: unknown): string {
   return type
 }
 
+export function parseDurationMs(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1 || value > MAX_DRAFT_DURATION_MS) {
+    return invalid('Draft duration is invalid.')
+  }
+  return value
+}
+
+export function parseUploadPurpose(value: unknown, contentType: string): UploadPurpose {
+  const input = record(value)
+  if (input.kind === 'footage') return { kind: 'footage' }
+  if (input.kind !== 'draft') return invalid('Upload purpose is invalid.')
+  if (!/^(?:video\/(?:mp4|webm|ogg))$/.test(contentType)) {
+    return invalid('Drafts must use a supported video format.')
+  }
+  return { kind: 'draft', durationMs: parseDurationMs(input.durationMs) }
+}
+
 export function parseByteSize(value: unknown): number {
   if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1 || value > MAX_UPLOAD_BYTES) {
     return invalid('File size is invalid.')
@@ -91,12 +124,14 @@ export function parseByteSize(value: unknown): number {
 
 export function parseBeginUpload(value: unknown): BeginUpload {
   const input = record(value)
+  const contentType = parseContentType(input.contentType)
   return {
     videoId: parseVideoId(input.videoId),
     clientRequestId: parseMediaId(input.clientRequestId),
     displayName: parseDisplayName(input.displayName),
     byteSize: parseByteSize(input.byteSize),
-    contentType: parseContentType(input.contentType),
+    contentType,
+    purpose: parseUploadPurpose(input.purpose, contentType),
   }
 }
 
@@ -145,6 +180,9 @@ export function sameUpload(left: BeginUpload, right: Omit<BeginUpload, 'videoId'
     && left.displayName === right.displayName
     && left.byteSize === right.byteSize
     && left.contentType === right.contentType
+    && left.purpose.kind === right.purpose.kind
+    && (left.purpose.kind === 'footage'
+      || (right.purpose.kind === 'draft' && left.purpose.durationMs === right.purpose.durationMs))
 }
 
 export function cleanupDelay(attempt: number): number {

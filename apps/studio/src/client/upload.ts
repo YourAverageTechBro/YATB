@@ -1,4 +1,4 @@
-import type { MediaFile, UploadSnapshot } from '#/domain/media'
+import type { ReadyUpload, UploadPurpose, UploadSnapshot } from '#/domain/media'
 
 export type UploadProgress = Readonly<{
   sentBytes: number
@@ -9,7 +9,8 @@ export type UploadProgress = Readonly<{
 
 type UploadOptions = Readonly<{
   clientRequestId: string
-  signal: AbortSignal
+  purpose: UploadPurpose
+  signal?: AbortSignal
   onProgress: (progress: UploadProgress) => void
 }>
 
@@ -51,7 +52,7 @@ async function retry<T>(action: () => Promise<T>, signal?: AbortSignal): Promise
 function sendPart(
   url: string,
   blob: Blob,
-  signal: AbortSignal,
+  signal: AbortSignal | undefined,
   onProgress: (loaded: number) => void,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -70,8 +71,8 @@ function sendPart(
     request.onerror = () => reject(new Error('Part upload lost its network connection.'))
     request.onabort = () => reject(new DOMException('Upload cancelled.', 'AbortError'))
     const abort = () => request.abort()
-    signal.addEventListener('abort', abort, { once: true })
-    request.onloadend = () => signal.removeEventListener('abort', abort)
+    signal?.addEventListener('abort', abort, { once: true })
+    request.onloadend = () => signal?.removeEventListener('abort', abort)
     request.send(blob)
   })
 }
@@ -80,7 +81,7 @@ export async function uploadFile(
   videoId: string,
   file: File,
   options: UploadOptions,
-): Promise<MediaFile> {
+): Promise<ReadyUpload> {
   const base = `/api/videos/${encodeURIComponent(videoId)}/uploads`
   let upload = await retry(async () => responseJson<UploadSnapshot>(await fetch(base, {
     method: 'POST',
@@ -91,6 +92,7 @@ export async function uploadFile(
       displayName: file.name,
       byteSize: file.size,
       contentType: file.type || 'application/octet-stream',
+      purpose: options.purpose,
     }),
   })), options.signal)
   while (upload.state === 'initializing') {
@@ -100,7 +102,7 @@ export async function uploadFile(
       options.signal,
     )
   }
-  if (upload.state === 'ready' && upload.file) return upload.file
+  if (upload.state === 'ready') return upload.result
   if (upload.state !== 'uploading') throw new Error('Upload is not available.')
 
   const persisted = new Set(upload.uploadedParts)
@@ -145,10 +147,10 @@ export async function uploadFile(
         method: 'POST', credentials: 'same-origin',
       })), options.signal)
     }
-    if (complete.state !== 'ready' || !complete.file) throw new Error('Upload completion did not publish a file.')
-    return complete.file
+    if (complete.state !== 'ready') throw new Error('Upload completion did not publish a file.')
+    return complete.result
   } catch (error) {
-    if (options.signal.aborted) {
+    if (options.signal?.aborted) {
       await fetch(`${base}/${upload.id}`, { method: 'DELETE', credentials: 'same-origin' }).catch(() => undefined)
     }
     throw error

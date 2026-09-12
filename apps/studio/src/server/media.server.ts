@@ -7,10 +7,13 @@ import {
   sameUpload,
   UPLOAD_PART_SIZE,
   type BeginUpload,
+  type MediaPurpose,
   type MediaFile,
+  type ReadyUpload,
   type UploadSnapshot,
   type UploadState,
 } from '#/domain/media'
+import type { Draft, ReviewAuthor } from '#/domain/reviews'
 import { ACTIVE_VIDEO_SQL } from './video-sql'
 
 type Bindings = Cloudflare.Env & { DB: D1Database; MEDIA: R2Bucket }
@@ -35,6 +38,9 @@ type UploadRow = {
   display_name: string
   byte_size: number
   content_type: string
+  purpose: MediaPurpose
+  draft_id: string | null
+  draft_duration_ms: number | null
   part_size: number
   part_count: number
   state: UploadState
@@ -49,16 +55,29 @@ type FileRow = {
   display_name: string
   byte_size: number
   content_type: string
+  purpose: MediaPurpose
   created_at: number
   updated_at: number
 }
 
 type StoredFileRow = FileRow & { object_key: string; object_etag: string }
 
+type DraftRow = {
+  id: string
+  video_id: string
+  version: number
+  duration_ms: number
+  created_at: number
+  user_id: string
+  user_name: string
+  user_email: string
+}
+
 function publicFile(row: FileRow): MediaFile {
   return {
     id: row.id,
     videoId: row.video_id,
+    purpose: row.purpose,
     displayName: row.display_name,
     byteSize: row.byte_size,
     contentType: row.content_type,
@@ -96,31 +115,74 @@ async function parts(id: string): Promise<Array<{ part_number: number; byte_size
 
 async function storedFile(fileId: string, videoId: string): Promise<StoredFileRow | null> {
   return bindings.DB.prepare(
-    `SELECT f.id, f.video_id, f.display_name, f.byte_size, f.content_type,
+    `SELECT f.id, f.video_id, f.display_name, f.byte_size, f.content_type, f.purpose,
             f.object_key, f.object_etag, f.created_at, f.updated_at
      FROM media_file f JOIN video v ON v.id = f.video_id
      WHERE f.id = ? AND f.video_id = ? AND v.${ACTIVE_VIDEO_SQL}`,
   ).bind(fileId, videoId).first<StoredFileRow>()
 }
 
+function publicAuthor(row: DraftRow): ReviewAuthor {
+  return { id: row.user_id, name: row.user_name, email: row.user_email }
+}
+
+async function storedDraft(fileId: string, videoId: string, file: MediaFile): Promise<Draft | null> {
+  const row = await bindings.DB.prepare(
+    `SELECT d.id, d.video_id, d.version, d.duration_ms, d.created_at,
+            u.id AS user_id, u.name AS user_name, u.email AS user_email
+     FROM draft d JOIN user u ON u.id = d.created_by_user_id
+     WHERE d.media_file_id = ? AND d.video_id = ?`,
+  ).bind(fileId, videoId).first<DraftRow>()
+  return row && {
+    id: row.id,
+    videoId: row.video_id,
+    version: row.version,
+    durationMs: row.duration_ms,
+    file,
+    author: publicAuthor(row),
+    createdAt: row.created_at,
+  }
+}
+
+function uploadPurpose(row: UploadRow): BeginUpload['purpose'] {
+  if (row.purpose === 'footage') return { kind: 'footage' }
+  if (row.draft_duration_ms === null) throw new MediaError(500, 'Draft duration is missing.')
+  return { kind: 'draft', durationMs: row.draft_duration_ms }
+}
+
 async function snapshot(row: UploadRow): Promise<UploadSnapshot> {
-  const [receipts, file] = await Promise.all([
+  const [receipts, stored] = await Promise.all([
     parts(row.id),
     row.state === 'ready' ? storedFile(row.file_id, row.video_id) : Promise.resolve(null),
   ])
-  return {
+  let result: ReadyUpload | null = null
+  if (stored) {
+    const file = publicFile(stored)
+    if (row.purpose === 'footage') result = { kind: 'footage', file }
+    else {
+      const draft = await storedDraft(row.file_id, row.video_id, file)
+      if (!draft) throw new MediaError(500, 'Draft publication is incomplete.')
+      result = { kind: 'draft', file, draft }
+    }
+  }
+  const base = {
     id: row.id,
     fileId: row.file_id,
     videoId: row.video_id,
     displayName: row.display_name,
     byteSize: row.byte_size,
     contentType: row.content_type,
+    purpose: uploadPurpose(row),
     partSize: row.part_size,
     partCount: row.part_count,
     uploadedParts: receipts.map((part) => part.part_number),
     state: row.state,
-    file: file && publicFile(file),
   }
+  if (row.state === 'ready') {
+    if (!result) throw new MediaError(500, 'Upload publication is incomplete.')
+    return { ...base, state: 'ready', result }
+  }
+  return { ...base, state: row.state, result: null }
 }
 
 function matchesInput(row: UploadRow, input: BeginUpload): boolean {
@@ -129,6 +191,7 @@ function matchesInput(row: UploadRow, input: BeginUpload): boolean {
     displayName: row.display_name,
     byteSize: row.byte_size,
     contentType: row.content_type,
+    purpose: uploadPurpose(row),
   })
 }
 
@@ -171,12 +234,15 @@ export async function beginUpload(input: BeginUpload, userId: string): Promise<U
     `INSERT OR IGNORE INTO upload_session (
        id, video_id, created_by_user_id, client_request_id, file_id, object_key,
        initializer_token, initializer_lease_until, display_name, byte_size, content_type,
+       purpose, draft_id, draft_duration_ms,
        part_size, part_count, state, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'initializing', ?, ?)`,
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'initializing', ?, ?)`,
   ).bind(
     id, input.videoId, userId, input.clientRequestId, fileId,
-    `videos/${input.videoId}/footage/${fileId}`, token, now + 30_000,
-    input.displayName, input.byteSize, input.contentType, UPLOAD_PART_SIZE,
+    `videos/${input.videoId}/${input.purpose.kind === 'draft' ? 'drafts' : 'footage'}/${fileId}`,
+    token, now + 30_000, input.displayName, input.byteSize, input.contentType,
+    input.purpose.kind, input.purpose.kind === 'draft' ? crypto.randomUUID() : null,
+    input.purpose.kind === 'draft' ? input.purpose.durationMs : null, UPLOAD_PART_SIZE,
     partCount(input.byteSize), now, now,
   ).run()
   let row = await uploadByRequest(input, userId)
@@ -228,23 +294,70 @@ function objectMatches(row: UploadRow, object: R2Object | null): object is R2Obj
     && object.customMetadata?.expectedSize === String(row.byte_size)
 }
 
+function mediaInsert(row: UploadRow, object: R2Object, now: number): D1PreparedStatement {
+  return bindings.DB.prepare(
+    `INSERT OR IGNORE INTO media_file (
+       id, video_id, created_by_user_id, upload_session_id, object_key, display_name,
+       byte_size, content_type, object_etag, purpose, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).bind(
+    row.file_id, row.video_id, row.created_by_user_id, row.id, row.object_key,
+    row.display_name, row.byte_size, row.content_type, object.etag, row.purpose, now, now,
+  )
+}
+
+function readyUpdate(row: UploadRow, object: R2Object, now: number): D1PreparedStatement {
+  return bindings.DB.prepare(
+    `UPDATE upload_session SET state = 'ready', object_etag = ?, completed_at = ?, updated_at = ?
+     WHERE id = ? AND state IN ('completing', 'ready')`,
+  ).bind(object.etag, now, now, row.id)
+}
+
+function draftVersionConflict(error: unknown): boolean {
+  return error instanceof Error && /UNIQUE constraint failed: draft\.video_id, draft\.version/.test(error.message)
+}
+
 async function publish(row: UploadRow, object: R2Object): Promise<UploadSnapshot> {
   const now = Date.now()
-  await bindings.DB.batch([
-    bindings.DB.prepare(
-      `INSERT OR IGNORE INTO media_file (
-         id, video_id, created_by_user_id, upload_session_id, object_key, display_name,
-         byte_size, content_type, object_etag, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).bind(
-      row.file_id, row.video_id, row.created_by_user_id, row.id, row.object_key,
-      row.display_name, row.byte_size, row.content_type, object.etag, now, now,
-    ),
-    bindings.DB.prepare(
-      `UPDATE upload_session SET state = 'ready', object_etag = ?, completed_at = ?, updated_at = ?
-       WHERE id = ? AND state IN ('completing', 'ready')`,
-    ).bind(object.etag, now, now, row.id),
-  ])
+  if (row.purpose === 'footage') {
+    await bindings.DB.batch([mediaInsert(row, object, now), readyUpdate(row, object, now)])
+  } else {
+    if (!row.draft_id || row.draft_duration_ms === null) throw new MediaError(500, 'Draft publication data is missing.')
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const existing = await bindings.DB.prepare(
+        'SELECT id FROM draft WHERE media_file_id = ? AND video_id = ?',
+      ).bind(row.file_id, row.video_id).first<{ id: string }>()
+      if (existing) {
+        await readyUpdate(row, object, now).run()
+        break
+      }
+      try {
+        await bindings.DB.batch([
+          mediaInsert(row, object, now),
+          bindings.DB.prepare(
+            `INSERT INTO draft (
+               id, video_id, media_file_id, version, duration_ms, created_by_user_id, created_at
+             ) SELECT ?, ?, ?, COALESCE(MAX(version), 0) + 1, ?, ?, ?
+               FROM draft WHERE video_id = ?`,
+          ).bind(
+            row.draft_id, row.video_id, row.file_id, row.draft_duration_ms,
+            row.created_by_user_id, now, row.video_id,
+          ),
+          readyUpdate(row, object, now),
+        ])
+        break
+      } catch (error) {
+        const winner = await bindings.DB.prepare(
+          'SELECT id FROM draft WHERE media_file_id = ? AND video_id = ?',
+        ).bind(row.file_id, row.video_id).first<{ id: string }>()
+        if (winner) {
+          await readyUpdate(row, object, now).run()
+          break
+        }
+        if (!draftVersionConflict(error) || attempt === 7) throw error
+      }
+    }
+  }
   const ready = await uploadRow(row.id, row.video_id)
   if (!ready || ready.state !== 'ready') throw new MediaError(500, 'File publication did not finish.')
   return snapshot(ready)
@@ -334,15 +447,15 @@ export async function cancelUpload(videoId: string, id: string): Promise<UploadS
 export async function listMedia(videoId: string): Promise<MediaFile[]> {
   if (!(await activeVideoExists(videoId))) throw new MediaError(404, 'Video not found.')
   const result = await bindings.DB.prepare(
-    `SELECT id, video_id, display_name, byte_size, content_type, created_at, updated_at
-     FROM media_file WHERE video_id = ? ORDER BY created_at DESC, id ASC`,
+    `SELECT id, video_id, display_name, byte_size, content_type, purpose, created_at, updated_at
+     FROM media_file WHERE video_id = ? AND purpose = 'footage' ORDER BY created_at DESC, id ASC`,
   ).bind(videoId).all<FileRow>()
   return result.results.map(publicFile)
 }
 
 export async function renameMedia(videoId: string, fileId: string, displayName: string): Promise<MediaFile> {
   const result = await bindings.DB.prepare(
-    `UPDATE media_file SET display_name = ?, updated_at = ? WHERE id = ? AND video_id = ?
+    `UPDATE media_file SET display_name = ?, updated_at = ? WHERE id = ? AND video_id = ? AND purpose = 'footage'
        AND EXISTS (SELECT 1 FROM video WHERE id = ? AND ${ACTIVE_VIDEO_SQL})`,
   ).bind(displayName, Date.now(), fileId, videoId, videoId).run()
   if (result.meta.changes !== 1) throw new MediaError(404, 'File not found.')

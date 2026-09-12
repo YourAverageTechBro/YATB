@@ -151,7 +151,8 @@ export function handleMediaRead(
       'X-Content-Type-Options': 'nosniff',
     })
     const url = new URL(request.url)
-    const inline = /^(?:video\/(?:mp4|webm|ogg))$/.test(file.content_type) && url.searchParams.get('download') !== '1'
+    const inline = /^(?:video\/(?:mp4|webm|ogg)|image\/(?:png|jpeg|gif|webp|avif))$/.test(file.content_type)
+      && url.searchParams.get('download') !== '1'
     headers.set('Content-Disposition', contentDisposition(file.display_name, !inline))
     let range
     try {
