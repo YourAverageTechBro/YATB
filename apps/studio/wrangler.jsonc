@@ -4,10 +4,11 @@
   "account_id": "32967fffa44c1d38bc86ab6e4e419edb",
   "compatibility_date": "2026-09-12",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry",
+  "main": "src/server.ts",
   "workers_dev": true,
   "preview_urls": true,
   "observability": { "enabled": true },
+  "triggers": { "crons": ["*/15 * * * *"] },
   "vars": {
     "APP_ORIGIN": "https://studio.youraveragetechbro.com",
     "EMAIL_MODE": "cloudflare",

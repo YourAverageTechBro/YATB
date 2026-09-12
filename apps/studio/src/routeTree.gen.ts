@@ -14,7 +14,12 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppVideosRouteImport } from './routes/_app.videos'
 import { Route as AppVideosVideoIdRouteImport } from './routes/_app.videos_.$videoId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
-import { Route as ApiMediaMediaIdRouteImport } from './routes/api.media.$mediaId'
+import { Route as ApiVideosVideoIdMediaRouteImport } from './routes/api.videos.$videoId.media'
+import { Route as ApiVideosVideoIdUploadsRouteImport } from './routes/api.videos.$videoId.uploads'
+import { Route as ApiVideosVideoIdMediaFileIdRouteImport } from './routes/api.videos.$videoId.media.$fileId'
+import { Route as ApiVideosVideoIdUploadsUploadIdRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId'
+import { Route as ApiVideosVideoIdUploadsUploadIdCompleteRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId.complete'
+import { Route as ApiVideosVideoIdUploadsUploadIdPartsPartNumberRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId.parts.$partNumber'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,25 +45,64 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiMediaMediaIdRoute = ApiMediaMediaIdRouteImport.update({
-  id: '/api/media/$mediaId',
-  path: '/api/media/$mediaId',
+const ApiVideosVideoIdMediaRoute = ApiVideosVideoIdMediaRouteImport.update({
+  id: '/api/videos/$videoId/media',
+  path: '/api/videos/$videoId/media',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiVideosVideoIdUploadsRoute = ApiVideosVideoIdUploadsRouteImport.update({
+  id: '/api/videos/$videoId/uploads',
+  path: '/api/videos/$videoId/uploads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVideosVideoIdMediaFileIdRoute =
+  ApiVideosVideoIdMediaFileIdRouteImport.update({
+    id: '/$fileId',
+    path: '/$fileId',
+    getParentRoute: () => ApiVideosVideoIdMediaRoute,
+  } as any)
+const ApiVideosVideoIdUploadsUploadIdRoute =
+  ApiVideosVideoIdUploadsUploadIdRouteImport.update({
+    id: '/$uploadId',
+    path: '/$uploadId',
+    getParentRoute: () => ApiVideosVideoIdUploadsRoute,
+  } as any)
+const ApiVideosVideoIdUploadsUploadIdCompleteRoute =
+  ApiVideosVideoIdUploadsUploadIdCompleteRouteImport.update({
+    id: '/complete',
+    path: '/complete',
+    getParentRoute: () => ApiVideosVideoIdUploadsUploadIdRoute,
+  } as any)
+const ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute =
+  ApiVideosVideoIdUploadsUploadIdPartsPartNumberRouteImport.update({
+    id: '/parts/$partNumber',
+    path: '/parts/$partNumber',
+    getParentRoute: () => ApiVideosVideoIdUploadsUploadIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/videos': typeof AppVideosRoute
   '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/media/$mediaId': typeof ApiMediaMediaIdRoute
+  '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
+  '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
+  '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
+  '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/videos': typeof AppVideosRoute
   '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/media/$mediaId': typeof ApiMediaMediaIdRoute
+  '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
+  '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
+  '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
+  '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -67,15 +111,38 @@ export interface FileRoutesById {
   '/_app/videos': typeof AppVideosRoute
   '/_app/videos_/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/media/$mediaId': typeof ApiMediaMediaIdRoute
+  '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
+  '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
+  '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
+  '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/videos' | '/videos/$videoId' | '/api/auth/$' | '/api/media/$mediaId'
+    | '/'
+    | '/videos'
+    | '/videos/$videoId'
+    | '/api/auth/$'
+    | '/api/videos/$videoId/media'
+    | '/api/videos/$videoId/uploads'
+    | '/api/videos/$videoId/media/$fileId'
+    | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/videos/$videoId/uploads/$uploadId/complete'
+    | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/videos' | '/videos/$videoId' | '/api/auth/$' | '/api/media/$mediaId'
+    | '/'
+    | '/videos'
+    | '/videos/$videoId'
+    | '/api/auth/$'
+    | '/api/videos/$videoId/media'
+    | '/api/videos/$videoId/uploads'
+    | '/api/videos/$videoId/media/$fileId'
+    | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/videos/$videoId/uploads/$uploadId/complete'
+    | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   id:
     | '__root__'
     | '/'
@@ -83,14 +150,20 @@ export interface FileRouteTypes {
     | '/_app/videos'
     | '/_app/videos_/$videoId'
     | '/api/auth/$'
-    | '/api/media/$mediaId'
+    | '/api/videos/$videoId/media'
+    | '/api/videos/$videoId/uploads'
+    | '/api/videos/$videoId/media/$fileId'
+    | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/videos/$videoId/uploads/$uploadId/complete'
+    | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiMediaMediaIdRoute: typeof ApiMediaMediaIdRoute
+  ApiVideosVideoIdMediaRoute: typeof ApiVideosVideoIdMediaRouteWithChildren
+  ApiVideosVideoIdUploadsRoute: typeof ApiVideosVideoIdUploadsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -130,12 +203,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/media/$mediaId': {
-      id: '/api/media/$mediaId'
-      path: '/api/media/$mediaId'
-      fullPath: '/api/media/$mediaId'
-      preLoaderRoute: typeof ApiMediaMediaIdRouteImport
+    '/api/videos/$videoId/media': {
+      id: '/api/videos/$videoId/media'
+      path: '/api/videos/$videoId/media'
+      fullPath: '/api/videos/$videoId/media'
+      preLoaderRoute: typeof ApiVideosVideoIdMediaRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/videos/$videoId/uploads': {
+      id: '/api/videos/$videoId/uploads'
+      path: '/api/videos/$videoId/uploads'
+      fullPath: '/api/videos/$videoId/uploads'
+      preLoaderRoute: typeof ApiVideosVideoIdUploadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/videos/$videoId/media/$fileId': {
+      id: '/api/videos/$videoId/media/$fileId'
+      path: '/$fileId'
+      fullPath: '/api/videos/$videoId/media/$fileId'
+      preLoaderRoute: typeof ApiVideosVideoIdMediaFileIdRouteImport
+      parentRoute: typeof ApiVideosVideoIdMediaRoute
+    }
+    '/api/videos/$videoId/uploads/$uploadId': {
+      id: '/api/videos/$videoId/uploads/$uploadId'
+      path: '/$uploadId'
+      fullPath: '/api/videos/$videoId/uploads/$uploadId'
+      preLoaderRoute: typeof ApiVideosVideoIdUploadsUploadIdRouteImport
+      parentRoute: typeof ApiVideosVideoIdUploadsRoute
+    }
+    '/api/videos/$videoId/uploads/$uploadId/complete': {
+      id: '/api/videos/$videoId/uploads/$uploadId/complete'
+      path: '/complete'
+      fullPath: '/api/videos/$videoId/uploads/$uploadId/complete'
+      preLoaderRoute: typeof ApiVideosVideoIdUploadsUploadIdCompleteRouteImport
+      parentRoute: typeof ApiVideosVideoIdUploadsUploadIdRoute
+    }
+    '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': {
+      id: '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
+      path: '/parts/$partNumber'
+      fullPath: '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
+      preLoaderRoute: typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRouteImport
+      parentRoute: typeof ApiVideosVideoIdUploadsUploadIdRoute
     }
   }
 }
@@ -152,11 +260,58 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface ApiVideosVideoIdMediaRouteChildren {
+  ApiVideosVideoIdMediaFileIdRoute: typeof ApiVideosVideoIdMediaFileIdRoute
+}
+
+const ApiVideosVideoIdMediaRouteChildren: ApiVideosVideoIdMediaRouteChildren = {
+  ApiVideosVideoIdMediaFileIdRoute: ApiVideosVideoIdMediaFileIdRoute,
+}
+
+const ApiVideosVideoIdMediaRouteWithChildren =
+  ApiVideosVideoIdMediaRoute._addFileChildren(
+    ApiVideosVideoIdMediaRouteChildren,
+  )
+
+interface ApiVideosVideoIdUploadsUploadIdRouteChildren {
+  ApiVideosVideoIdUploadsUploadIdCompleteRoute: typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
+  ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute: typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
+}
+
+const ApiVideosVideoIdUploadsUploadIdRouteChildren: ApiVideosVideoIdUploadsUploadIdRouteChildren =
+  {
+    ApiVideosVideoIdUploadsUploadIdCompleteRoute:
+      ApiVideosVideoIdUploadsUploadIdCompleteRoute,
+    ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute:
+      ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute,
+  }
+
+const ApiVideosVideoIdUploadsUploadIdRouteWithChildren =
+  ApiVideosVideoIdUploadsUploadIdRoute._addFileChildren(
+    ApiVideosVideoIdUploadsUploadIdRouteChildren,
+  )
+
+interface ApiVideosVideoIdUploadsRouteChildren {
+  ApiVideosVideoIdUploadsUploadIdRoute: typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+}
+
+const ApiVideosVideoIdUploadsRouteChildren: ApiVideosVideoIdUploadsRouteChildren =
+  {
+    ApiVideosVideoIdUploadsUploadIdRoute:
+      ApiVideosVideoIdUploadsUploadIdRouteWithChildren,
+  }
+
+const ApiVideosVideoIdUploadsRouteWithChildren =
+  ApiVideosVideoIdUploadsRoute._addFileChildren(
+    ApiVideosVideoIdUploadsRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiMediaMediaIdRoute: ApiMediaMediaIdRoute,
+  ApiVideosVideoIdMediaRoute: ApiVideosVideoIdMediaRouteWithChildren,
+  ApiVideosVideoIdUploadsRoute: ApiVideosVideoIdUploadsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
