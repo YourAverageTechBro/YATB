@@ -17,4 +17,11 @@ const scan = spawnSync(
   [fileURLToPath(new URL('./check-bundle-secrets.mjs', import.meta.url))],
   { env: { ...process.env, SECRET_SCAN_VALUE: probe }, stdio: 'inherit' },
 )
-process.exit(scan.status ?? 1)
+if (scan.status !== 0) process.exit(scan.status ?? 1)
+
+const monochrome = spawnSync(
+  process.execPath,
+  [fileURLToPath(new URL('./check-monochrome.mjs', import.meta.url))],
+  { stdio: 'inherit' },
+)
+process.exit(monochrome.status ?? 1)

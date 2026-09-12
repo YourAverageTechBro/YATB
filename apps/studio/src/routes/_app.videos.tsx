@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Clapperboard, LogOut, Plus, Search } from 'lucide-react'
 import { authClient } from '#/lib/auth-client'
+import { ThemeControl } from '#/components/theme-control'
 
 export const Route = createFileRoute('/_app/videos')({ component: Videos })
 
@@ -19,6 +20,7 @@ function Videos() {
         <a className="wordmark compact" href="/videos">
           <span>YATB</span> Studio
         </a>
+        <ThemeControl compact />
         <nav aria-label="Studio navigation">
           <a className="nav-item active" href="/videos">
             <Clapperboard size={17} /> Videos

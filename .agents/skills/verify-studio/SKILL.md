@@ -37,6 +37,7 @@ accessibility tree before each action. Use these stable accessible names:
 - `Forgot password?` opens reset request.
 - `Sign out` ends a session.
 - `Videos` and `No videos yet` identify the protected shell.
+- `Color theme` selects `System`, `Light`, or `Dark` on public and private pages.
 
 Use `npx wrangler d1 execute yatb-studio --local --cwd apps/studio --command
 "<read-only SQL>"` to confirm D1 side effects. Read captured links from

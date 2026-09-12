@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { authClient } from '#/lib/auth-client'
 import { loadSession } from '#/server/auth.functions'
+import { ThemeControl } from '#/components/theme-control'
 
 type Mode = 'sign-in' | 'sign-up' | 'forgot' | 'reset'
 
@@ -74,7 +75,10 @@ function Login() {
     <main className="login-page">
       <section className="login-panel">
         <div className="brand-block">
-          <a className="wordmark" href="/"><span>YATB</span> Studio</a>
+          <div className="brand-header">
+            <a className="wordmark" href="/"><span>YATB</span> Studio</a>
+            <ThemeControl />
+          </div>
           <div className="brand-copy">
             <p className="eyebrow light">Private production workspace</p>
             <h1>Ideas become<br />finished videos.</h1>

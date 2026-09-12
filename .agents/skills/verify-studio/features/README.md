@@ -36,3 +36,4 @@ Each feature file describes its browser entry, exact drive, proof, and traps.
 - [Sign out](./sign-out.md)
 - [Password reset](./password-reset.md)
 - [Private routes](./private-routes.md)
+- [Color theme](./color-theme.md)

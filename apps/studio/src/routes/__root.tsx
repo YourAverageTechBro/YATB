@@ -6,6 +6,8 @@ import {
 } from '@tanstack/react-router'
 import appCss from '../styles.css?url'
 
+const themeScript = `try{const t=localStorage.getItem('yatb-studio-theme');document.documentElement.dataset.theme=t==='light'||t==='dark'?t:'system'}catch{document.documentElement.dataset.theme='system'}`
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -27,8 +29,9 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <HeadContent />
       </head>
       <body>

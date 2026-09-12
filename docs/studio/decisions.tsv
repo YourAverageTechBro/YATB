@@ -10,3 +10,4 @@ ts	phase	decision	why	evidence	result
 2026-09-12T16:00:00Z	delivery	let the root review evidence and merge without an operator pause	the user granted autonomous implementation and merge authority	docs/studio/plan.md	VERIFIED
 2026-09-12T16:30:00Z	auth	use D1 as the sole runtime allowlist source	a fixed application list would drift from administrator revocation	apps/studio/src/server/auth.server.ts	VERIFIED
 2026-09-12T16:32:00Z	build	fail builds that emit an environment file or a sentinel secret value	Cloudflare Vite copies an app-local .dev.vars file into its server output	apps/studio/scripts/build.mjs	VERIFIED
+2026-09-12T16:34:00Z	ui	use native light dark and system themes with a pre-CSS initializer	the stored choice applies before paint without adding a runtime dependency	apps/studio/src/routes/__root.tsx	VERIFIED
