@@ -6,7 +6,7 @@ An authenticated user uploads immutable edit versions, reviews them with the nat
 
 - `draft-version` assigns unique increasing task-local versions only after R2 and D1 publication complete.
 - `draft-retry` returns the same draft identity and version after completion retries.
-- `draft-failure` exposes a failed upload for retry or dismissal without publishing a draft.
+- `draft-failure` retries transient failures automatically, then exposes an exhausted upload for dismissal without publishing a draft.
 - `draft-playback` supports authenticated range playback, native scrubbing, and actual playback-rate changes.
 - `draft-download` downloads the selected version through the authenticated media route with its exact filename and bytes.
 - `review-layout` places the player beside a fixed composer and independently scrollable comments on desktop. Mobile uses page scrolling.
