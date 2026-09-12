@@ -1,0 +1,12 @@
+ts	phase	decision	why	evidence	result
+2026-09-12T15:00:00Z	frame	use six dependent PRs with high verification rigor	authentication private media and production infrastructure have high blast radius	docs/studio/plan.md	OPEN
+2026-09-12T15:02:00Z	boundary	add an isolated apps/studio Worker	the marketing and private production applications have different users data and release cadence	docs/studio/architecture.md	VERIFIED
+2026-09-12T15:04:00Z	data	use native D1 for Better Auth and direct prepared SQL for Studio	one metadata store and no unused abstraction keeps request traces short	docs/studio/architecture.md	VERIFIED
+2026-09-12T15:06:00Z	media	use authenticated Worker-mediated R2 multipart uploads	parts stay below request limits while every byte write retains session authorization	/private/tmp/yatb-studio-arena.NmfgPL/candidate-1/design.md	VERIFIED
+2026-09-12T15:08:00Z	playback	start with authenticated R2 range playback and defer Stream	the requested controls work for browser-compatible exports and format fixtures can prove whether transcoding is needed	docs/studio/architecture.md	OPEN
+2026-09-12T15:10:00Z	email	use Cloudflare Email Routing sends restricted to verified product users	the account has Email Service but currently shows no eligible Email Sending zones while verified destination sends remain Cloudflare-native	https://dash.cloudflare.com/32967fffa44c1d38bc86ab6e4e419edb/email-service/routing	OPEN
+2026-09-12T15:12:00Z	verification	create verify-studio in PR STUDIO-01 and maintain it after every later direct proof	a runnable verification contract must exist before feature breadth grows	.agents/skills/verify-studio/SKILL.md	VERIFIED
+2026-09-12T15:14:00Z	delivery	use autopilot-full with merge-then-branch dependencies	each PR should land as a coherent production-shaped increment instead of one coupled final stack	docs/studio/plan.md	OPEN
+2026-09-12T16:00:00Z	delivery	let the root review evidence and merge without an operator pause	the user granted autonomous implementation and merge authority	docs/studio/plan.md	VERIFIED
+2026-09-12T16:30:00Z	auth	use D1 as the sole runtime allowlist source	a fixed application list would drift from administrator revocation	apps/studio/src/server/auth.server.ts	VERIFIED
+2026-09-12T16:32:00Z	build	fail builds that emit an environment file or a sentinel secret value	Cloudflare Vite copies an app-local .dev.vars file into its server output	apps/studio/scripts/build.mjs	VERIFIED
