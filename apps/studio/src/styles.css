@@ -147,6 +147,34 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .rich-surface p:first-child, .rich-surface h1:first-child, .rich-surface h2:first-child, .rich-surface h3:first-child { margin-top: 0; }
 .conflict { border: 1px solid var(--ink); border-radius: 9px; padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; }
 .conflict button { border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--ink); padding: 7px 9px; }
+.footage-section { margin-top: 26px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 20px; }
+.footage-section > header { margin: 0 0 18px; display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+.footage-section h2 { margin: 6px 0 0; font-size: 21px; letter-spacing: -.025em; }
+.upload-button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--ink); background: var(--ink); color: var(--panel); border-radius: 9px; padding: 10px 13px; cursor: pointer; font-size: 13px; font-weight: 650; }
+.upload-button input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; pointer-events: none; }
+.upload-list { display: grid; gap: 8px; margin-bottom: 18px; }
+.upload-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(120px, 2fr) auto; align-items: center; gap: 12px; border: 1px solid var(--line); background: var(--panel-muted); border-radius: 9px; padding: 11px; }
+.upload-row div, .footage-card > div { display: grid; gap: 3px; min-width: 0; }
+.upload-row strong, .footage-card strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.upload-row small, .footage-card small { color: var(--muted); }
+.upload-row progress { width: 100%; accent-color: var(--ink); }
+.upload-row button { border: 0; background: transparent; color: var(--muted); padding: 5px; }
+.footage-empty { color: var(--muted); border: 1px dashed var(--line); border-radius: 9px; padding: 30px; text-align: center; }
+.footage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.footage-card { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-muted); }
+.footage-card video, .file-placeholder { width: 100%; aspect-ratio: 16 / 9; background: var(--brand); color: var(--brand-ink); }
+.footage-card video { display: block; object-fit: contain; }
+.file-placeholder { display: grid; place-items: center; }
+.footage-card > div { padding: 11px 12px; }
+.footage-card footer { display: flex; border-top: 1px solid var(--line); }
+.footage-card footer button, .footage-card footer a { flex: 1; display: inline-flex; justify-content: center; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--ink); padding: 9px; font-size: 12px; text-decoration: none; }
+.footage-card footer > * + * { border-left: 1px solid var(--line); }
+.footage-rename { display: grid; gap: 8px; padding: 11px 12px 12px; }
+.footage-rename label { gap: 5px; }
+.footage-rename input { width: 100%; }
+.footage-rename > small { color: var(--ink); }
+.footage-rename > div { display: flex; gap: 7px; padding: 0; }
+.footage-rename button { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 7px; padding: 7px 9px; font-size: 12px; }
 .not-found { min-height: 100vh; display: grid; place-content: center; text-align: center; }
 .not-found h1 { margin: 0; }
 .not-found p { color: var(--muted); }
@@ -174,4 +202,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .workspace { padding: 34px 24px; }
   .toolbar { overflow-x: auto; }
   .field-grid { grid-template-columns: 1fr; }
+  .footage-section > header { align-items: stretch; flex-direction: column; }
+  .upload-button { justify-content: center; }
+  .upload-row { grid-template-columns: 1fr auto; }
+  .upload-row progress { grid-row: 2; grid-column: 1 / -1; }
 }
