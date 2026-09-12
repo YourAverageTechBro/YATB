@@ -1,6 +1,6 @@
 # Sign in
 
-A verified approved user signs in and reaches the empty video workspace.
+A verified approved user signs in and reaches the video workspace.
 
 ## Sub-features
 
@@ -20,7 +20,7 @@ Preconditions:
 - Studio passes the doctor.
 
 - **Reject unverified.** Submit the unverified user's credentials. The browser stays on `/`, shows the auth error, and D1 has no session for that user.
-- **Sign in.** Submit the verified credentials. The browser navigates to `/videos` and shows `No videos yet`.
+- **Sign in.** Submit the verified credentials. The browser navigates to `/videos` and shows the current planning view, which may contain videos or an empty result.
 - **Inspect cookie.** Confirm the session cookie has `HttpOnly`, `SameSite=Lax`, no `Domain`, and `Secure` when the app origin uses HTTPS.
 - **Proof.** Capture the login action, the private shell, and response headers.
 

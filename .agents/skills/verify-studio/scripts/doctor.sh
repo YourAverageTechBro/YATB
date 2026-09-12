@@ -18,7 +18,8 @@ if rg -q 'No videos yet' "$scratch_dir/missing"; then
   exit 1
 fi
 
-curl -sS -D "$scratch_dir/media.headers" -o /dev/null "$studio_url/api/media/missing"
+curl -sS -D "$scratch_dir/media.headers" -o /dev/null \
+  "$studio_url/api/videos/1b0e913b-645c-4306-a71d-78115390b46d/media/28a2b4a2-1ee2-44d8-8e3a-0c2dbd5b2d27"
 rg -q '^HTTP/1.1 401' "$scratch_dir/media.headers"
 rg -qi '^cache-control: private, no-store, max-age=0\r?$' "$scratch_dir/media.headers"
 

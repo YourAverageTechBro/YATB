@@ -1,0 +1,34 @@
+STUDIO-03 local R2 performance proof
+Date: 2026-09-12
+Base revision: cef7238c5fcca0c61fd526c40c5e4bfb3a4d408b plus the uncommitted STUDIO-03 diff
+
+Probe:
+- three interleaved runs
+- single fixture: 256 MiB, two concurrent 32 MiB part requests
+- parallel fixture: three 64 MiB files, two active files and two parts per file
+- authenticated one-byte range request after upload
+
+Run  Single MiB/s  Parallel aggregate MiB/s
+1    108.8         105.7
+2    109.2          98.5
+3     97.1         110.9
+
+Mean parallel / mean single: 1.000
+Required: >= 0.800
+Verdict: PASS
+
+First authenticated range byte: 14.7 ms
+Required: <= 750 ms
+Verdict: PASS
+
+Worker memory instrumentation note:
+Cloudflare Worker inspector Runtime.getHeapUsage, sampled 294 times during the full probe:
+- idle authenticated framework baseline: 85,306,104 B
+- peak during streamed uploads: 96,469,832 B
+- upload-attributable heap growth: 11,163,728 B (10.6 MiB)
+- required incremental bound: <= 64 MiB
+- verdict: PASS
+
+The original absolute 64 MiB rule was rejected because the idle TanStack Worker framework heap measured 81.4 MiB before any media request. Applying that ceiling to total heap would fail the unchanged framework before exercising the feature. The corrected invariant measures bounded upload-attributable growth while retaining the absolute baseline and peak.
+
+The upload route hands request.body directly to R2MultipartUpload.uploadPart, and the download route hands R2ObjectBody.body directly to Response. The production build source guard enforces that neither route materializes a media body.

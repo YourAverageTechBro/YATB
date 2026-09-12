@@ -19,6 +19,13 @@ const scan = spawnSync(
 )
 if (scan.status !== 0) process.exit(scan.status ?? 1)
 
+const mediaStreaming = spawnSync(
+  process.execPath,
+  [fileURLToPath(new URL('./check-media-streaming.mjs', import.meta.url))],
+  { stdio: 'inherit' },
+)
+if (mediaStreaming.status !== 0) process.exit(mediaStreaming.status ?? 1)
+
 const monochrome = spawnSync(
   process.execPath,
   [fileURLToPath(new URL('./check-monochrome.mjs', import.meta.url))],

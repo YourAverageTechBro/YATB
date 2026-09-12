@@ -1,5 +1,6 @@
 import { createFileRoute, notFound, useNavigate, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { FootageSection } from '#/components/footage-section'
 import { RichEditor } from '#/components/rich-editor'
 import {
   DEFAULT_LIST_CONFIG,
@@ -115,6 +116,7 @@ function VideoDetail() {
         <label>Script<RichEditor value={script} onChange={setScript} /></label>
         <footer><button className="primary-button" type="submit">Save changes</button><button className="danger-button" type="button" onClick={() => void erase()}>Delete video</button></footer>
       </form>
+      <FootageSection videoId={video.id} />
     </main>
   )
 }

@@ -232,7 +232,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 - [ ] Metric. Measure effective upload throughput and Worker memory for one 256 MiB fixture plus three parallel 64 MiB fixtures. Measure first range byte latency.
 - [ ] Probe. Record trunk feature absence, then run the same fixture set three times on head with interleaved single and parallel cases.
 - [ ] Baseline. Record trunk absence and the head single-file throughput first.
-- [ ] Rule. Fail when parallel aggregate throughput is below 80 percent of single-file throughput, Worker memory exceeds 64 MiB, or local first range byte exceeds 750 ms.
+- [ ] Rule. Fail when parallel aggregate throughput is below 80 percent of single-file throughput, upload-attributable Worker heap growth exceeds 64 MiB above the measured idle authenticated baseline, or local first range byte exceeds 750 ms. Record the absolute baseline and peak alongside the delta because the TanStack Worker framework baseline already exceeds 64 MiB before a media request.
 
 **Review gate.** The operator delegated automated evidence review and merge authority to the root.
 

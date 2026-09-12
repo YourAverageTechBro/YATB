@@ -1,6 +1,6 @@
 ---
 name: verify-studio
-description: Drive the local YATB Studio authentication and video-planning UI. Use after changes to Studio routes, sessions, email callbacks, planning data, rich scripts, saved views, or Cloudflare bindings.
+description: Drive the local YATB Studio authentication, planning, and private footage UI. Use after changes to Studio routes, sessions, email callbacks, planning data, rich scripts, saved views, multipart uploads, media delivery, or Cloudflare bindings.
 ---
 
 # Verify YATB Studio
@@ -42,6 +42,7 @@ accessibility tree before each action. Use these stable accessible names:
 - `Video view controls`, `Saved views`, and `Save view` identify planning controls.
 - `Script`, `Save changes`, and `Delete video` identify the task editor.
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
+- `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, and `Download` identify private media delivery.
 - `Color theme` selects `System`, `Light`, or `Dark` on public and private pages.
 
 Use `npx wrangler d1 execute yatb-studio --local --cwd apps/studio --command
@@ -92,6 +93,14 @@ Drive the planning server functions through two real local sessions:
 STUDIO_TEST_EMAIL=<primary-email> STUDIO_TEST_PASSWORD=<primary-password> \
 STUDIO_SECOND_TEST_EMAIL=<secondary-email> STUDIO_SECOND_TEST_PASSWORD=<secondary-password> \
 node .agents/skills/verify-studio/scripts/verify-planning.mjs
+```
+
+Exercise multipart R2 upload, retry recovery, rename, exact download, range,
+isolation, cancellation, and scheduled cleanup:
+
+```sh
+STUDIO_TEST_EMAIL=<email> STUDIO_TEST_PASSWORD=<password> \
+node .agents/skills/verify-studio/scripts/verify-footage.mjs
 ```
 
 Seed 200 tasks through the application boundary and measure list and board responses:
