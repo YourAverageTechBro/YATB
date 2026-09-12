@@ -109,7 +109,7 @@ export function FootageSection({ videoId, refreshToken = 0 }: { videoId: string;
     <section className="footage-section" aria-labelledby="footage-heading">
       <header>
         <div><p className="eyebrow">Original media</p><h2 id="footage-heading">Footage upload</h2></div>
-        <Label className={buttonVariants()}><Upload /> Add footage<Input className="sr-only" type="file" multiple disabled={pending.some((item) => item.state !== 'failed')} onChange={choose} /></Label>
+        <Label className={buttonVariants({ className: 'upload-button' })}><Upload /> Add footage<Input className="sr-only" type="file" multiple disabled={pending.some((item) => item.state !== 'failed')} onChange={choose} /></Label>
       </header>
       {pending.length > 0 && <div className="upload-list" aria-label="Uploads">
         {pending.map((item) => {

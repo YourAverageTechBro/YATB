@@ -101,7 +101,7 @@ export function ReviewWorkspace({ videoId, onFootageChanged }: { videoId: string
   return <section className="review-workspace" aria-labelledby="review-heading">
     <header>
       <div><p className="eyebrow">Versioned review</p><h2 id="review-heading">Video drafts</h2></div>
-      <Label className={buttonVariants()}><Upload /> Upload draft<Input className="sr-only" type="file" accept="video/mp4,video/webm,video/ogg" multiple onChange={(event) => void chooseDrafts(event)} /></Label>
+      <Label className={buttonVariants({ className: 'upload-button' })}><Upload /> Upload draft<Input className="sr-only" type="file" accept="video/mp4,video/webm,video/ogg" multiple onChange={(event) => void chooseDrafts(event)} /></Label>
     </header>
     {error && <Alert><AlertTitle>Review unavailable</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
     {uploads.length > 0 && <div className="upload-list" aria-label="Draft uploads">{uploads.map((upload) => {
