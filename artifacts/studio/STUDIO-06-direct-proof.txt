@@ -1,0 +1,22 @@
+STUDIO-06 local direct proof
+Date: 2026-09-12
+Base revision: 3d17ece with the STUDIO-06 branch changes
+
+Focused verification:
+- comparison and review tests: 8 passed.
+- Studio TypeScript: passed.
+- the local Studio doctor passed against the current Worker.
+- the final root check passed all 29 Studio tests and both app type checks.
+- the final root build passed the Cloudflare binding, secret, streaming, and grayscale checks.
+
+Comparison protocol:
+- three concurrent drafts published immutable versions 1, 2, and 3.
+- an empty pair selected the newest two drafts.
+- an explicit pair retained both requested draft identities.
+- identical and foreign-task draft pairs returned the same generic unavailable error.
+- each draft kept its existing draft-scoped comment read and mutation boundary.
+- the verifier retained the STUDIO-05 upload, attachment, range, rich comment, optimistic conflict, and cleanup checks.
+- the generated route tree registers `/videos/$videoId/compare` directly under the authenticated app route, so the exact URL renders without a parent outlet.
+- every direct-verifier video, draft, comment, media row, and R2 object was removed through tombstone and scheduled cleanup.
+
+Verdict: PASS

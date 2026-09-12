@@ -367,44 +367,44 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 **Files.**
 
-- [ ] Create the comparison route and composition components under `apps/studio`.
-- [ ] Edit review queries, responsive styles, focused tests, and the Studio verification map.
+- [x] Create the comparison route and composition components under `apps/studio`.
+- [x] Edit review queries, responsive styles, focused tests, and the Studio verification map.
 
 **Build.**
 
-- [ ] Render two instances of the same review pane in a desktop 50/50 grid.
-- [ ] Keep draft selection, player state, speed, comments, and composer independent on each side.
-- [ ] Reject identical or cross-task draft pairs and preserve comment identity when selections change.
-- [ ] Maintain the verification skill after direct browser and D1 proof.
+- [x] Render two instances of the same review pane in a desktop 50/50 grid.
+- [x] Keep draft selection, player state, speed, comments, and composer independent on each side.
+- [x] Reject identical or cross-task draft pairs and preserve comment identity when selections change.
+- [x] Maintain the verification skill after direct browser and D1 proof.
 
 **You see.**
 
-- [ ] A user chooses two versions of one task, watches them side by side, reads each version's comments, and adds a new point or range comment to either side.
+- [x] A user chooses two versions of one task, watches them side by side, reads each version's comments, and adds a new point or range comment to either side.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Run focused tests for same-task comparison, pair rejection, read model partitioning, pane independence, and responsive layout contract.
-- [ ] Run `npm run check && npm run build` from the repository root.
+- [x] Run focused tests for same-task comparison, pair rejection, read model partitioning, pane independence, and responsive layout contract.
+- [x] Run `npm run check && npm run build` from the repository root.
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on the configured `swarm workers` model at the PR head drive the running Worker.
 
-- [ ] Lane 1. Regression lane against trunk. Run single-draft review on trunk and head, then open comparison on head. Save `compare-regression.png`. Pass when single review is unchanged and two panes render.
-- [ ] Lane 2. Select versions one and two. Save `compare-layout.png`. Pass when desktop panes occupy equal width without overlap.
-- [ ] Lane 3. Scrub the left player. Save `compare-left-player.png`. Pass when only left `currentTime` changes.
-- [ ] Lane 4. Change the right speed. Save `compare-right-speed.png`. Pass when only right `playbackRate` changes.
-- [ ] Lane 5. Add a point comment on the left. Save `compare-left-comment.png`. Pass when it appears only under the left draft.
-- [ ] Lane 6. Add a range comment on the right. Save `compare-right-comment.png`. Pass when it appears only under the right draft.
-- [ ] Lane 7. Click timestamps on each side. Save `compare-seek.png`. Pass when each timestamp controls only its own player.
-- [ ] Lane 8. Switch the left draft and switch back. Save `compare-comment-identity.png`. Pass when comments remain attached to their original version.
-- [ ] Lane 9. Request identical and cross-task pairs. Save `compare-invalid-pair.png`. Pass when both are rejected without leaking metadata.
-- [ ] Lane 10. Use the narrow responsive layout. Save `compare-responsive.png`. Pass when panes stack at the documented breakpoint and every control remains usable.
+- [x] Lane 1. Regression lane against trunk. Run single-draft review on trunk and head, then open comparison on head. Save `compare-regression.png`. Pass when single review is unchanged and two panes render.
+- [x] Lane 2. Select versions one and two. Save `compare-layout.png`. Pass when desktop panes occupy equal width without overlap.
+- [x] Lane 3. Scrub the left player. Save `compare-left-player.png`. Pass when only left `currentTime` changes.
+- [x] Lane 4. Change the right speed. Save `compare-right-speed.png`. Pass when only right `playbackRate` changes.
+- [x] Lane 5. Add a point comment on the left. Save `compare-left-comment.png`. Pass when it appears only under the left draft.
+- [x] Lane 6. Add a range comment on the right. Save `compare-right-comment.png`. Pass when it appears only under the right draft.
+- [x] Lane 7. Click timestamps on each side. Save `compare-seek.png`. Pass when each timestamp controls only its own player.
+- [x] Lane 8. Switch the left draft and switch back. Save `compare-comment-identity.png`. Pass when comments remain attached to their original version.
+- [x] Lane 9. Request identical and cross-task pairs. Save `compare-invalid-pair.png`. Pass when both are rejected without leaking metadata.
+- [x] Lane 10. Use the narrow responsive layout. Save `compare-responsive.png`. Pass when panes stack at the documented breakpoint and every control remains usable.
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. Measure comparison interactive time and dual seek completion against the single-review trunk baseline.
-- [ ] Probe. Interleave ten single-review loads on trunk with ten two-pane loads on head using the same two files and comment counts.
-- [ ] Baseline. Record trunk single-review interactive time first.
-- [ ] Rule. Fail when head comparison interactive time exceeds twice trunk single-review time plus 500 ms or 2500 ms absolute, or either seek exceeds 1500 ms.
+- [x] Metric. Measure comparison interactive time and dual seek completion against the single-review trunk baseline.
+- [x] Probe. Interleave ten single-review loads on trunk with ten two-pane loads on head using the same two files and comment counts.
+- [x] Baseline. Record trunk single-review interactive time first.
+- [x] Rule. Fail when head comparison interactive time exceeds twice trunk single-review time plus 500 ms or 2500 ms absolute, or either seek exceeds 1500 ms.
 
 **Review gate.** The operator delegated automated evidence review and merge authority to the root.
 

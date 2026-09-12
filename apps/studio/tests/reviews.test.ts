@@ -3,7 +3,15 @@ import { resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { describe, expect, it } from 'vitest'
 import { parseBeginUpload, UPLOAD_PART_SIZE } from '../src/domain/media'
-import { anchorStartMs, formatTimestamp, parseReviewAnchor } from '../src/domain/reviews'
+import {
+  anchorStartMs,
+  formatTimestamp,
+  parseComparisonQuery,
+  parseReviewAnchor,
+  partitionComparison,
+  resolveComparison,
+  type Draft,
+} from '../src/domain/reviews'
 
 const videoA = '1b0e913b-645c-4306-a71d-78115390b46d'
 const videoB = '2b0e913b-645c-4306-a71d-78115390b46d'
@@ -11,6 +19,29 @@ const fileA = '3b0e913b-645c-4306-a71d-78115390b46d'
 const fileB = '4b0e913b-645c-4306-a71d-78115390b46d'
 const draftA = '5b0e913b-645c-4306-a71d-78115390b46d'
 const draftB = '6b0e913b-645c-4306-a71d-78115390b46d'
+const draftC = '7b0e913b-645c-4306-a71d-78115390b46d'
+const foreignDraft = '8b0e913b-645c-4306-a71d-78115390b46d'
+
+function comparisonDraft(id: string, videoId: string, version: number): Draft {
+  return {
+    id,
+    videoId,
+    version,
+    durationMs: 12_000,
+    file: {
+      id: crypto.randomUUID(),
+      videoId,
+      purpose: 'draft',
+      displayName: `version-${version}.mp4`,
+      byteSize: 20,
+      contentType: 'video/mp4',
+      createdAt: version,
+      updatedAt: version,
+    },
+    author: { id: 'user-1', name: 'Studio User', email: 'studio@example.com' },
+    createdAt: version,
+  }
+}
 
 function migratedDatabase(): DatabaseSync {
   const db = new DatabaseSync(':memory:')
@@ -69,6 +100,57 @@ describe('review domain', () => {
     expect(() => parseReviewAnchor({ kind: 'range', startMs: 5000, endMs: 4000 }, 6000)).toThrow('after')
     expect(() => parseReviewAnchor({ kind: 'point', atMs: 5001 }, 5000)).toThrow('duration')
     expect(formatTimestamp(3_723_000)).toBe('1:02:03')
+  })
+})
+
+describe('draft comparison', () => {
+  const drafts = [
+    comparisonDraft(draftC, videoA, 3),
+    comparisonDraft(draftB, videoA, 2),
+    comparisonDraft(draftA, videoA, 1),
+  ]
+  const foreign = comparisonDraft(foreignDraft, videoB, 1)
+
+  it('parses optional selectors and defaults to the newest two drafts', () => {
+    expect(parseComparisonQuery({})).toEqual({ left: undefined, right: undefined })
+    expect(parseComparisonQuery({ left: draftA, right: draftB })).toEqual({ left: draftA, right: draftB })
+    expect(resolveComparison(drafts, {})).toEqual({
+      drafts,
+      selection: { left: draftC, right: draftB },
+    })
+    expect(resolveComparison(drafts.slice(0, 1), {}).selection).toBeNull()
+  })
+
+  it('accepts a same-task pair and partitions the catalog by side', () => {
+    const model = resolveComparison(drafts, { left: draftA, right: draftC })
+    expect(partitionComparison(model)).toEqual({ left: drafts[2], right: drafts[0] })
+  })
+
+  it('rejects one-sided, identical, missing, and cross-task selectors generically', () => {
+    const invalidQueries = [
+      { left: draftA },
+      { right: draftB },
+      { left: draftA, right: draftA },
+      { left: draftA, right: crypto.randomUUID() },
+      { left: draftA, right: foreign.id },
+    ]
+    expect(foreign.videoId).not.toBe(videoA)
+    for (const query of invalidQueries) {
+      expect(() => resolveComparison(drafts, query)).toThrow('Comparison is unavailable.')
+    }
+  })
+
+  it('keeps URL selectors, side keys, and the responsive layout in the route contract', () => {
+    const route = readFileSync(resolve(process.cwd(), 'src/routes/_app.videos_.$videoId_.compare.tsx'), 'utf8')
+    const routeTree = readFileSync(resolve(process.cwd(), 'src/routeTree.gen.ts'), 'utf8')
+    const styles = readFileSync(resolve(process.cwd(), 'src/styles.css'), 'utf8')
+    expect(route).toContain('loaderDeps: ({ search }) => ({ left: search.left, right: search.right })')
+    expect(route).toContain('navigate({ search: selection, replace: true })')
+    expect(routeTree).toMatch(/id: '\/videos_\/\$videoId_\/compare',[\s\S]*?getParentRoute: \(\) => AppRoute/)
+    expect(route).toContain('key={`left:${pair.left.id}`}')
+    expect(route).toContain('key={`right:${pair.right.id}`}')
+    expect(styles).toMatch(/\.comparison-grid \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/)
+    expect(styles).toMatch(/@media \(max-width: 1100px\) \{\s*\.comparison-grid \{ grid-template-columns: minmax\(0, 1fr\)/)
   })
 })
 

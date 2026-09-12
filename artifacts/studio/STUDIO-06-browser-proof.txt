@@ -1,0 +1,29 @@
+STUDIO-06 root browser proof
+Date: 2026-09-12
+Base revision: 3d17ece with the STUDIO-06 branch changes
+
+The root drove the current local Worker through Codex computer control and emitted tool-native screenshots.
+
+Fixture:
+- task: 9c1279e2-fe80-40bc-afc7-0607d8f80d63
+- version 3: 6d51da20-4dff-4bea-822a-3a82a85b224e
+- version 2: 7e3ce2f1-874e-45cd-98db-e0eaef03692d
+- version 1: 0742ea2c-9284-4aac-a651-5b8d32738ccb
+- attachment: bcd60775-6d83-4bf7-9124-2b7b0c1e56d5
+
+Passed scenarios:
+- `Compare versions` rendered the comparison route after the non-nested route fix.
+- the empty URL canonicalized to explicit version 3 and version 2 IDs; reload retained them.
+- at 1280 pixels, both panes measured 492 pixels wide at the same vertical position with an 18 pixel gap and no overlap.
+- at 390 pixels, the panes stacked in document order with aligned horizontal positions.
+- setting the right player to 1.5x left the left player at 1x.
+- playing and pausing the left player at 0.521 seconds left the right player at 0.
+- a rich point comment appeared only on the left. A rich range comment with a PNG appeared only on the right, and the attachment rendered.
+- switching the left draft from version 3 to version 1 and back changed only the left URL ID, preserved the unfinished right composer, and restored the version 3 comment.
+- reload retained the selected pair and both persisted comments.
+- comment edit cancel and the delete AlertDialog open/cancel paths returned safely.
+- identical IDs and a fabricated missing or foreign ID both rendered the same generic unavailable result without draft metadata.
+
+The destructive browser confirmation was not executed. The direct authenticated mutation and cleanup path covers deletion while the browser passed the shared AlertDialog open/cancel behavior.
+
+Verdict: PASS

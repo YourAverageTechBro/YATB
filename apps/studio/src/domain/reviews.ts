@@ -5,6 +5,16 @@ import { parseRichDocument, type RichDocument } from '../server/rich-document'
 export type DraftId = string
 export type ReviewCommentId = string
 
+export type ComparisonQuery = Readonly<{
+  left?: DraftId
+  right?: DraftId
+}>
+
+export type ComparisonSelection = Readonly<{
+  left: DraftId
+  right: DraftId
+}>
+
 export type ReviewAuthor = Readonly<{
   id: string
   name: string
@@ -19,6 +29,11 @@ export type Draft = Readonly<{
   file: MediaFile
   author: ReviewAuthor
   createdAt: number
+}>
+
+export type ComparisonModel = Readonly<{
+  drafts: Draft[]
+  selection: ComparisonSelection | null
 }>
 
 export type ReviewAnchor =
@@ -63,6 +78,45 @@ function record(value: unknown): Record<string, unknown> {
     return invalid('Review data is required.')
   }
   return value as Record<string, unknown>
+}
+
+function optionalDraftId(value: unknown): DraftId | undefined {
+  return value === undefined ? undefined : parseMediaId(value)
+}
+
+export function parseComparisonQuery(value: unknown): ComparisonQuery {
+  const input = record(value)
+  return {
+    left: optionalDraftId(input.left),
+    right: optionalDraftId(input.right),
+  }
+}
+
+export function resolveComparison(drafts: Draft[], query: ComparisonQuery): ComparisonModel {
+  const hasLeft = query.left !== undefined
+  const hasRight = query.right !== undefined
+  if (hasLeft !== hasRight) return invalid('Comparison is unavailable.')
+
+  if (!query.left || !query.right) {
+    return {
+      drafts,
+      selection: drafts.length >= 2 ? { left: drafts[0]!.id, right: drafts[1]!.id } : null,
+    }
+  }
+
+  if (query.left === query.right) return invalid('Comparison is unavailable.')
+  const ids = new Set(drafts.map((draft) => draft.id))
+  if (!ids.has(query.left) || !ids.has(query.right)) return invalid('Comparison is unavailable.')
+  return { drafts, selection: { left: query.left, right: query.right } }
+}
+
+export function partitionComparison(model: ComparisonModel): Readonly<{ left: Draft; right: Draft }> | null {
+  if (!model.selection) return null
+  const byId = new Map(model.drafts.map((draft) => [draft.id, draft]))
+  const left = byId.get(model.selection.left)
+  const right = byId.get(model.selection.right)
+  if (!left || !right) return invalid('Comparison is unavailable.')
+  return { left, right }
 }
 
 function parseTimestampMs(value: unknown): number {

@@ -132,6 +132,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .draft-selector { display: flex; align-items: end; justify-content: space-between; gap: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
 .draft-selector label { min-width: min(420px, 100%); }
 .draft-selector small { color: var(--muted-foreground); padding-bottom: 9px; }
+.draft-selector-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
 .review-pane { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 18px; align-items: start; }
 .review-player { min-width: 0; position: sticky; top: 20px; }
 .review-player > video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--sidebar); border-radius: 10px; }
@@ -158,6 +159,23 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .rich-document-view > :last-child { margin-bottom: 0; }
 .comment-attachments { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
 .comment-attachments img, .comment-attachments video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--sidebar); border-radius: 8px; border: 1px solid var(--border); }
+.comparison-page { width: min(100%, 1600px); margin: 0 auto; padding: 42px 24px; }
+.comparison-page > a { color: var(--muted-foreground); text-decoration: none; font-size: 13px; }
+.comparison-page > header { margin: 28px 0 24px; }
+.comparison-page h1 { margin: 7px 0; font-size: 36px; letter-spacing: -.045em; }
+.comparison-page > header > p:last-child { color: var(--muted-foreground); margin: 0; }
+.comparison-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.comparison-side { min-width: 0; border: 1px solid var(--border); background: var(--card); border-radius: 12px; padding: 18px; }
+.comparison-side > header { display: flex; align-items: end; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.comparison-side > header h2 { margin: 5px 0 0; font-size: 20px; }
+.comparison-side > header label { display: grid; gap: 7px; min-width: min(270px, 55%); font-size: 13px; font-weight: 620; }
+.comparison-side .review-pane { grid-template-columns: minmax(0, 1fr); }
+.comparison-side .review-player { position: static; }
+.comparison-side .comment-composer { grid-column: 1; }
+
+@media (max-width: 1100px) {
+  .comparison-grid { grid-template-columns: minmax(0, 1fr); }
+}
 .not-found { min-height: 100vh; display: grid; place-content: center; text-align: center; }
 .not-found h1 { margin: 0; }
 .not-found p { color: var(--muted-foreground); }
@@ -191,7 +209,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .toolbar { overflow-x: auto; }
   .field-grid { grid-template-columns: 1fr; }
   .footage-section > header { align-items: stretch; flex-direction: column; }
-  .review-workspace > header, .draft-selector { align-items: stretch; flex-direction: column; }
+  .review-workspace > header, .draft-selector, .comparison-side > header { align-items: stretch; flex-direction: column; }
+  .draft-selector-actions { align-items: stretch; flex-direction: column; }
+  .comparison-side > header label { min-width: 100%; }
   .review-pane { grid-template-columns: 1fr; }
   .review-player { position: static; }
   .comment-composer { grid-column: 1; }

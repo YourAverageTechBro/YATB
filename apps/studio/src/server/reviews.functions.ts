@@ -1,9 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
 import { setResponseHeader } from '@tanstack/react-start/server'
 import {
+  parseComparisonQuery,
   parseCreateReviewComment,
   parseDeleteReviewComment,
   parseEditReviewComment,
+  resolveComparison,
+  type ComparisonQuery,
 } from '#/domain/reviews'
 import { parseMediaId } from '#/domain/media'
 import { parseVideoId } from '#/domain/videos'
@@ -12,6 +15,15 @@ function pair(value: unknown): { videoId: string; draftId: string } {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Review query is required.')
   const input = value as Record<string, unknown>
   return { videoId: parseVideoId(input.videoId), draftId: parseMediaId(input.draftId) }
+}
+
+function comparisonRequest(value: unknown): { videoId: string; query: ComparisonQuery } {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Comparison query is required.')
+  const input = value as Record<string, unknown>
+  return {
+    videoId: parseVideoId(input.videoId),
+    query: parseComparisonQuery(input),
+  }
 }
 
 async function readSession() {
@@ -39,6 +51,14 @@ export const loadComments = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     await readSession()
     return (await import('./reviews.server')).listComments(data.videoId, data.draftId)
+  })
+
+export const loadComparison = createServerFn({ method: 'GET' })
+  .validator(comparisonRequest)
+  .handler(async ({ data }) => {
+    await readSession()
+    const drafts = await (await import('./reviews.server')).listDrafts(data.videoId)
+    return resolveComparison(drafts, data.query)
   })
 
 export const addComment = createServerFn({ method: 'POST' })

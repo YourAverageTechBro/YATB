@@ -1,0 +1,19 @@
+STUDIO-06 local comparison performance proof
+Date: 2026-09-12
+Base revision: 3d17ece with the STUDIO-06 branch changes
+
+Baseline:
+- merged STUDIO-05 single-review paired workspace p95: 33.2 ms.
+- comparison budget from the plan: 2 * 33.2 + 500 = 566.4 ms, with a 2500 ms absolute ceiling.
+
+Head probe:
+- 10 two-pane loads, each combining the comparison catalog and both draft-scoped comment reads.
+- comparison interactive p95: 37.6 ms. PASS.
+- left comparison seek p95: 23.2 ms. PASS under 1500 ms.
+- right comparison seek p95: 22.8 ms. PASS under 1500 ms.
+- single-review workspace p95 in the same run: 25.0 ms.
+- authenticated player range p95: 13.9 ms.
+- 500-comment selected-draft load: 54.5 ms.
+
+The root browser lane measures actual media currentTime and playbackRate independently for both panes.
+Verdict: PASS

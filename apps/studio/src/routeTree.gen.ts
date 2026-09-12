@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppVideosRouteImport } from './routes/_app.videos'
 import { Route as AppVideosVideoIdRouteImport } from './routes/_app.videos_.$videoId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
+import { Route as AppVideosVideoIdCompareRouteImport } from './routes/_app.videos_.$videoId_.compare'
 import { Route as ApiVideosVideoIdMediaRouteImport } from './routes/api.videos.$videoId.media'
 import { Route as ApiVideosVideoIdUploadsRouteImport } from './routes/api.videos.$videoId.uploads'
 import { Route as ApiVideosVideoIdMediaFileIdRouteImport } from './routes/api.videos.$videoId.media.$fileId'
@@ -44,6 +45,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppVideosVideoIdCompareRoute = AppVideosVideoIdCompareRouteImport.update({
+  id: '/videos_/$videoId_/compare',
+  path: '/videos/$videoId/compare',
+  getParentRoute: () => AppRoute,
 } as any)
 const ApiVideosVideoIdMediaRoute = ApiVideosVideoIdMediaRouteImport.update({
   id: '/api/videos/$videoId/media',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/videos': typeof AppVideosRoute
   '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/videos/$videoId/compare': typeof AppVideosVideoIdCompareRoute
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/videos': typeof AppVideosRoute
   '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/videos/$videoId/compare': typeof AppVideosVideoIdCompareRoute
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/_app/videos': typeof AppVideosRoute
   '/_app/videos_/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_app/videos_/$videoId_/compare': typeof AppVideosVideoIdCompareRoute
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/videos'
     | '/videos/$videoId'
     | '/api/auth/$'
+    | '/videos/$videoId/compare'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
     | '/api/videos/$videoId/media/$fileId'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/videos'
     | '/videos/$videoId'
     | '/api/auth/$'
+    | '/videos/$videoId/compare'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
     | '/api/videos/$videoId/media/$fileId'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_app/videos'
     | '/_app/videos_/$videoId'
     | '/api/auth/$'
+    | '/_app/videos_/$videoId_/compare'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
     | '/api/videos/$videoId/media/$fileId'
@@ -203,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/videos_/$videoId_/compare': {
+      id: '/_app/videos_/$videoId_/compare'
+      path: '/videos/$videoId/compare'
+      fullPath: '/videos/$videoId/compare'
+      preLoaderRoute: typeof AppVideosVideoIdCompareRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/videos/$videoId/media': {
       id: '/api/videos/$videoId/media'
       path: '/api/videos/$videoId/media'
@@ -251,11 +270,13 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppVideosRoute: typeof AppVideosRoute
   AppVideosVideoIdRoute: typeof AppVideosVideoIdRoute
+  AppVideosVideoIdCompareRoute: typeof AppVideosVideoIdCompareRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppVideosRoute: AppVideosRoute,
   AppVideosVideoIdRoute: AppVideosVideoIdRoute,
+  AppVideosVideoIdCompareRoute: AppVideosVideoIdCompareRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
