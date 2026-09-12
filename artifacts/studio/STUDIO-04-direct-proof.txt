@@ -1,0 +1,41 @@
+STUDIO-04 shared UI direct proof
+Date: 2026-09-12
+Base: 2542f3aa6fe69c8243658901c2fbf1d6eb461c64
+
+Checks
+
+- `npm run check`: PASS.
+- Shared ownership guard: both apps import `@yatb/ui/styles.css`, declare the
+  workspace dependency, contain no app-local primitive copies, raw interactive
+  elements, or browser prompt/alert/confirm calls.
+- Studio tests: 20/20 PASS.
+- Studio and Web TypeScript checks: PASS.
+- `npm run build` outside the loopback sandbox: PASS for both Cloudflare Worker
+  builds.
+- Studio build scans: no environment file or secret probe in output; media
+  boundaries remain streaming; authored and emitted Studio CSS is grayscale.
+- Root emitted palette scan: shared authored CSS and both applications' client
+  and server CSS remain grayscale across seven files.
+- Dependency graph: React 19.3.0 and React DOM 19.3.0 are deduplicated; the
+  shared package owns unified `radix-ui` 1.6.7.
+- Emitted output has no Next or Vercel runtime/config import. Better Auth's
+  generic wildcard-host error examples mention `*.vercel.app`; those dependency
+  strings are documentation, not a runtime integration.
+
+Build artifacts
+
+- Studio client CSS: 51.73 kB, 10.18 kB gzip.
+- Studio login route: 278.01 kB, 89.35 kB gzip.
+- Studio planning route: 9.08 kB, 3.09 kB gzip.
+- Studio detail route, including lazy overlays: 24.22 kB, 8.24 kB gzip.
+- Web client CSS: 42.51 kB, 8.25 kB gzip.
+- Web home route: 348.65 kB, 111.65 kB gzip.
+- Web success route: 2.60 kB, 0.98 kB gzip.
+
+Cleanup
+
+- Deleted both exact generated local R2 fixture objects.
+- Deleted the disposable local video, saved views, user, sessions, account,
+  verification, captured email, and matching rate-limit state.
+- Follow-up D1 counts for the user, video, and media rows were all zero.
+- Removed workspace upload fixtures and temporary auth response files.

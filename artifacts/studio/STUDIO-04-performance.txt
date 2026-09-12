@@ -1,0 +1,36 @@
+STUDIO-04 shared UI performance receipt
+Date: 2026-09-12
+Base: exact detached STUDIO-03 head 2542f3aa6fe69c8243658901c2fbf1d6eb461c64
+
+Gate
+
+- Fail if either application adds more than 20 KiB gzip to its initial route
+  assets.
+- Fail if an interleaved local production-preview response p95 regresses by
+  more than 25 ms.
+
+Client asset comparison
+
+- Web CSS: 7.23 -> 8.25 KiB gzip, +1.02 KiB.
+- Web home JavaScript: 111.65 -> 111.65 KiB gzip, unchanged.
+- Web initial total change: +1.02 KiB, PASS.
+- Studio CSS: 6.07 -> 10.18 KiB gzip, +4.11 KiB.
+- Studio login JavaScript: 89.34 -> 89.35 KiB gzip, +0.01 KiB.
+- Studio login initial total change: +4.12 KiB, PASS.
+- Studio authenticated shell/list route delta: 0.68 + 2.43 -> 0.69 + 3.09
+  KiB gzip, +0.67 KiB. Including shared CSS and login change stays below the
+  20 KiB gate.
+- Studio detail route grew from 5.45 to 8.24 KiB gzip; the +2.79 KiB lazy
+  route delta contains Dialog and AlertDialog behavior and is recorded
+  separately from the initial route.
+
+Interleaved production-preview responses
+
+- Studio, 20 successful 200 responses after five warmups per side:
+  STUDIO-03 p95 7.1 ms; shared UI p95 7.4 ms; +0.3 ms, PASS.
+- Web, 20 successful 200 responses after five warmups per side:
+  STUDIO-03 p95 2.7 ms; shared UI p95 2.4 ms; -0.3 ms, PASS.
+- The first attempted Studio baseline preview had no local migrations and
+  returned 500. It was rejected, initialized with the real migrations, and
+  repeated with explicit status=200 assertions before recording the values
+  above.

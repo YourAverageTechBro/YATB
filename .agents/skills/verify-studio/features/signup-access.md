@@ -19,8 +19,9 @@ Preconditions:
 - The selected approved address has no existing user row.
 
 - **Deny.** Enter an unapproved address and submit `Create account`. The form shows a generic failure and D1 has no matching user.
-- **Allow.** Enter an approved address with mixed case and surrounding spaces. The form asks the user to check email. D1 stores the normalized address with `emailVerified = 0`.
-- **Proof.** Capture each form result and the corresponding read-only D1 query.
+- **Allow.** Enter an approved address with mixed case. The form asks the user to check email. D1 stores the normalized lowercase address with `emailVerified = 0`.
+- **Normalize whitespace at the boundary.** Send the same signup payload with surrounding email whitespace to the same-origin auth endpoint, or run the focused auth test, because the browser's native email constraint may reject that spelling before submission.
+- **Proof.** Capture each form result and the corresponding read-only D1 query. Retain the endpoint or focused-test receipt for whitespace normalization.
 
 ## Gotchas
 

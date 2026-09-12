@@ -1,0 +1,41 @@
+STUDIO-04 root browser proof
+Date: 2026-09-12
+Evidence form: tool-native root CUA screenshots and accessibility snapshots
+
+Web
+
+- At a verified 390 px viewport, only `Toggle menu` replaced desktop
+  navigation. The shared Sheet exposed every navigation link.
+- Escape closed the Sheet and restored focus to `Toggle menu`.
+- The first FAQ Accordion item collapsed and re-expanded.
+- The mobile landing screenshot was visually clean.
+
+Studio public surface
+
+- System, Light, and Dark rendered the shared monochrome tokens correctly.
+- Dark survived a full reload; System followed the OS dark scheme.
+- Keyboard focus was visibly outlined on the password control.
+- Accessibility snapshots reported the selected theme option correctly.
+
+Studio authenticated surface
+
+- New Video Dialog created the disposable video.
+- Save View Dialog persisted a named configuration.
+- Delete AlertDialog named the task, explained the effect, and Cancel returned
+  safely. The confirm action was not executed because the browser-control
+  policy requires a new human confirmation immediately before deletion;
+  existing direct deletion proof covers the mutation.
+- Two footage files uploaded in parallel and became cards. Inline rename to
+  `shoot-notes.txt` persisted, and Download emitted an authenticated event.
+- The rich-link Dialog rejected HTTP. Keyboard-selected text survived portal
+  focus and became an HTTPS anchor. A full reload preserved the unsaved-state
+  boundary: submitting the link Dialog alone did not change the task title or
+  revision and did not bubble into the outer Save form.
+
+Regression found and fixed
+
+- The first shared Dialog implementation lost editor selection and then
+  silently reloaded plain text. Selection is now cached as editor-owned DOM
+  paths and offsets, pending local HTML is distinguished from applied props,
+  and the portaled form stops React submit propagation at its boundary.
+- The final markup contained the selected anchor and no debug tracing remains.
