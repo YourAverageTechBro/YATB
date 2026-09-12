@@ -47,6 +47,7 @@ accessibility tree before each action. Use these stable accessible names:
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
 - `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, and `Download` identify private media delivery.
 - `Video drafts`, `Upload draft`, `Draft version`, `Playback speed`, `Current playback time`, `Comment timing`, `Review comment`, and `Add comment` identify versioned review.
+- `Download version <number>: <filename>` identifies the selected draft download. `Comments for version <number>` identifies its focusable comments viewport.
 - `Compare versions`, `Compare drafts`, `Left draft`, and `Right draft` identify the two-version comparison.
 - `Start seconds`, `End seconds`, and `Use playhead` create timestamp ranges; comment timestamp buttons seek the active player.
 - `Edit comment`, `Save comment`, and `Delete comment` identify review mutations.
@@ -113,7 +114,7 @@ STUDIO_TEST_EMAIL=<email> STUDIO_TEST_PASSWORD=<password> \
 node .agents/skills/verify-studio/scripts/verify-footage.mjs
 ```
 
-Exercise immutable draft versions, two-version selection, pair rejection,
+Exercise immutable draft versions, exact authenticated version downloads, two-version selection, pair rejection,
 completion replay, review anchors, rich comments, attachment reuse, task
 isolation, optimistic edits, ranges, and the 500-comment performance bound with
 a browser-compatible editor export:
