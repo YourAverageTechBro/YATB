@@ -6,8 +6,10 @@ An authenticated user uploads immutable edit versions, reviews them with the nat
 
 - `draft-version` assigns unique increasing task-local versions only after R2 and D1 publication complete.
 - `draft-retry` returns the same draft identity and version after completion retries.
-- `draft-failure` exposes a failed upload for retry or dismissal without publishing a draft.
+- `draft-failure` retries transient failures automatically, then exposes an exhausted upload for dismissal without publishing a draft.
 - `draft-playback` supports authenticated range playback, native scrubbing, and actual playback-rate changes.
+- `draft-download` downloads the selected version through the authenticated media route with its exact filename and bytes.
+- `review-layout` places the player beside a fixed composer and independently scrollable comments on desktop. Mobile uses page scrolling.
 - `comment-point` stores a rich comment at one bounded integer millisecond timestamp with author identity.
 - `comment-range` stores a rich comment whose start is before its end and whose end does not exceed the draft duration.
 - `comment-seek` moves the active player to a clicked point or range start.
@@ -30,6 +32,10 @@ Preconditions:
 - **Version.** Upload three drafts, including two completing concurrently. Confirm versions one through three appear newest first. Replay completion and confirm no fourth version appears.
 - **Failure.** Force one draft upload through retry exhaustion, dismiss it, and confirm it never appears as an immutable version or ready media row.
 - **Play.** Scrub the selected draft and choose a different `Playback speed`. Read the actual media element `currentTime` and `playbackRate`, not only the displayed controls.
+- **Download.** Select each version and activate its `Download version <number>: <filename>` link. Confirm HTTP `200`, `Content-Disposition: attachment`, the exact filename, and bytes identical to that version's upload. Request the same URL without a session and confirm `401`.
+- **Desktop rail.** At desktop width, confirm the player is left of the composer and comments. Add enough comments to overflow `Comments for version <number>`. Scroll that region and confirm the player and composer positions stay fixed. Focus the region with Tab and scroll it with the keyboard.
+- **Containment.** Use range timing, paste a long unbroken URL into the editor, and select 12 attachments with long names. Confirm the editor and attachment list stay bounded, every form control remains reachable, and no horizontal page overflow appears. Exercise edit and delete controls on a long comment.
+- **Mobile flow.** At 390 pixels wide, confirm the player, composer, and comments stack in that order. Confirm the page scrolls naturally without a bounded inner comments viewport.
 - **Point.** Pause the player, choose point timing, format a rich `Review comment`, attach an image, and choose `Add comment`. Reload and confirm author, timestamp, rich body, and attachment persist.
 - **Range.** Choose range timing, capture start and end with `Use playhead`, and save. Reject an end before start and a timestamp beyond known duration; confirm D1 contains neither invalid row.
 - **Seek.** Click each comment timestamp. Confirm actual player time equals the point or range start.

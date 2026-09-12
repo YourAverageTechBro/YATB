@@ -24,12 +24,12 @@ Preconditions:
 
 - **Navigate.** Open `/videos` without cookies. The browser returns to `/`.
 - **Open unknown page.** Open `/not-a-route`. The response is `404` and shows no workspace data.
-- **Request media.** Request `/api/videos/1b0e913b-645c-4306-a71d-78115390b46d/media/28a2b4a2-1ee2-44d8-8e3a-0c2dbd5b2d27` without cookies. The response is `401` with private no-store caching.
-- **Revoke.** Set the signed-in email's `allowed_email.enabled` value to `0`, then reload `/videos`. The browser returns to `/`.
+- **Request media.** Request `/api/videos/1b0e913b-645c-4306-a71d-78115390b46d/media/28a2b4a2-1ee2-44d8-8e3a-0c2dbd5b2d27?download=1` without cookies. The response is `401` with private no-store caching.
+- **Revoke.** Set the signed-in email's `allowed_email.enabled` value to `0`, then reload `/videos`. The browser returns to `/`. Restore the value to `1` before the origin check.
 - **Reject origin.** Submit an auth write and a footage mutation with `Origin: https://attacker.example`. Both return `403`; Better Auth identifies its rejection as `INVALID_ORIGIN`.
 - **Proof.** Capture the redirects, raw responses, and read-only allowlist row.
 
 ## Gotchas
 
-- Restore `allowed_email.enabled` to `1` after the drive.
+- Restore `allowed_email.enabled` to `1` before the origin check.
 - The route layout improves navigation, but the server session guard is the data boundary.

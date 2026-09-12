@@ -9,6 +9,7 @@ An authenticated user reviews two distinct immutable drafts of one video side by
 - `comparison-layout` uses equal-width desktop panes and stacks them at 1100 pixels and below.
 - `comparison-playback` keeps each native player's playhead and playback rate independent.
 - `comparison-comments` reads, creates, edits, and deletes rich point or range comments for the exact pane draft.
+- `comparison-download` exposes a download for the exact version selected on each side.
 - `comparison-attachments` uploads comment attachments as footage under the same parent task.
 
 ## How to get to it (user POV)
@@ -22,6 +23,8 @@ An authenticated user reviews two distinct immutable drafts of one video side by
 - **Layout.** At desktop width, measure the two `.comparison-side` boxes. Their widths match and neither overlaps. At 1100 pixels or narrower, confirm the panes stack and every control remains visible.
 - **Playback.** Seek only the left player and change only the right `Playback speed`. Read both media elements' actual `currentTime` and `playbackRate` values.
 - **Comments.** Add a rich point comment on the left and a rich range comment on the right. Confirm each appears only under its selected version. Edit and cancel deletion through the same controls as single review.
+- **Scroll.** Overflow both comment lists at desktop width. Scroll each named comments region and confirm the other region and both composers stay still. At 390 pixels, confirm both panes return to natural page scrolling.
+- **Download.** Download each side and confirm attachment disposition, exact filename, and bytes match that selected draft. Change one selector and confirm only that side's download target changes.
 - **Identity.** Type unfinished comment text on the right, switch the left draft, and confirm the right text and player state remain. Switch back and confirm persisted comments remain on their original draft.
 - **Boundaries.** Request an identical pair and a pair containing a draft from another task. Confirm both return the generic unavailable result without foreign metadata.
 

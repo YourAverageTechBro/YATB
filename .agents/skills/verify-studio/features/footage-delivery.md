@@ -28,8 +28,8 @@ Preconditions:
 
 - **Upload in parallel.** Choose three fixtures in one file picker action. Confirm at least two progress rows advance before either completes.
 - **Retry and cancel.** Interrupt one part and let its automatic retry finish. Exhaust the retry limit on another file while a sibling is active, then choose its accessible `Retry` button. Confirm it reuses the same D1 upload identity and reaches ready. Confirm `Dismiss` removes a failed row. Start another upload and choose its accessible `Cancel` button.
-- **Rename.** Choose `Rename`, enter a new display name in `File name`, then choose `Save filename`. Refresh and confirm it persists. Submit an invalid name and confirm the inline error without losing the editor.
-- **Download.** Choose `Download` and hash the resulting bytes outside the browser. Compare them with the source fixture.
+- **Rename.** Choose `Rename`, enter a new display name in `New name for <filename>`, then choose `Save filename`. Refresh and confirm it persists. Submit an invalid name and confirm the inline error without losing the editor.
+- **Download.** Choose `Download` within the target footage card and hash the resulting bytes outside the browser. Compare them with the source fixture.
 - **Seek.** Play a compatible MP4 and seek beyond its buffered position. Confirm the media request returns `206` with a valid `Content-Range`.
 - **Prove isolation.** Put one file ID under another video ID and confirm `404`.
 - **Prove cleanup.** Delete the parent video, invoke `/cdn-cgi/local/scheduled`, and confirm both the D1 media row and R2 object are absent.

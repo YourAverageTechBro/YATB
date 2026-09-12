@@ -31,8 +31,8 @@ comparison workflow on the production D1 database and private R2 bucket.
   acceptance in Cloudflare Email logs without recording either token.
 - Sign in and run each mapped planning, footage, draft review, and comparison
   drive against production.
-- Repeat private route and media requests signed out, then disable the test
-  address in `allowed_email` and repeat with its existing session.
+- Repeat private route and media requests signed out. Run allowlist revocation
+  only with a dedicated disposable address. Do not disable either product address.
 - Inspect the D1 rows and R2 object metadata created by the drive. Remove only
   the exact test task through the product deletion flow and wait for scheduled
   cleanup.
@@ -44,8 +44,9 @@ comparison workflow on the production D1 database and private R2 bucket.
   SHA. Confirm invocation logging is disabled before exercising auth links.
 - Capture the signed-out login, signed-in shell, planning task, private footage,
   draft review, and comparison views.
-- Record response timing for login, task list, first media byte, range seek, and
-  comparison against the same Worker on `workers.dev` before domain cutoff.
+- Record custom-domain response timing for login, task list, first media byte,
+  range seek, and comparison. Use `workers.dev` only for signed-out public checks
+  because Better Auth pins authenticated cookies to the custom domain.
 
 ## Traps
 

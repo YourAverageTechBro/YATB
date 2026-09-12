@@ -131,6 +131,19 @@ assert(drafts.every((result) => result.kind === 'draft'), 'Draft upload returned
 const versions = drafts.map((result) => result.draft.version).sort((left, right) => left - right)
 assert(JSON.stringify(versions) === '[1,2,3]', `Draft versions were ${versions.join(',')}`)
 const newestDrafts = [...drafts].sort((left, right) => right.draft.version - left.draft.version)
+for (const { draft } of drafts) {
+  const downloadUrl = `${baseUrl}/api/videos/${owner.id}/media/${draft.file.id}?download=1`
+  const download = await fetch(downloadUrl, { headers: { Cookie: cookie } })
+  assert(download.status === 200, `Version ${draft.version} download returned ${download.status}`)
+  const disposition = download.headers.get('Content-Disposition') ?? ''
+  assert(disposition.startsWith('attachment;'), `Version ${draft.version} was not an attachment`)
+  const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/)?.[1]
+  assert(encodedName && decodeURIComponent(encodedName) === draft.file.displayName, `Version ${draft.version} download filename changed`)
+  assert(download.headers.get('Content-Length') === String(fixture.length), `Version ${draft.version} download length changed`)
+  assert(Buffer.from(await download.arrayBuffer()).equals(fixture), `Version ${draft.version} download bytes changed`)
+  const signedOut = await fetch(downloadUrl)
+  assert(signedOut.status === 401, `Signed-out version ${draft.version} download returned ${signedOut.status}`)
+}
 const foreignDraft = await upload(cookie, other.id, fixture, { kind: 'draft', durationMs: 2000 }, 'foreign-draft.mp4', 'video/mp4')
 assert(foreignDraft.kind === 'draft', 'Foreign comparison fixture returned footage')
 
@@ -303,6 +316,7 @@ database.close()
 
 console.log(`run=${run}`)
 console.log(`draft_versions=${versions.join(',')} completion_replay=same_result`)
+console.log('draft_downloads=attachment exact_filenames=true exact_bytes=true signed_out_status=401')
 console.log('comparison_default=newest_two explicit_pair=preserved identical_and_cross_task=rejected')
 console.log('point_ms=750 range_ms=1000-1500 rich_body=persisted author=joined comment_replay=no_duplicate')
 console.log('image_and_video_reused_as_footage=true invalid_anchor=rejected invalid_purpose_and_cross_task_attachments=rejected')
