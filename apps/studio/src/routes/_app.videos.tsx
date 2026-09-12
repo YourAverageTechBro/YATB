@@ -3,11 +3,12 @@ import { Badge } from '@yatb/ui/badge'
 import { Button } from '@yatb/ui/button'
 import { Card } from '@yatb/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@yatb/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@yatb/ui/dropdown-menu'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
-import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { Clapperboard, LayoutGrid, List, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, Clapperboard, LayoutGrid, List, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import {
   DEFAULT_LIST_CONFIG,
@@ -69,9 +70,10 @@ function VideoCard({ video, board = false }: { video: VideoSummary; board?: bool
     {video.publishDate && <small>Publish {video.publishDate}</small>}
     {board ? <Label>
       Move to
-      <NativeSelect value={video.status} onChange={(event) => void move(event.target.value as VideoSummary['status'])}>
-        {VIDEO_STATUSES.map((status) => <NativeSelectOption key={status} value={status}>{STATUS[status].label}</NativeSelectOption>)}
-      </NativeSelect>
+      <Select value={video.status} onValueChange={(value) => void move(value as VideoSummary['status'])}>
+        <SelectTrigger aria-label={`Move ${video.title} to status`}><SelectValue /></SelectTrigger>
+        <SelectContent>{VIDEO_STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS[status].label}</SelectItem>)}</SelectContent>
+      </Select>
     </Label> : <Badge variant="secondary">{STATUS[video.status].label}</Badge>}
     {conflict && <Alert><AlertDescription>This video changed elsewhere. The latest version is now loaded.</AlertDescription></Alert>}
   </Card>
@@ -120,30 +122,15 @@ function Videos() {
       <Button type="button" onClick={() => setCreating(true)}><Plus /> New video</Button>
     </header>
     <section className="planning-toolbar" aria-label="Video view controls">
-      <NativeSelect aria-label="Status filter" value={config.status} onChange={(event) => update({ status: event.target.value as VideoListConfig['status'] })}>
-        <NativeSelectOption value="all">All statuses</NativeSelectOption>
-        {VIDEO_STATUSES.map((status) => <NativeSelectOption key={status} value={status}>{STATUS[status].label}</NativeSelectOption>)}
-      </NativeSelect>
-      <NativeSelect aria-label="Format filter" value={config.format} onChange={(event) => update({ format: event.target.value as VideoListConfig['format'] })}>
-        <NativeSelectOption value="all">All formats</NativeSelectOption><NativeSelectOption value="short">Short</NativeSelectOption><NativeSelectOption value="long">Long</NativeSelectOption>
-      </NativeSelect>
-      <NativeSelect aria-label="Sort videos" value={config.sort} onChange={(event) => update({ sort: event.target.value as VideoListConfig['sort'] })}>
-        <NativeSelectOption value="updated-desc">Recently updated</NativeSelectOption><NativeSelectOption value="publish-date-asc">Publish date</NativeSelectOption><NativeSelectOption value="title-asc">Title</NativeSelectOption>
-      </NativeSelect>
-      {config.layout === 'list' && <NativeSelect aria-label="Group videos" value={config.groupBy} onChange={(event) => update({ groupBy: event.target.value as 'none' | 'status' | 'format' })}>
-        <NativeSelectOption value="none">No grouping</NativeSelectOption><NativeSelectOption value="status">Group by status</NativeSelectOption><NativeSelectOption value="format">Group by format</NativeSelectOption>
-      </NativeSelect>}
+      <Select value={config.status} onValueChange={(value) => update({ status: value as VideoListConfig['status'] })}><SelectTrigger aria-label="Status filter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{VIDEO_STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS[status].label}</SelectItem>)}</SelectContent></Select>
+      <Select value={config.format} onValueChange={(value) => update({ format: value as VideoListConfig['format'] })}><SelectTrigger aria-label="Format filter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All formats</SelectItem><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select>
+      <Select value={config.sort} onValueChange={(value) => update({ sort: value as VideoListConfig['sort'] })}><SelectTrigger aria-label="Sort videos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="updated-desc">Recently updated</SelectItem><SelectItem value="publish-date-asc">Publish date</SelectItem><SelectItem value="title-asc">Title</SelectItem></SelectContent></Select>
+      {config.layout === 'list' && <Select value={config.groupBy} onValueChange={(value) => update({ groupBy: value as 'none' | 'status' | 'format' })}><SelectTrigger aria-label="Group videos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">No grouping</SelectItem><SelectItem value="status">Group by status</SelectItem><SelectItem value="format">Group by format</SelectItem></SelectContent></Select>}
       <Button variant="outline" type="button" onClick={() => update({ layout: config.layout === 'list' ? 'board' : 'list' })}>
         {config.layout === 'list' ? <><LayoutGrid /> Board</> : <><List /> List</>}
       </Button>
       <Button variant="outline" type="button" onClick={() => setSavingView(true)}>Save view</Button>
-      <NativeSelect aria-label="Saved views" value="" onChange={(event) => {
-        const view = savedViews.find((entry) => entry.id === event.target.value)
-        if (view) void navigate({ search: { ...view.config, page: 1 } })
-      }}>
-        <NativeSelectOption value="">Saved views</NativeSelectOption>
-        {savedViews.map((view) => <NativeSelectOption key={view.id} value={view.id}>{view.name}</NativeSelectOption>)}
-      </NativeSelect>
+      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" type="button">Saved views <ChevronDown /></Button></DropdownMenuTrigger><DropdownMenuContent align="start">{savedViews.length === 0 ? <DropdownMenuItem disabled>No saved views</DropdownMenuItem> : savedViews.map((view) => <DropdownMenuItem key={view.id} onSelect={() => void navigate({ search: { ...view.config, page: 1 } })}>{view.name}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
     </section>
     {savedViews.length > 0 && <div className="saved-views">
       {savedViews.map((view) => <Badge variant="outline" key={view.id}>{view.name}<Button variant="ghost" size="icon-xs" aria-label={`Delete ${view.name}`} type="button" onClick={() => void deleteView(view.id)}><Trash2 /></Button></Badge>)}
@@ -159,8 +146,8 @@ function Videos() {
         <DialogHeader><DialogTitle>New video</DialogTitle><DialogDescription>Add a short or long video to the production schedule.</DialogDescription></DialogHeader>
         <form className="dialog-form" onSubmit={(event) => void submitCreate(event)}>
           <Label>Title<Input value={title} onChange={(event) => setTitle(event.target.value)} required maxLength={200} autoFocus /></Label>
-          <Label>Format<NativeSelect value={format} onChange={(event) => { const next = event.target.value as VideoFormat; setFormat(next); setPromotionName('organic') }}><NativeSelectOption value="short">Short</NativeSelectOption><NativeSelectOption value="long">Long</NativeSelectOption></NativeSelect></Label>
-          <Label>Promotion<NativeSelect value={promotionName} onChange={(event) => setPromotionName(event.target.value)}>{legalPromotions(format).map((item) => <NativeSelectOption key={item} value={item}>{item}</NativeSelectOption>)}</NativeSelect></Label>
+          <Label>Format<Select value={format} onValueChange={(value) => { const next = value as VideoFormat; setFormat(next); setPromotionName('organic') }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select></Label>
+          <Label>Promotion<Select value={promotionName} onValueChange={setPromotionName}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{legalPromotions(format).map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Label>
           <DialogFooter><Button variant="outline" type="button" onClick={() => setCreating(false)}>Cancel</Button><Button type="submit">Create</Button></DialogFooter>
         </form>
       </DialogContent>

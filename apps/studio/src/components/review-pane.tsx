@@ -6,7 +6,8 @@ import { Button, buttonVariants } from '@yatb/ui/button'
 import { Card } from '@yatb/ui/card'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
-import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
+import { ScrollArea } from '@yatb/ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { uploadFile } from '#/client/upload'
 import { anchorStartMs, formatTimestamp, type Draft, type ReviewAnchor, type ReviewComment } from '#/domain/reviews'
 import { addComment, loadComments, removeComment, saveComment } from '#/server/reviews.functions'
@@ -111,22 +112,24 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
       <Card className="comment-composer">
         <form onSubmit={(event) => void submit(event)}>
           <div className="comment-anchor-controls">
-            <Label>Comment timing<NativeSelect value={kind} onChange={(event) => setKind(event.target.value as 'point' | 'range')}><NativeSelectOption value="point">Point</NativeSelectOption><NativeSelectOption value="range">Range</NativeSelectOption></NativeSelect></Label>
+            <Label>Comment timing<Select value={kind} onValueChange={(value) => setKind(value as 'point' | 'range')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="point">Point</SelectItem><SelectItem value="range">Range</SelectItem></SelectContent></Select></Label>
             {kind === 'point'
               ? <Label>Timestamp<Input value={pointSeconds} readOnly /></Label>
               : <><Label>Start seconds<Input type="number" min="0" step="0.001" value={start} onChange={(event) => setStart(event.target.value)} required /></Label><Button variant="outline" type="button" onClick={() => setStart(pointSeconds)}>Use playhead</Button><Label>End seconds<Input type="number" min="0" step="0.001" value={end} onChange={(event) => setEnd(event.target.value)} required /></Label><Button variant="outline" type="button" onClick={() => setEnd(pointSeconds)}>Use playhead</Button></>}
           </div>
           <RichEditor ariaLabel="Review comment" value={body} onChange={setBody} />
           <Label className={buttonVariants({ variant: 'outline', className: 'upload-button' })}>Attach images or video<Input className="sr-only" type="file" accept="image/*,video/*" multiple onChange={(event) => { setAttachments([...(event.target.files ?? [])].slice(0, 12).map((file) => ({ id: crypto.randomUUID(), file }))); event.target.value = '' }} /></Label>
-          {attachments.length > 0 && <ul className="attachment-selection" aria-label="Selected attachments" tabIndex={0}>{attachments.map((attachment) => <li key={attachment.id}><span>{attachment.file.name}</span><Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${attachment.file.name}`} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><X /></Button></li>)}</ul>}
+          {attachments.length > 0 && <ScrollArea className="attachment-selection-scroll" viewportProps={{ 'aria-label': 'Selected attachments', tabIndex: 0 }}><ul className="attachment-selection">{attachments.map((attachment) => <li key={attachment.id}><span>{attachment.file.name}</span><Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${attachment.file.name}`} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><X /></Button></li>)}</ul></ScrollArea>}
           {error && <p role="alert" className="dialog-error">{error}</p>}
           <Button type="submit" disabled={saving}><MessageSquare /> {saving ? 'Saving…' : 'Add comment'}</Button>
         </form>
       </Card>
-      <section className="review-comments" aria-label={`Comments for version ${draft.version}`} tabIndex={0}>
-        <h3>Comments <Badge variant="secondary">{comments.length}</Badge></h3>
-        {comments.length === 0 ? <p className="footage-empty">No review notes yet.</p> : comments.map((comment) => <CommentCard key={comment.id} comment={comment} onSeek={seek} onChanged={refresh} />)}
-      </section>
+      <ScrollArea className="review-comments" viewportProps={{ 'aria-label': `Comments for version ${draft.version}`, tabIndex: 0 }}>
+        <section className="review-comments-content">
+          <h3>Comments <Badge variant="secondary">{comments.length}</Badge></h3>
+          {comments.length === 0 ? <p className="footage-empty">No review notes yet.</p> : comments.map((comment) => <CommentCard key={comment.id} comment={comment} onSeek={seek} onChanged={refresh} />)}
+        </section>
+      </ScrollArea>
     </aside>
   </div>
 }

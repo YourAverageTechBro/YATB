@@ -1,8 +1,8 @@
 import { Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react'
 import { forwardRef, useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { Button } from '@yatb/ui/button'
-import { Input } from '@yatb/ui/input'
-import { NativeSelect, NativeSelectOption } from '@yatb/ui/native-select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
+import { Slider } from '@yatb/ui/slider'
 import { formatTimestamp, type ReviewAnchor } from '#/domain/reviews'
 
 export type ReviewTimelineMarker = Readonly<{ commentId: string; anchor: ReviewAnchor }>
@@ -131,7 +131,7 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
 
   function shortcut(event: KeyboardEvent<HTMLElement>) {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat) return
-    if (event.target instanceof Element && event.target.closest('button, a, input, select, textarea, [contenteditable="true"]')) return
+    if (event.target instanceof Element && event.target.closest('button, a, input, select, textarea, [contenteditable="true"], [role="slider"], [role="combobox"]')) return
     switch (event.key.toLowerCase()) {
       case ' ': case 'k': void togglePlayback(); break
       case 'arrowleft': seekTo((video.current?.currentTime ?? 0) * 1000 - 5000); break
@@ -150,9 +150,9 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
       onVolumeChange={synchronize} onRateChange={synchronize} onError={synchronize} onEmptied={synchronize} />
     <div className="custom-player-controls">
       <div className="custom-player-timeline">
-        <Input type="range" min={0} max={duration} step={100} value={snapshot.currentMs} disabled={disabled}
+        <Slider min={0} max={duration || 1} step={100} value={[snapshot.currentMs]} disabled={disabled}
           aria-label="Seek video" aria-valuetext={`${formatTimestamp(snapshot.currentMs)} of ${formatTimestamp(duration)}`}
-          aria-describedby={descriptionId} onChange={(event) => seekTo(Number(event.target.value))}
+          aria-describedby={descriptionId} onValueChange={([value]) => seekTo(value ?? 0)}
           onKeyDown={(event) => { if (!event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && (event.key === 'Home' || event.key === 'End')) { event.preventDefault(); seekTo(event.key === 'Home' ? 0 : duration) } }} />
         <div className="comment-marker-layer" aria-hidden="true">{paints.map((paint) => paint.kind === 'range'
           ? <span key={paint.commentId} className="comment-range-marker" style={{ left: `${paint.startPercent}%`, width: `${paint.widthPercent}%` }} />
@@ -163,8 +163,8 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
         <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={playLabel} title={playLabel} onClick={() => void togglePlayback()}>{snapshot.ended ? <RotateCcw aria-hidden="true" /> : snapshot.paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}</Button>
         <output aria-label="Current playback time">{formatTimestamp(snapshot.currentMs)} / {formatTimestamp(duration)}</output>
         <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={muteLabel} title={muteLabel} onClick={toggleMute}>{silent ? <VolumeX aria-hidden="true" /> : <Volume2 aria-hidden="true" />}</Button>
-        <Input className="custom-player-volume" type="range" min={0} max={1} step={0.05} value={snapshot.volume} disabled={disabled} aria-label="Volume" aria-valuetext={`${Math.round(snapshot.volume * 100)}%`} onChange={(event) => { if (video.current) { video.current.volume = Number(event.target.value); if (video.current.volume > 0) video.current.muted = false } }} />
-        <NativeSelect aria-label="Playback speed" value={snapshot.playbackRate} disabled={disabled} onChange={(event) => { if (video.current) video.current.playbackRate = Number(event.target.value) }}>{[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => <NativeSelectOption key={rate} value={rate}>{rate}×</NativeSelectOption>)}</NativeSelect>
+        <Slider className="custom-player-volume" min={0} max={1} step={0.05} value={[snapshot.volume]} disabled={disabled} aria-label="Volume" aria-valuetext={`${Math.round(snapshot.volume * 100)}%`} onValueChange={([value]) => { if (video.current && value !== undefined) { video.current.volume = value; if (value > 0) video.current.muted = false } }} />
+        <Select value={String(snapshot.playbackRate)} disabled={disabled} onValueChange={(value) => { if (video.current) video.current.playbackRate = Number(value) }}><SelectTrigger aria-label="Playback speed" size="sm"><SelectValue /></SelectTrigger><SelectContent>{[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => <SelectItem key={rate} value={String(rate)}>{rate}×</SelectItem>)}</SelectContent></Select>
         <Button type="button" variant="ghost" size="icon-sm" disabled={!fullscreenAvailable} aria-label={fullscreenLabel} title={fullscreenLabel} onClick={() => void toggleFullscreen()}>{fullscreen ? <Minimize aria-hidden="true" /> : <Maximize aria-hidden="true" />}</Button>
       </div>
       <p className="comment-marker-legend"><span aria-hidden="true" className="comment-marker-key" /> Comments: ticks mark points, bars mark ranges.</p>

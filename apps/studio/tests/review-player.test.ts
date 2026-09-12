@@ -36,7 +36,7 @@ describe('review timeline', () => {
 })
 
 describe('review player controls', () => {
-  it('renders named native controls and an informational timeline with no marker tab stops', () => {
+  it('renders named controls and an informational timeline with no marker tab stops', () => {
     const markup = renderToStaticMarkup(createElement(ReviewPlayer, {
       src: '/api/videos/video-1/media/file-1', durationMs: 2000, label: 'Version 1', onPlayheadChange: () => undefined,
       markers: [{ commentId: 'p', anchor: { kind: 'point', atMs: 500 } }],
@@ -58,7 +58,7 @@ describe('review player controls', () => {
       src: '/video.mp4', durationMs: 0, label: 'Version 1', markers: [], onPlayheadChange: () => undefined,
     }))
     expect(markup).toContain('No comments are marked on the timeline.')
-    expect(markup).toMatch(/<input[^>]*disabled=""[^>]*aria-label="Seek video"/)
+    expect(markup).toMatch(/<span[^>]*aria-disabled="true"[^>]*aria-label="Seek video"/)
     expect(markup).not.toContain('NaN')
   })
 })
