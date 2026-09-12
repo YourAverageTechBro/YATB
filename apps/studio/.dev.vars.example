@@ -1,0 +1,4 @@
+BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters
+APP_ORIGIN=http://localhost:3001
+EMAIL_MODE=capture
+EMAIL_FROM=studio@youraveragetechbro.com

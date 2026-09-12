@@ -1,12 +1,13 @@
 # Your Average Tech Bro
 
-This npm-workspaces monorepo contains the applications for Your Average Tech Bro. The consulting website lives in `apps/web` and runs on TanStack Start and Cloudflare Workers.
+This npm-workspaces monorepo contains the applications for Your Average Tech Bro. Both applications run on TanStack Start and Cloudflare Workers.
 
 ## Repository layout
 
 ```text
 apps/
   web/    Consulting website and Cloudflare Worker
+  studio/ Private video production workspace and Cloudflare Worker
 docs/
   migration/    Migration plan, architecture, and decision log
 ```
@@ -26,6 +27,22 @@ npm run dev
 Replace both placeholder values in `apps/web/.dev.vars` if you need to exercise Stripe. The landing page does not need Stripe credentials.
 
 Open `http://localhost:3000`.
+
+## Run Studio
+
+Create the local D1 database and start Studio:
+
+```sh
+npx wrangler d1 migrations apply yatb-studio --local --cwd apps/studio
+BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters \
+APP_ORIGIN=http://localhost:3001 EMAIL_MODE=capture \
+EMAIL_FROM=studio@youraveragetechbro.com npm run dev:studio
+```
+
+Set a random `BETTER_AUTH_SECRET` with at least 32 characters. Open
+`http://localhost:3001`. Local authentication messages are stored in the
+`email_outbox` D1 table. Production sends them through the restricted
+`AUTH_EMAIL` Cloudflare Email Routing binding.
 
 ## Check a change
 
@@ -69,5 +86,11 @@ npm run deploy:web
 ```
 
 `apps/web/wrangler.jsonc` defines the Worker name, runtime date, non-secret bindings, and canonical application origin. The Stripe price ID is a public identifier stored there as a Worker variable. Run `npm run cf-typegen --workspace @yatb/web` after you change that file.
+
+Studio deployment remains separate. Create the `yatb-studio` D1 database and
+the private `yatb-studio-media` R2 bucket, then replace the D1 database ID in
+`apps/studio/wrangler.jsonc`. Verify both allowed destination addresses in
+Cloudflare Email Routing. Store `BETTER_AUTH_SECRET` with `wrangler secret put`
+before the first production deployment.
 
 The custom domain migration keeps `www.youraveragetechbro.com` as the canonical hostname and redirects the apex domain to `www`. Verify the `workers.dev` deployment before changing production DNS.

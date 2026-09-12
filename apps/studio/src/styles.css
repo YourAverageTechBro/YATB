@@ -1,0 +1,79 @@
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import 'tailwindcss';
+
+:root {
+  color: #20211f;
+  font-family: 'Geist Variable', sans-serif;
+  background: #f5f5f1;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+
+.login-page { min-height: 100vh; padding: 20px; }
+.login-panel { min-height: calc(100vh - 40px); display: grid; grid-template-columns: 1.08fr .92fr; border: 1px solid #d7d7d0; border-radius: 20px; overflow: hidden; background: white; box-shadow: 0 24px 70px rgb(30 31 28 / 8%); }
+.brand-block { background: #1b3d32; color: white; padding: 42px 48px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+.brand-block::after { content: ''; position: absolute; width: 460px; height: 460px; border: 1px solid rgb(255 255 255 / 12%); border-radius: 50%; right: -180px; bottom: -180px; box-shadow: 0 0 0 80px rgb(255 255 255 / 3%), 0 0 0 160px rgb(255 255 255 / 2%); }
+.wordmark { color: inherit; text-decoration: none; font-size: 17px; font-weight: 620; letter-spacing: -.02em; position: relative; z-index: 1; }
+.wordmark span { display: inline-grid; place-items: center; background: #e6ff83; color: #1b3d32; padding: 5px 7px; border-radius: 6px; margin-right: 7px; font-size: 12px; letter-spacing: .04em; }
+.brand-copy { position: relative; z-index: 1; max-width: 540px; }
+.brand-copy h1 { font-size: clamp(44px, 5.8vw, 78px); line-height: .96; letter-spacing: -.065em; margin: 18px 0 28px; font-weight: 570; }
+.brand-copy > p:last-child { max-width: 430px; color: #bed0c8; line-height: 1.6; font-size: 17px; }
+.eyebrow { margin: 0; color: #738078; text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 700; }
+.eyebrow.light { color: #a8c4b8; }
+.private-note { position: relative; z-index: 1; display: flex; gap: 8px; align-items: center; color: #c6d7d0; font-size: 13px; }
+.auth-block { display: grid; place-items: center; padding: 48px; background: #fbfbf8; }
+.auth-card { width: min(100%, 410px); display: flex; flex-direction: column; gap: 22px; }
+.auth-card h2 { font-size: 36px; letter-spacing: -.045em; margin: 10px 0 8px; font-weight: 610; }
+.form-intro { color: #6e716d; margin: 0; }
+.auth-card label { color: #343633; font-size: 13px; font-weight: 620; display: grid; gap: 8px; }
+.auth-card input { width: 100%; border: 1px solid #d8dad4; background: white; border-radius: 9px; padding: 13px 14px; outline: none; transition: border .15s, box-shadow .15s; }
+.auth-card input:focus { border-color: #507365; box-shadow: 0 0 0 3px rgb(80 115 101 / 12%); }
+.password-field { position: relative; }
+.password-field button { position: absolute; right: 9px; top: 9px; border: 0; background: transparent; color: #777c76; padding: 5px; }
+.submit-button, .primary-button { border: 0; border-radius: 9px; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 13px 18px; background: #1b3d32; color: white; font-weight: 650; }
+.submit-button:disabled { opacity: .65; }
+.form-message { background: #edf1eb; color: #2b4a3f; padding: 11px 13px; border-radius: 8px; font-size: 13px; margin: 0; }
+.form-links { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.form-links button { border: 0; background: transparent; padding: 0; color: #49695d; font-size: 13px; text-align: left; }
+
+.workspace-shell { display: grid; grid-template-columns: 230px 1fr; min-height: 100vh; }
+.sidebar { background: #1b3d32; color: white; padding: 24px 16px; display: flex; flex-direction: column; }
+.wordmark.compact { padding: 0 8px 28px; }
+.sidebar nav { display: grid; gap: 5px; }
+.nav-item { color: #bdd0c8; text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 10px 11px; border-radius: 8px; font-size: 14px; }
+.nav-item.active { background: rgb(255 255 255 / 10%); color: white; }
+.account { border-top: 1px solid rgb(255 255 255 / 12%); padding: 18px 8px 0; margin-top: auto; display: grid; gap: 3px; font-size: 13px; }
+.account small { color: #9eb6ac; overflow: hidden; text-overflow: ellipsis; }
+.quiet-button { border: 0; background: transparent; color: #bdd0c8; padding: 12px 0 0; display: flex; align-items: center; gap: 7px; }
+.workspace { padding: 46px 54px; }
+.workspace-header { display: flex; justify-content: space-between; align-items: end; }
+.workspace-header h1 { font-size: 38px; margin: 7px 0 0; letter-spacing: -.045em; }
+.primary-button:disabled { opacity: .45; cursor: not-allowed; }
+.toolbar { margin-top: 34px; display: flex; gap: 10px; border-bottom: 1px solid #dcded8; padding-bottom: 15px; }
+.toolbar span { display: flex; align-items: center; gap: 7px; border: 1px solid #dcded8; background: white; padding: 8px 11px; border-radius: 8px; color: #636761; font-size: 13px; }
+.empty-state { min-height: 56vh; display: grid; place-content: center; justify-items: center; text-align: center; }
+.empty-icon { width: 52px; height: 52px; display: grid; place-items: center; background: #e7ebe5; color: #426457; border-radius: 14px; }
+.empty-state h2 { margin: 18px 0 6px; letter-spacing: -.025em; }
+.empty-state p { color: #777a75; margin: 0; }
+
+@media (max-width: 760px) {
+  .login-page { padding: 0; }
+  .login-panel { min-height: 100vh; grid-template-columns: 1fr; border: 0; border-radius: 0; }
+  .brand-block { min-height: 280px; padding: 28px; }
+  .brand-copy h1 { font-size: 45px; margin: 12px 0 18px; }
+  .brand-copy > p:last-child, .private-note { display: none; }
+  .auth-block { padding: 42px 26px; }
+  .workspace-shell { grid-template-columns: 1fr; }
+  .sidebar { padding: 16px; flex-direction: row; align-items: center; gap: 12px; }
+  .wordmark.compact { padding: 0; }
+  .sidebar nav { margin-left: auto; }
+  .account span, .account small, .nav-item { display: none; }
+  .account { margin: 0; padding: 0; border: 0; }
+  .quiet-button { padding: 0; font-size: 0; }
+  .workspace { padding: 34px 24px; }
+  .toolbar { overflow-x: auto; }
+}

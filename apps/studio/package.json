@@ -1,0 +1,41 @@
+{
+  "name": "@yatb/studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 3001",
+    "generate-routes": "tsr generate",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv",
+    "cf-typecheck": "wrangler types --env-interface CloudflareEnv --check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "check": "npm run cf-typecheck && npm run typecheck && npm test",
+    "build": "node scripts/build.mjs",
+    "preview": "vite preview --port 3001",
+    "deploy": "npm run check && npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.2.8",
+    "@fontsource-variable/geist-mono": "^5.2.8",
+    "@tanstack/react-router": "1.170.35",
+    "@tanstack/react-start": "1.168.52",
+    "better-auth": "1.7.4",
+    "lucide-react": "^0.479.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.54.8",
+    "@tailwindcss/vite": "^4.0.14",
+    "@tanstack/router-cli": "1.167.35",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "tailwindcss": "^4.0.14",
+    "typescript": "6.0.3",
+    "vite": "8.3.0",
+    "vitest": "^3.2.4",
+    "wrangler": "4.131.1"
+  }
+}
