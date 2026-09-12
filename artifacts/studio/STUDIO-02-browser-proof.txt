@@ -1,0 +1,19 @@
+STUDIO-02 root computer-control receipt
+Date: 2026-09-12
+
+The root drove the exact current-head production preview. Screenshots were emitted as tool-native evidence and did not expose filesystem paths.
+
+Passed scenarios
+- Authenticated 20-row paginated list.
+- Long video with ad integration created through the UI.
+- Title, Ready to review status, 2026-10-31 publish date, and H2 script survived reload.
+- Board rendered all five status columns.
+- Task moved to Published and retained the selected state.
+- Saved view restored Ready to review, Long, Publish date, and board controls.
+- Light theme applied and persisted across sign out.
+- Direct `/videos` navigation after sign out redirected to `/`.
+- Deleted task disappeared and its direct URL rendered Not found.
+- Two concurrent tabs produced a visible optimistic conflict.
+- Load latest restored the remote title without overwriting it.
+
+The browser evidence is tool-native. No screenshot or video path is invented in this receipt.

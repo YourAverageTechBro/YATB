@@ -1,6 +1,5 @@
 import {
   HeadContent,
-  Navigate,
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
@@ -21,9 +20,7 @@ export const Route = createRootRoute({
     ],
     links: [{ rel: 'stylesheet', href: appCss }],
   }),
-  notFoundComponent: () => (
-    <Navigate to="/" search={{ token: undefined }} replace />
-  ),
+  notFoundComponent: () => <main className="not-found"><h1>Not found</h1><p>This Studio item is unavailable.</p></main>,
   shellComponent: RootDocument,
 })
 

@@ -175,7 +175,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 - [ ] Metric. Measure authenticated list render p95 for 200 seeded tasks at trunk and head, plus board filter response time.
 - [ ] Probe. Interleave 20 list navigations on trunk and head against equivalent D1 data, then apply every status filter on head.
 - [ ] Baseline. Record trunk authenticated shell response first.
-- [ ] Rule. Fail when head list p95 exceeds 1.25 times trunk shell p95 or 750 ms locally, or any board filter response exceeds 300 ms.
+- [ ] Rule. Fail when head list p95 exceeds trunk shell p95 by more than 25 ms, exceeds 750 ms locally, or any board filter response exceeds 300 ms. Use additive overhead because a multiplicative ratio is unstable against the near-zero empty trunk shell.
 
 **Review gate.** The operator delegated automated evidence review and merge authority to the root.
 

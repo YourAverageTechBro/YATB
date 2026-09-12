@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { authClient } from '#/lib/auth-client'
 import { loadSession } from '#/server/auth.functions'
 import { ThemeControl } from '#/components/theme-control'
+import { DEFAULT_LIST_CONFIG } from '#/domain/videos'
 
 type Mode = 'sign-in' | 'sign-up' | 'forgot' | 'reset'
 
@@ -12,7 +13,7 @@ export const Route = createFileRoute('/')({
     token: typeof search.token === 'string' ? search.token : undefined,
   }),
   beforeLoad: async () => {
-    if (await loadSession()) throw redirect({ to: '/videos' })
+    if (await loadSession()) throw redirect({ to: '/videos', search: DEFAULT_LIST_CONFIG })
   },
   component: Login,
 })
@@ -64,7 +65,7 @@ function Login() {
     } else if (mode === 'sign-up') {
       setMessage('Check your email to verify your account.')
     } else {
-      await navigate({ to: '/videos' })
+      await navigate({ to: '/videos', search: DEFAULT_LIST_CONFIG })
     }
     setBusy(false)
   }

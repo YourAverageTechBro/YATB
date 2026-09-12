@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppVideosRouteImport } from './routes/_app.videos'
+import { Route as AppVideosVideoIdRouteImport } from './routes/_app.videos_.$videoId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
 import { Route as ApiMediaMediaIdRouteImport } from './routes/api.media.$mediaId'
 
@@ -29,6 +30,11 @@ const AppVideosRoute = AppVideosRouteImport.update({
   path: '/videos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppVideosVideoIdRoute = AppVideosVideoIdRouteImport.update({
+  id: '/videos_/$videoId',
+  path: '/videos/$videoId',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -43,12 +49,14 @@ const ApiMediaMediaIdRoute = ApiMediaMediaIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/videos': typeof AppVideosRoute
+  '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/media/$mediaId': typeof ApiMediaMediaIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/videos': typeof AppVideosRoute
+  '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/media/$mediaId': typeof ApiMediaMediaIdRoute
 }
@@ -57,19 +65,23 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/_app/videos': typeof AppVideosRoute
+  '/_app/videos_/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/media/$mediaId': typeof ApiMediaMediaIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/videos' | '/api/auth/$' | '/api/media/$mediaId'
+  fullPaths:
+    '/' | '/videos' | '/videos/$videoId' | '/api/auth/$' | '/api/media/$mediaId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/videos' | '/api/auth/$' | '/api/media/$mediaId'
+  to:
+    '/' | '/videos' | '/videos/$videoId' | '/api/auth/$' | '/api/media/$mediaId'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/_app/videos'
+    | '/_app/videos_/$videoId'
     | '/api/auth/$'
     | '/api/media/$mediaId'
   fileRoutesById: FileRoutesById
@@ -104,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVideosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/videos_/$videoId': {
+      id: '/_app/videos_/$videoId'
+      path: '/videos/$videoId'
+      fullPath: '/videos/$videoId'
+      preLoaderRoute: typeof AppVideosVideoIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -123,10 +142,12 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppVideosRoute: typeof AppVideosRoute
+  AppVideosVideoIdRoute: typeof AppVideosVideoIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppVideosRoute: AppVideosRoute,
+  AppVideosVideoIdRoute: AppVideosVideoIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

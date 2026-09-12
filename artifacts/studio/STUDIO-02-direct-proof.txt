@@ -1,0 +1,26 @@
+STUDIO-02 direct proof receipt
+Date: 2026-09-12
+
+The reusable verifier drove real TanStack server functions through Better Auth sessions and observed local D1 plus rendered HTTP responses.
+
+Primary run
+- run=STUDIO-02 1789227340723
+- legal_production_rows=4
+- invalid_production_rejected=true
+- rich_script_persisted=true
+- unsafe_link_rejected=true
+- optimistic_conflict=true
+- final_revision=7
+- all_statuses_persisted=true
+- saved_view_owner_scoped=true
+- second_user_does_not_inherit=true
+- filtered_board_rendered=true
+- tombstone_written=true
+- deleted_direct_status=404
+
+Focused boundary suite
+- 14 tests passed with pagination coverage.
+- Deeply nested rich documents fail during traversal.
+- Saved-view deletion uses the saved-view ID parser.
+
+Browser screenshots and video are recorded separately by the root computer-control lane.
