@@ -9,7 +9,8 @@ Sign out invalidates the session and makes copied private URLs inaccessible.
 
 ## How to get to it (user POV)
 
-- In `/videos`, choose `Sign out`.
+- In `/videos`, choose `Sign out`. At mobile width, first open `Open Studio
+  navigation`.
 
 ## Driving it with Codex computer control
 

@@ -45,7 +45,7 @@ accessibility tree before each action. Use these stable accessible names:
 - `Video view controls`, `Saved views`, and `Save view` identify planning controls.
 - `Script`, `Save changes`, and `Delete video` identify the task editor.
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
-- `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, and `Download` identify private media delivery.
+- `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, `Cancel <filename>`, and `Download` identify private media delivery.
 - `Video drafts`, `Upload draft`, `Draft version`, `Playback speed`, `Current playback time`, `Comment timing`, `Review comment`, and `Add comment` identify versioned review.
 - `Play video`, `Pause video`, `Replay video`, `Seek video`, `Mute video`, `Unmute video`, and `Volume` identify custom player controls. `Enter full screen` and `Exit full screen` toggle fullscreen when supported.
 - `Download version <number>: <filename>` identifies the selected draft download. `Comments for version <number>` identifies its focusable comments viewport.
@@ -125,6 +125,11 @@ STUDIO_TEST_EMAIL=<email> STUDIO_TEST_PASSWORD=<password> \
 STUDIO_REVIEW_FIXTURE=<absolute-mp4-path> STUDIO_REVIEW_PERF=1 \
 node .agents/skills/verify-studio/scripts/verify-review.mjs
 ```
+
+Set `STUDIO_KEEP_FIXTURES=1` only when the browser pass needs the generated
+drafts and comments. The script prints the fixture video IDs. Delete both
+videos through the application boundary and run the local scheduled handler
+before ending verification.
 
 The review script checks media delivery and stored review data. Drive the
 custom player in the browser to verify actual playback, sound, fullscreen,

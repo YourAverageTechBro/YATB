@@ -306,6 +306,13 @@ if (process.env.STUDIO_REVIEW_PERF === '1') {
   console.log(`player_range_p95_ms=${playerP95.toFixed(1)} seek_p95_ms=${seekP95.toFixed(1)} workspace_p95_ms=${workspaceP95.toFixed(1)} comparison_p95_ms=${comparisonP95.toFixed(1)} left_comparison_seek_p95_ms=${leftComparisonSeekP95.toFixed(1)} right_comparison_seek_p95_ms=${rightComparisonSeekP95.toFixed(1)} comments_500_ms=${comments500Ms.toFixed(1)}`)
 }
 
+if (process.env.STUDIO_KEEP_FIXTURES === '1') {
+  database.close()
+  console.log(`browser_fixture_video_id=${owner.id}`)
+  console.log(`browser_fixture_cleanup=delete video ${owner.id} and ${other.id}, then run the local scheduled handler`)
+  process.exit(0)
+}
+
 await call(videoIds, cookie, 'removeVideo', { id: owner.id, expectedRevision: owner.revision })
 await call(videoIds, cookie, 'removeVideo', { id: other.id, expectedRevision: other.revision })
 const scheduled = await fetch(`${baseUrl}/cdn-cgi/local/scheduled?cron=*/15+*+*+*+*`)

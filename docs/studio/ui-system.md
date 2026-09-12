@@ -39,10 +39,10 @@ owns layout and product composition. Studio keeps its pre-paint theme script and
 light, dark, and system preference because preference is application state, not
 a primitive concern.
 
-The initial component inventory has current callers. It includes Accordion,
-Alert, AlertDialog, Badge, Button, Card, Dialog, Input, Label, NativeSelect,
-Progress, Separator, and Sheet. Table, Tabs, Skeleton, and other unused
-components stay out of the public surface.
+The component inventory follows current callers. It includes Accordion, Alert,
+AlertDialog, Badge, Button, Card, Dialog, DropdownMenu, Input, Label, Progress,
+ScrollArea, Select, Separator, Sheet, Sidebar, Slider, Skeleton, and Tooltip.
+Table, Tabs, and other unused components stay out of the public surface.
 
 ## Synthesis decision
 
@@ -60,8 +60,8 @@ real browser-prompt callers.
   for eliminating a package release pipeline.
 - One palette increases the blast radius of token changes in exchange for one
   monochrome product language.
-- NativeSelect retains platform selection behavior in exchange for fewer custom
-  menu styling options than Radix Select.
+- Radix Select gives every application the same keyboard and visual behavior in
+  exchange for replacing platform-native mobile picker presentation.
 - Destructive actions use border weight, copy, iconography, and confirmation in
   exchange for keeping the palette strictly black and white.
 
@@ -74,17 +74,17 @@ real browser-prompt callers.
   consumer.
 - Base UI changes composition semantics during a package extraction without
   improving the product.
-- Installing every registry component creates unused source and dependencies.
+- Installing the entire registry creates unused source and dependencies.
 
 ## Risks
 
 - Tailwind must scan package source in both Worker builds.
 - Radix portals must inherit monochrome tokens and visible focus styles.
-- Studio's dense legacy layout CSS must not override primitive disabled or focus
+- Studio layout CSS must not override primitive disabled, focus, or selected
   behavior.
 - Dialog focus movement must preserve rich-editor selections before a link is
   applied.
 
 The ownership and emitted-palette scripts make the first three risks
 deterministic build failures. Direct browser proof covers portal focus, theme
-persistence, rich-link selection, responsive Sheet behavior, and media controls.
+persistence, rich-link selection, responsive Sidebar behavior, and media controls.
