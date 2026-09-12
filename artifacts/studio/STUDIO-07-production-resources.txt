@@ -1,0 +1,118 @@
+STUDIO-07 production resource proof
+Date: 2026-09-12
+Cloudflare account: 32967fffa44c1d38bc86ab6e4e419edb
+
+Provisioning
+- Worker: yatb-studio
+- D1: yatb-studio (e2d62270-da2c-4def-b3ce-878f1e02af9d, ENAM)
+- R2: yatb-studio-media (ENAM, Standard, private, no r2.dev or custom domain)
+- Pre-upload R2 baseline: 0 objects, 0 B
+- Email Sending domain: studio-mail.youraveragetechbro.com (Enabled, DNS Configured)
+- Sender: studio@studio-mail.youraveragetechbro.com
+- Custom domain: studio.youraveragetechbro.com
+- Cleanup cron: */15 * * * *
+
+Database
+- Pre-migration Time Travel bookmark: 00000001-00000000-000050e4-d553505c2bc30f8e1061441d74f16a46
+- Applied: 0001_auth.sql, 0002_planning.sql, 0003_footage.sql, 0004_reviews.sql
+- Second migration application: No migrations to apply
+- PRAGMA foreign_key_check: no rows
+- Allowlist: dohyun@youraveragetechbro.com enabled; jivedwinedompales@gmail.com enabled
+- Native verification email was delivered and its token succeeded once; the production owner is verified
+- Native password-reset email was delivered and the owner completed reset and sign-in
+- Neither authentication token nor the permanent password was stored in evidence or exposed to command-line verification
+
+Authenticated production fixture
+- Video: 7c2b230b-3e05-4e6b-989b-2068cd803fa1, long/integration/filming, revision 3
+- Upload sessions: 4 total, 4 ready; media files: 4; drafts: 2; comments: 2; attachments: 1
+- Draft v1: dfeaa3dd-8f69-40a1-b62b-a09be31a30e4, media 777d8f18-180c-4061-8157-e65922f5f4af, 2000 ms, 0 comments
+- Draft v2: f19db2cd-0980-425c-9af6-5daaca828973, media 600f93b4-04b0-4d31-b2b2-a122716e1268, 2000 ms, 2 comments
+- Point comment: 67082f32-aa22-40cf-bf9e-c7b075373a10 at 0 ms on v2
+- Range comment: 66170add-6d69-49c1-b171-15f67bd9af23 from 250 through 1500 ms on v2
+- Both comments are authored by dohyun@youraveragetechbro.com and revision 1
+- Attachment media c615b74f-f648-465c-afb2-51f6f9817c75 is position 0 on the point comment and is the same footage record shown in the task Footage collection
+- PRAGMA foreign_key_check: no rows
+
+Private R2 fixture proof
+- Four D1-owned keys share the exact task prefix: one footage MP4, one attachment PNG, and two draft MP4s
+- Direct remote retrieval succeeded for every exact key
+- Each MP4 is 2,995 B and matches local SHA-256 620e3f0883e7e78b35bd233b02c8735aebab40f2115f86a040e75e4d4ef90743
+- The attachment is 1,505,219 B and matches local SHA-256 ceda3264427030497940e6a888f70d73ed83e927424519cf8ed6f34de86de027
+- R2 bucket aggregate object metrics still reported the pre-upload 0-object value immediately after direct retrieval; scoped D1 keys plus successful byte-for-byte object gets are the authoritative fixture receipt
+
+Root production browser drive
+- Footage upload, authenticated download, attachment reuse, and H.264 playback passed
+- Single-review v1 showed 0 comments; v2 showed its point and range comments after asynchronous load
+- Clicking the range timestamp sought v2 to 0.25 seconds; playback advanced at 2x
+- Comparison loaded v2 left and v1 right, enforced distinct selectors, and preserved exact-version comment isolation
+- Comparison speeds were independently 1.5x left and 0.5x right; only the left player sought to 0.25 seconds
+- The 969 px comparison layout stacked without horizontal overflow; the corrected 1440 px task layout also matched viewport width
+- The human-facing production deploy rebuilt the secret-scanned bundle before invoking Wrangler; its post-deploy signed-out audit and D1 fixture integrity passed
+- Fixture cleanup remains pending because product deletion requires fresh user confirmation at action time; it is separate from release correctness
+
+Deployment
+- Route-free workers.dev bootstrap version: 709e3d4d-a14e-4083-9da8-6646b7c863f6
+- Active version after safe deploy-command proof: 9e5923f9-8a8a-4c85-9c77-5e30499821c2
+- Deployed source head: 34ba705
+- Deployment traffic: 100 percent on the active version
+- Encrypted secret inventory: BETTER_AUTH_SECRET, secret_text; value never logged or stored in the repository
+- workers.dev signed-out login/private/media: 200/307/401
+- custom-domain signed-out login/private/media: 200/307/401
+- Production audit: PASS
+- Signed-out raw upload begin, part, complete, cancel, rename, and media read: 401 for each fabricated identifier
+- Cross-origin account creation for a non-allowlisted address: generic 400 with no account write
+- Pre-upload D1 baseline: 1 active video, 1 session, and 0 uploads, media files, drafts, comments, or attachments
+- Pre-upload count query: 0.41 ms in ENAM, 0 rows written
+
+TLS and DNS
+- Cloudflare A records: 104.21.19.28 and 172.67.184.233
+- Certificate subject: CN=youraveragetechbro.com
+- Issuer: Google Trust Services WE1
+- Valid: 2026-09-12 through 2026-12-11
+
+Observability
+- A synthetic wrangler tail request exposed its query string even with redact_query_string=true.
+- Invocation logs are disabled in the active configuration so verification and reset URLs are not stored as request logs.
+- Errors and explicit application logs remain enabled and persisted. Query redaction remains enabled as defense in depth.
+- The only live tail session was stopped before the production password-reset link was opened.
+
+Public response performance, 20 interleaved reads from IAD
+- workers.dev login p95: 357.3 ms
+- custom-domain login p95: 440.9 ms
+- custom-domain overhead: 23.4 percent (PASS, maximum 25 percent)
+- absolute login ceiling: PASS, 440.9 ms under 1500 ms
+
+Authenticated production browser wall-clock receipts after the active deploy
+- Video list navigation: 1,066 ms (PASS, under 1,500 ms)
+- Correct private media GET under /api: 305 ms (PASS, under 1,000 ms)
+- Comparison navigation: 583 ms (PASS, under 3,000 ms)
+- These are single interactive observations, not p95 values. Navigation Timing was unavailable in the browser sandbox.
+- A prior 78 ms media probe was rejected because it omitted /api and exercised the wrong route.
+
+Source gates
+- Wrangler 4.131.1 config dry run: PASS
+- Studio TypeScript and generated bindings: PASS
+- Studio unit tests: 31/31 PASS
+- Production client and Worker builds: PASS
+- Secret, streaming, and grayscale guards: PASS
+- Root shared-UI check, all workspace type checks, and full Web and Studio builds: PASS
+- Exact production validation rerun: PASS (2026-09-12, Wrangler 4.131.1)
+- Emitted environment file: absent after build; sentinel secret scan: clean
+- Vercel runtime, configuration, and deployment references: absent from executable workspaces and CI
+- Supported dry run: npm run validate:studio:production; deploy-script arguments are not a dry-run interface
+- Create Verification Skill inspection: existing verify-studio skill retained; no duplicate harness created
+- Maintain Verification Skill outcome: changed; all 16 indexed features received source review and the complete product received local or production live coverage
+- Ponytail full: PASS; native Cloudflare bindings and existing scripts only, with no dependency or speculative abstraction added
+- No Comments audit: 0 authored deletion candidates and 0 new suppressions; Wrangler-generated declarations retained
+- Technical writing and Unslop: PASS after correcting Email Sending, deploy, observability, and performance claims to the proven behavior
+
+Workers Builds
+- GitHub repository: YourAverageTechBro/YATB
+- Production branch: main
+- Root directory: /
+- Build: npm run check && npm run build
+- Production deploy: npm run deploy:studio:production
+- Non-production upload: npm exec --workspace @yatb/studio -- wrangler versions upload
+- Non-production builds: enabled
+- Build cache: enabled
+- Include paths: apps/studio/**, packages/ui/**, package.json, package-lock.json, scripts/**
