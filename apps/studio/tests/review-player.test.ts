@@ -47,6 +47,7 @@ describe('review player controls', () => {
     expect(markup).toContain('playsInline=""')
     expect(markup).not.toMatch(/<video[^>]*\scontrols[=\s>]/)
     expect(markup).toContain('aria-valuetext="0:00 of 0:02"')
+    expect(markup).toContain('1 comment is marked on the timeline.')
     expect(markup).toContain('Use the timestamp buttons in the comments list')
     expect(markup).toContain('Comments: ticks mark points, bars mark ranges.')
     expect(markup).toContain('<span class="comment-point-marker" style="left:25%;width:2px"></span>')

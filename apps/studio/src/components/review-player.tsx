@@ -158,7 +158,7 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
           ? <span key={paint.commentId} className="comment-range-marker" style={{ left: `${paint.startPercent}%`, width: `${paint.widthPercent}%` }} />
           : <span key={paint.commentIds.join(':')} className="comment-point-marker" style={{ left: `${paint.atPercent}%`, width: Math.min(6, paint.commentIds.length + 1) }} />)}</div>
       </div>
-      <p id={descriptionId} className="sr-only">{markers.length === 0 ? 'No comments are marked on the timeline.' : `${markers.length} comments are marked on the timeline. Use the timestamp buttons in the comments list to seek to each point or range start.`}</p>
+      <p id={descriptionId} className="sr-only">{markers.length === 0 ? 'No comments are marked on the timeline.' : `${markers.length} ${markers.length === 1 ? 'comment is' : 'comments are'} marked on the timeline. Use the timestamp buttons in the comments list to seek to each point or range start.`}</p>
       <div className="custom-player-control-row">
         <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={playLabel} title={playLabel} onClick={() => void togglePlayback()}>{snapshot.ended ? <RotateCcw aria-hidden="true" /> : snapshot.paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}</Button>
         <output aria-label="Current playback time">{formatTimestamp(snapshot.currentMs)} / {formatTimestamp(duration)}</output>
