@@ -36,7 +36,7 @@ Create the local D1 database and start Studio:
 npx wrangler d1 migrations apply yatb-studio --local --cwd apps/studio
 BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters \
 APP_ORIGIN=http://localhost:3001 EMAIL_MODE=capture \
-EMAIL_FROM=studio@youraveragetechbro.com npm run dev:studio
+EMAIL_FROM=studio@studio-mail.youraveragetechbro.com npm run dev:studio
 ```
 
 Set a random `BETTER_AUTH_SECRET` with at least 32 characters. Open
@@ -87,10 +87,9 @@ npm run deploy:web
 
 `apps/web/wrangler.jsonc` defines the Worker name, runtime date, non-secret bindings, and canonical application origin. The Stripe price ID is a public identifier stored there as a Worker variable. Run `npm run cf-typegen --workspace @yatb/web` after you change that file.
 
-Studio deployment remains separate. Create the `yatb-studio` D1 database and
-the private `yatb-studio-media` R2 bucket, then replace the D1 database ID in
-`apps/studio/wrangler.jsonc`. Verify both allowed destination addresses in
-Cloudflare Email Routing. Store `BETTER_AUTH_SECRET` with `wrangler secret put`
-before the first production deployment.
+Studio deployment remains separate. Follow the checked production procedure in
+[`docs/studio/production-runbook.md`](docs/studio/production-runbook.md). The
+runbook separates validation, migration, and deployment so no production write
+is hidden inside a check command.
 
 The custom domain migration keeps `www.youraveragetechbro.com` as the canonical hostname and redirects the apex domain to `www`. Verify the `workers.dev` deployment before changing production DNS.
