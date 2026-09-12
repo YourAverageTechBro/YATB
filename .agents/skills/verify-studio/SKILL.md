@@ -1,6 +1,6 @@
 ---
 name: verify-studio
-description: Drive the local YATB Studio authentication, planning, private footage, versioned draft review, and shared UI used by Studio and Web. Use after changes to routes, sessions, email callbacks, planning data, rich scripts, saved views, multipart uploads, media delivery, review comments, shared primitives, responsive navigation, themes, or Cloudflare bindings.
+description: Drive local and production YATB Studio authentication, planning, private footage, versioned draft review, comparison, and shared UI. Use after changes to routes, sessions, email callbacks, planning data, rich scripts, saved views, multipart uploads, media delivery, review comments, shared primitives, responsive navigation, themes, Cloudflare bindings, or production resources.
 ---
 
 # Verify YATB Studio
@@ -15,7 +15,7 @@ npx wrangler d1 migrations apply yatb-studio --local --cwd apps/studio
 CLOUDFLARE_INCLUDE_PROCESS_ENV=true \
 BETTER_AUTH_SECRET=verify-studio-secret-at-least-32-characters \
 APP_ORIGIN=http://localhost:3001 EMAIL_MODE=capture \
-EMAIL_FROM=studio@youraveragetechbro.com npm run dev:studio
+EMAIL_FROM=studio@studio-mail.youraveragetechbro.com npm run dev:studio
 ```
 
 Wait for `Local: http://localhost:3001/`. Keep the terminal session ID. Stop
@@ -133,3 +133,14 @@ node .agents/skills/verify-studio/scripts/measure-planning.mjs
 
 Set `STUDIO_TRUNK_P95_MS` to the interleaved production-preview trunk shell p95
 to enforce the additive 25 ms overhead limit.
+
+After explicit deployment approval and production deployment, audit the
+Cloudflare resources and signed-out boundary without changing either:
+
+```sh
+apps/studio/scripts/audit-production.sh
+```
+
+Continue with [`features/production-launch.md`](features/production-launch.md).
+The audit is only the first production gate. It does not prove email delivery
+or authenticated product behavior.

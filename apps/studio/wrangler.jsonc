@@ -7,18 +7,35 @@
   "main": "src/server.ts",
   "workers_dev": true,
   "preview_urls": true,
-  "observability": { "enabled": true },
+  "routes": [
+    {
+      "pattern": "studio.youraveragetechbro.com",
+      "custom_domain": true
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": false,
+      "persist": true
+    }
+  },
   "triggers": { "crons": ["*/15 * * * *"] },
+  "secrets": { "required": ["BETTER_AUTH_SECRET"] },
   "vars": {
     "APP_ORIGIN": "https://studio.youraveragetechbro.com",
     "EMAIL_MODE": "cloudflare",
-    "EMAIL_FROM": "studio@youraveragetechbro.com"
+    "EMAIL_FROM": "studio@studio-mail.youraveragetechbro.com"
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "yatb-studio",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "e2d62270-da2c-4def-b3ce-878f1e02af9d",
       "migrations_dir": "migrations"
     }
   ],
@@ -34,6 +51,9 @@
       "allowed_destination_addresses": [
         "dohyun@youraveragetechbro.com",
         "jivedwinedompales@gmail.com"
+      ],
+      "allowed_sender_addresses": [
+        "studio@studio-mail.youraveragetechbro.com"
       ]
     }
   ]

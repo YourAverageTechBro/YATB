@@ -6,6 +6,7 @@ An authenticated user uploads immutable edit versions, reviews them with the nat
 
 - `draft-version` assigns unique increasing task-local versions only after R2 and D1 publication complete.
 - `draft-retry` returns the same draft identity and version after completion retries.
+- `draft-failure` exposes a failed upload for retry or dismissal without publishing a draft.
 - `draft-playback` supports authenticated range playback, native scrubbing, and actual playback-rate changes.
 - `comment-point` stores a rich comment at one bounded integer millisecond timestamp with author identity.
 - `comment-range` stores a rich comment whose start is before its end and whose end does not exceed the draft duration.
@@ -27,6 +28,7 @@ Preconditions:
 - The fixture is a representative editor export that the browser can load through native `<video>`.
 
 - **Version.** Upload three drafts, including two completing concurrently. Confirm versions one through three appear newest first. Replay completion and confirm no fourth version appears.
+- **Failure.** Force one draft upload through retry exhaustion, dismiss it, and confirm it never appears as an immutable version or ready media row.
 - **Play.** Scrub the selected draft and choose a different `Playback speed`. Read the actual media element `currentTime` and `playbackRate`, not only the displayed controls.
 - **Point.** Pause the player, choose point timing, format a rich `Review comment`, attach an image, and choose `Add comment`. Reload and confirm author, timestamp, rich body, and attachment persist.
 - **Range.** Choose range timing, capture start and end with `Use playhead`, and save. Reject an end before start and a timestamp beyond known duration; confirm D1 contains neither invalid row.

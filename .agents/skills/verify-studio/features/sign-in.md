@@ -6,6 +6,9 @@ A verified approved user signs in and reaches the video workspace.
 
 - `signin-verified` creates a session for a verified approved user.
 - `signin-unverified` rejects a user before email verification.
+- `password-visibility` reveals and hides the password without changing it.
+- `existing-session-redirect` sends an already authenticated visit from `/` to
+  `/videos`.
 
 ## How to get to it (user POV)
 
@@ -20,7 +23,11 @@ Preconditions:
 - Studio passes the doctor.
 
 - **Reject unverified.** Submit the unverified user's credentials. The browser stays on `/`, shows the auth error, and D1 has no session for that user.
+- **Toggle password.** Enter a password, choose `Show password`, confirm the
+  input value is unchanged and visible, then choose `Hide password`.
 - **Sign in.** Submit the verified credentials. The browser navigates to `/videos` and shows the current planning view, which may contain videos or an empty result.
+- **Revisit login.** Navigate the authenticated browser to `/` and confirm it
+  returns to `/videos` without showing the login form.
 - **Inspect cookie.** Confirm the session cookie has `HttpOnly`, `SameSite=Lax`, no `Domain`, and `Secure` when the app origin uses HTTPS.
 - **Proof.** Capture the login action, the private shell, and response headers.
 

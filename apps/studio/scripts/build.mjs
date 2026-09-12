@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process'
+import { readFileSync, unlinkSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const probe = 'yatb-studio-build-secret-probe-84b7c90e'
@@ -11,6 +12,15 @@ const build = spawnSync(process.execPath, [vite, 'build'], {
 })
 
 if (build.status !== 0) process.exit(build.status ?? 1)
+
+const generatedSecretFile = fileURLToPath(
+  new URL('../dist/server/.dev.vars', import.meta.url),
+)
+const generatedSecret = readFileSync(generatedSecretFile, 'utf8')
+if (generatedSecret !== `BETTER_AUTH_SECRET='${probe}'\n`) {
+  throw new Error('Build emitted an unexpected local secret file.')
+}
+unlinkSync(generatedSecretFile)
 
 const scan = spawnSync(
   process.execPath,

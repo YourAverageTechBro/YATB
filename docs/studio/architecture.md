@@ -171,16 +171,11 @@ contract.
 
 ## Cloudflare email boundary
 
-The account currently exposes Cloudflare Email Service, but no domain is
-onboarded for Email Sending. This does not force an external provider. Email
-Routing can send to verified destination addresses through the same Workers
-binding on the current plan.
-
-Production therefore restricts the binding to the two product users. Both
-addresses must be verified as Cloudflare destination addresses and
-`youraveragetechbro.com` must be onboarded to Email Routing before production
-auth is declared ready. A future expansion beyond verified users requires
-Cloudflare Email Sending domain onboarding and a Workers Paid plan.
+Cloudflare Email Sending is active for the isolated sender domain
+`studio-mail.youraveragetechbro.com`. The `AUTH_EMAIL` binding sends structured
+messages from `studio@studio-mail.youraveragetechbro.com` and restricts delivery
+to the two product users. Native Email Sending does not require destination
+verification.
 
 Local development captures email content in a local sink. A local log proves
 the callback and token flow. It does not prove production delivery.
