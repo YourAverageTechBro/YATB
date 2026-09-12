@@ -1,0 +1,17 @@
+STUDIO-03 root browser proof
+Date: 2026-09-12
+Surface: current local Cloudflare Worker at http://localhost:3001
+Evidence medium: root tool-native browser capture; no filesystem screenshot path was exposed
+
+- Created task d7c8a0de-deb9-44fc-a59c-4e0e078a61e2.
+- Selected three 40 MiB files in one chooser.
+- Observed all three rows simultaneously with separate progress and Cancel controls.
+- All three files reached ready.
+- Selected a 1 GiB fixture and cancelled immediately; it never appeared ready.
+- Uploaded a browser-compatible H.264/AAC MP4 and triggered the authenticated Download action.
+- Opened the inline rename editor through Rename.
+- Empty Save used native required-field validation.
+- Renamed browser-a.bin to camera-primary-take.bin; reload preserved the new display name.
+- Scrubbed the MP4 to the end: currentTime=12, duration=12, readyState=4.
+- The separate direct HTTP proof records the authenticated cross-part 206 response and exact bytes because the browser harness does not expose network response headers.
+- No post-fix console error was observed. The earlier prompt error was reproduced before the inline editor replaced it.

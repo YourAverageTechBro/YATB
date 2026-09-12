@@ -1,0 +1,30 @@
+STUDIO-03 direct local Worker proof
+Date: 2026-09-12
+Base revision: cef7238c5fcca0c61fd526c40c5e4bfb3a4d408b plus the uncommitted STUDIO-03 diff
+Runtime: Cloudflare Vite plugin with local D1 and R2 bindings
+
+Command:
+STUDIO_TEST_EMAIL=<local allowlisted account> STUDIO_TEST_PASSWORD=<local disposable password> node .agents/skills/verify-studio/scripts/verify-footage.mjs
+
+Results:
+- duplicate begin: same application session and file identity
+- duplicate part: accepted and replaced the server-owned part receipt
+- completion recovery: ready after forced loss of the D1 media publication row
+- private response scan: no R2 object key, multipart upload ID, initializer token, or ETag
+- authenticated download SHA-256: 9f2663f60c3267b8717eecacf5dfddc174a51ec687ac89d86446b920e3909ae1
+- cross-part byte range: 206 with exact source bytes
+- rename: R2 object key and ETag unchanged
+- cross-origin media mutation: 403
+- wrong parent task: 404
+- cancellation: cancelled terminal state and no ready file
+- bounded parallel upload: three files ready
+- root browser: three 40 MiB progress rows overlapped and all became ready
+- root browser: 1 GiB upload cancelled before publication
+- root browser: inline rename validation and reload persistence passed
+- root browser: compatible MP4 reached currentTime 12 of 12 with readyState 4
+- tombstone: media hidden immediately
+- scheduled cleanup: video, upload metadata, media metadata, and owned R2 objects removed
+
+Doctor:
+.agents/skills/verify-studio/scripts/doctor.sh
+Studio doctor passed at http://localhost:3001

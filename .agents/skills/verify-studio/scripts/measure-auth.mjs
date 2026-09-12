@@ -35,7 +35,7 @@ for (let run = 0; run < 20; run += 1) {
   const cookie = signIn.headers.get('set-cookie')?.split(';', 1)[0]
   if (!cookie) throw new Error(`Sign in ${run + 1} returned no session cookie`)
   const shell = await fetch(`${url}/videos`, { headers: { Cookie: cookie } })
-  if (!shell.ok || !(await shell.text()).includes('No videos yet')) {
+  if (!shell.ok || !(await shell.text()).includes('New video')) {
     throw new Error(`Private shell ${run + 1} did not render`)
   }
   signInToShell.push(performance.now() - started)
