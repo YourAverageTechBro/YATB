@@ -424,16 +424,16 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 **Files.**
 
-- [ ] Edit Studio Wrangler production identifiers, generated binding types, deployment commands, runbook, and verification map.
+- [x] Edit Studio Wrangler production identifiers, generated binding types, deployment commands, runbook, and verification map.
 - [ ] Create only the migration or security corrections found by the production rehearsal. Do not add unrelated features.
 
 **Build.**
 
-- [ ] Provision the production D1 database and private R2 bucket in the specified Cloudflare account.
-- [ ] Onboard `youraveragetechbro.com` to Cloudflare Email Routing and verify both destination addresses before enabling production verification and reset email.
-- [ ] Install the Better Auth secret, apply migrations, deploy `yatb-studio`, and attach the exact custom domain.
+- [x] Provision the production D1 database and private R2 bucket in the specified Cloudflare account.
+- [x] Onboard `studio-mail.youraveragetechbro.com` to native Cloudflare Email Sending and restrict the Worker binding to the sender and both product recipients.
+- [x] Install the Better Auth secret, apply migrations, deploy `yatb-studio`, and attach the exact custom domain.
 - [ ] Run the complete verification skill against production and reconcile every feature map entry.
-- [ ] Stop for explicit deployment approval immediately before the first production deploy or domain attachment.
+- [x] Confirm the operator delegated production deployment and cutover authority to the root before the first production deploy and domain attachment.
 
 **You see.**
 
@@ -487,12 +487,12 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 No code prototype was needed before the plan. Current documentation settles the
 TanStack, D1, R2 multipart, Email Service, and custom-domain capabilities.
 
-The Cloudflare dashboard inspection on 2026-09-12 proved that Email Service is
-present in account `32967fffa44c1d38bc86ab6e4e419edb`. Email Sending showed
-no eligible zones. Email Routing showed that the domain is not onboarded. The
-official Email Service documentation proves that Workers may send to verified
-destination addresses on the current plan. STUDIO-07 keeps onboarding and both
-verification clicks as explicit production prerequisites.
+The Cloudflare dashboard inspection on 2026-09-12 proved that native Email
+Sending is enabled for the isolated domain
+`studio-mail.youraveragetechbro.com` in account
+`32967fffa44c1d38bc86ab6e4e419edb`. Cloudflare created its DNS records and the
+Worker binding accepts structured email messages without verified-recipient
+onboarding. The binding still restricts sender and recipient addresses.
 
 The playback question remains deliberately unproven. STUDIO-05 runs real editor
 export fixtures. A failure stops execution for a Cloudflare Stream decision.
@@ -519,7 +519,7 @@ export fixtures. A failure stops execution for a Cloudflare Stream decision.
   immutable key, unique constraints, and completion recovery are mandatory.
 - STUDIO-05 may find browser-incompatible production codecs. Stop for a
   Cloudflare Stream decision rather than silently changing providers or formats.
-- STUDIO-07 requires user clicks for both Cloudflare destination verification
+- STUDIO-07 requires one real verification and password-reset email drive
   emails. This is the only known external coordination gate.
 - Production media can be large. Every part must stay within current Worker and
   R2 limits, and tests must include cancellation and retry.

@@ -12,8 +12,9 @@ truth for the Worker, its custom domain, bindings, schedule, and observability.
   development URL or custom domain to the bucket.
 - `studio-mail.youraveragetechbro.com` is an active Cloudflare Email Sending
   domain. Its approved sender is `studio@studio-mail.youraveragetechbro.com`.
-- `dohyun@youraveragetechbro.com` and `jivedwinedompales@gmail.com` are verified
-  destination addresses in the same account.
+- The `AUTH_EMAIL` binding restricts delivery to
+  `dohyun@youraveragetechbro.com` and `jivedwinedompales@gmail.com`. Native
+  Email Sending does not require destination verification.
 - Wrangler is authenticated to the account above.
 
 Confirm the non-secret resources without changing them.
@@ -40,8 +41,9 @@ Wrangler dry run. It does not migrate D1, deploy a Worker, or attach a domain.
 npm run validate:studio:production
 ```
 
-Stop here for explicit deployment approval. The remaining commands write to
-production. Record the approved commit SHA before continuing.
+Stop here unless the operator has explicitly authorized deployment. Record the
+authorized commit SHA before continuing. The operator delegated deployment and
+cutover authority to the root for STUDIO-07.
 
 ## Migrate and deploy
 
@@ -68,7 +70,9 @@ apps/studio/scripts/audit-production.sh
 
 Then run every lane in the production launch feature map. Confirm real email
 delivery before authentication drives. Inspect Workers Logs and verify that
-invocation logs are retained at full sampling while query strings are redacted.
+errors and explicit application logs are retained while invocation logs are
+disabled. This prevents auth query tokens from entering stored request URLs;
+the query-redaction setting remains defense in depth for other telemetry.
 
 If verification fails, stop writes. Use `wrangler versions list` and Cloudflare
 deployment history to identify the last known-good version. Roll back the

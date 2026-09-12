@@ -6,7 +6,7 @@ An authenticated user reviews two distinct immutable drafts of one video side by
 
 - `comparison-pair` resolves two distinct draft IDs only from the active task's draft catalog.
 - `comparison-url` stores both selected IDs in the URL and restores the same pair after reload.
-- `comparison-layout` uses equal-width desktop panes and stacks them below 1100 pixels.
+- `comparison-layout` uses equal-width desktop panes and stacks them at 1100 pixels and below.
 - `comparison-playback` keeps each native player's playhead and playback rate independent.
 - `comparison-comments` reads, creates, edits, and deletes rich point or range comments for the exact pane draft.
 - `comparison-attachments` uploads comment attachments as footage under the same parent task.

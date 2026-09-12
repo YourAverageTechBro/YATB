@@ -18,7 +18,9 @@ comparison workflow on the production D1 database and private R2 bucket.
 - `AUTH_EMAIL` accepts only the two allowlisted destinations and sender
   `studio@studio-mail.youraveragetechbro.com`.
 - The cleanup schedule runs every 15 minutes.
-- Workers Logs retain every invocation and redact URL query strings.
+- Workers Logs retain errors and explicit application logs, redact URL query
+  strings, and disable invocation logs so auth query tokens are not stored in
+  request URLs.
 
 ## Drive
 
@@ -36,7 +38,8 @@ comparison workflow on the production D1 database and private R2 bucket.
 ## Proof
 
 - Save the audit output, custom-domain certificate details, Worker version,
-  migration list, Workers Logs result, and Email log result with the exact SHA.
+  migration list, observability settings, and Email log result with the exact
+  SHA. Confirm invocation logging is disabled before exercising auth links.
 - Capture the signed-out login, signed-in shell, planning task, private footage,
   draft review, and comparison views.
 - Record response timing for login, task list, first media byte, range seek, and

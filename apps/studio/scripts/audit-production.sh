@@ -19,7 +19,7 @@ grep -Fq 'BETTER_AUTH_SECRET' <<<"$secret_output"
 
 login_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$origin/")"
 private_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$origin/videos")"
-media_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$origin/api/media/not-found")"
+media_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$origin/api/videos/00000000-0000-4000-8000-000000000000/media/00000000-0000-4000-8000-000000000001")"
 
 test "$login_status" = '200'
 case "$private_status" in
