@@ -1,0 +1,11 @@
+ts	phase	decision	why	evidence	result
+2026-09-12T12:31:00Z	frame	preserve the waitlist site plus the guarded Stripe success flow	existing paid-session links may still rely on the server verification route	docs/migration/grounding.md	open
+2026-09-12T12:31:00Z	frame	use npm workspaces with the current app under apps/web	supports future apps without introducing a task runner or premature shared package	docs/migration/plan.md	open
+2026-09-12T12:31:00Z	baseline	record the dependency installation failure before editing	the original locked app cannot be tested until the local npm client issue is bypassed	/private/tmp/yatb-npm-cache/_logs/2026-09-12T12_30_17_868Z-debug-0.log	INCONCLUSIVE
+2026-09-12T12:39:00Z	design	select a static-first apps/web capsule with two Stripe server functions	three independent sketches converged and this shape keeps the public surface and call chain smallest	docs/migration/architecture.md	VERIFIED
+2026-09-12T12:43:00Z	implementation	port the application to TanStack Start under apps/web and remove the Next.js delivery path	one application capsule preserves behavior while establishing the workspace boundary	apps/web/src/routes/index.tsx	VERIFIED
+2026-09-12T12:46:00Z	verification	prerender only the public home route and keep the paid success route dynamic	private Stripe verification cannot be captured in a static artifact	npm run check && npm run build	VERIFIED
+2026-09-12T12:48:00Z	deployment	pin the Worker to Cloudflare account 32967fffa44c1d38bc86ab6e4e419edb	Wrangler has access to two accounts and non-interactive deployment must be deterministic	apps/web/wrangler.jsonc	VERIFIED
+2026-09-12T12:49:00Z	deployment	bootstrap yatb-web on workers.dev without placeholder payment secrets	Cloudflare cannot create a new Worker with declared required secrets before their values exist	https://yatb-web.dohyun.workers.dev	VERIFIED
+2026-09-12T12:50:00Z	cutover	keep production DNS on Vercel until Stripe secrets are installed in Cloudflare	cutting over now would break valid paid-session success links	STRIPE_SECRET_KEY and STRIPE_SUBSCRIPTION_PRICE_ID	BLOCKED
+2026-09-12T12:53:00Z	audit	preserve session_id at the URL boundary and attach no-store headers to redirect responses	independent review found TanStack normalization duplicated the bearer token and added a redundant redirect	https://yatb-web.dohyun.workers.dev/success	VERIFIED

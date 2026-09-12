@@ -1,35 +1,18 @@
 {
-  "name": "yatb-consulting",
-  "version": "0.1.0",
+  "name": "yatb",
   "private": true,
+  "packageManager": "npm@11.6.0",
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "npm run dev --workspace @yatb/web",
+    "check": "npm run check --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "preview": "npm run preview --workspace @yatb/web",
+    "deploy:web": "npm run deploy --workspace @yatb/web"
   },
-  "dependencies": {
-    "@radix-ui/react-accordion": "^1.2.3",
-    "@radix-ui/react-avatar": "^1.1.3",
-    "@radix-ui/react-dialog": "^1.1.6",
-    "@radix-ui/react-separator": "^1.1.2",
-    "@radix-ui/react-slot": "^1.1.2",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.479.0",
-    "next": "15.2.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "stripe": "^17.7.0",
-    "tailwind-merge": "^3.0.2",
-    "tailwindcss-animate": "^1.0.7"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+  "engines": {
+    "node": ">=22.20.0"
   }
 }

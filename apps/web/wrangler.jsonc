@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "yatb-web",
+  "account_id": "32967fffa44c1d38bc86ab6e4e419edb",
+  "compatibility_date": "2026-09-12",
+  "main": "@tanstack/react-start/server-entry",
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "APP_ORIGIN": "https://www.youraveragetechbro.com"
+  },
+  "secrets": {
+    "required": [
+      "STRIPE_SECRET_KEY",
+      "STRIPE_SUBSCRIPTION_PRICE_ID"
+    ]
+  }
+}

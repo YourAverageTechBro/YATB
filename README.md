@@ -1,40 +1,74 @@
-# Your Average Tech Bro - Consulting Website
+# Your Average Tech Bro
 
-A minimalist website for "Your Average Tech Bro" consulting services, where users can work 1:1 to build their SaaS applications.
+This npm-workspaces monorepo contains the applications for Your Average Tech Bro. The consulting website lives in `apps/web` and runs on TanStack Start and Cloudflare Workers.
 
-## Features
+## Repository layout
 
-- Clean, minimalist design inspired by dillion.io
-- Responsive layout for all device sizes
-- Sections for services, about me, pricing, and FAQs
-- Built with NextJS and TailwindCSS
-- Uses ShadCN UI components for a modern look and feel
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+```text
+apps/
+  web/    Consulting website and Cloudflare Worker
+docs/
+  migration/    Migration plan, architecture, and decision log
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Add future applications under `apps`. Keep code inside an application until another application needs the same contract.
 
-## Technologies Used
+## Run the website
 
-- [Next.js](https://nextjs.org/) - React framework
-- [TailwindCSS](https://tailwindcss.com/) - CSS framework
-- [ShadCN UI](https://ui.shadcn.com/) - UI component library
-- [Lucide React](https://lucide.dev/) - Icon library
+Install Node.js 22 or newer, then run these commands from the repository root:
 
-## Learn More
+```sh
+npm ci
+cp apps/web/.dev.vars.example apps/web/.dev.vars
+npm run dev
+```
 
-To learn more about the technologies used in this project:
+Replace both placeholder values in `apps/web/.dev.vars` if you need to exercise Stripe. The landing page does not need Stripe credentials.
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [TailwindCSS Documentation](https://tailwindcss.com/docs)
-- [ShadCN UI Documentation](https://ui.shadcn.com/docs)
+Open `http://localhost:3000`.
+
+## Check a change
+
+Run the type and Cloudflare binding checks:
+
+```sh
+npm run check
+```
+
+Build the production Worker and prerendered landing page:
+
+```sh
+npm run build
+```
+
+Run the production output locally:
+
+```sh
+npm run preview
+```
+
+## Deploy the website
+
+Authenticate Wrangler with the Cloudflare account that owns the project:
+
+```sh
+npx wrangler login
+npx wrangler whoami
+```
+
+Set the production Stripe secrets once for the `yatb-web` Worker:
+
+```sh
+npx wrangler secret put STRIPE_SECRET_KEY --cwd apps/web
+npx wrangler secret put STRIPE_SUBSCRIPTION_PRICE_ID --cwd apps/web
+```
+
+Deploy the checked and built application:
+
+```sh
+npm run deploy:web
+```
+
+`apps/web/wrangler.jsonc` defines the Worker name, runtime date, bindings, and canonical application origin. Run `npm run cf-typegen --workspace @yatb/web` after you change that file.
+
+The custom domain migration keeps `www.youraveragetechbro.com` as the canonical hostname and redirects the apex domain to `www`. Verify the `workers.dev` deployment before changing production DNS.
