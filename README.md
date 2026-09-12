@@ -56,11 +56,10 @@ npx wrangler login
 npx wrangler whoami
 ```
 
-Set the production Stripe secrets once for the `yatb-web` Worker:
+Set the production Stripe secret once for the `yatb-web` Worker:
 
 ```sh
 npx wrangler secret put STRIPE_SECRET_KEY --cwd apps/web
-npx wrangler secret put STRIPE_SUBSCRIPTION_PRICE_ID --cwd apps/web
 ```
 
 Deploy the checked and built application:
@@ -69,6 +68,6 @@ Deploy the checked and built application:
 npm run deploy:web
 ```
 
-`apps/web/wrangler.jsonc` defines the Worker name, runtime date, bindings, and canonical application origin. Run `npm run cf-typegen --workspace @yatb/web` after you change that file.
+`apps/web/wrangler.jsonc` defines the Worker name, runtime date, non-secret bindings, and canonical application origin. The Stripe price ID is a public identifier stored there as a Worker variable. Run `npm run cf-typegen --workspace @yatb/web` after you change that file.
 
 The custom domain migration keeps `www.youraveragetechbro.com` as the canonical hostname and redirects the apex domain to `www`. Verify the `workers.dev` deployment before changing production DNS.

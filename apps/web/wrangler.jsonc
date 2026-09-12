@@ -6,16 +6,26 @@
   "main": "@tanstack/react-start/server-entry",
   "workers_dev": true,
   "preview_urls": true,
+  "routes": [
+    {
+      "pattern": "youraveragetechbro.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.youraveragetechbro.com",
+      "custom_domain": true
+    }
+  ],
   "observability": {
     "enabled": true
   },
   "vars": {
-    "APP_ORIGIN": "https://www.youraveragetechbro.com"
+    "APP_ORIGIN": "https://www.youraveragetechbro.com",
+    "STRIPE_SUBSCRIPTION_PRICE_ID": "price_1R2K7sABJEuIdJOEPbj7w5pH"
   },
   "secrets": {
     "required": [
-      "STRIPE_SECRET_KEY",
-      "STRIPE_SUBSCRIPTION_PRICE_ID"
+      "STRIPE_SECRET_KEY"
     ]
   }
 }
