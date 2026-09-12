@@ -34,6 +34,8 @@ describe('draft review pane', () => {
     expect(first).toContain('src="/api/videos/video-1/media/file-1"')
     expect(first).toContain('href="/api/videos/video-1/media/file-1?download=1"')
     expect(first).toContain('aria-label="Download version 1: first edit.mp4"')
+    expect(first).toContain('aria-label="Seek video"')
+    expect(first).toContain('aria-valuetext="0:00 of 0:02"')
     expect(second).toContain('src="/api/videos/video-1/media/file-2"')
     expect(second).toContain('href="/api/videos/video-1/media/file-2?download=1"')
     expect(second).toContain('aria-label="Download version 2: second edit.mp4"')

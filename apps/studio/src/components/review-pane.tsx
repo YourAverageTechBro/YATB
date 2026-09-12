@@ -13,6 +13,7 @@ import { addComment, loadComments, removeComment, saveComment } from '#/server/r
 import { emptyRichDocument, type RichDocument } from '#/server/rich-document'
 import { RichDocumentView } from './rich-document-view'
 import { RichEditor } from './rich-editor'
+import { ReviewPlayer, type ReviewPlayerHandle } from './review-player'
 
 type Attachment = Readonly<{ id: string; file: File }>
 
@@ -36,10 +37,9 @@ function milliseconds(value: string): number {
 
 export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootageChanged?: () => void }) {
   const draftMediaUrl = `/api/videos/${draft.videoId}/media/${draft.file.id}`
-  const video = useRef<HTMLVideoElement>(null)
+  const player = useRef<ReviewPlayerHandle>(null)
   const [comments, setComments] = useState<ReviewComment[]>([])
   const [currentMs, setCurrentMs] = useState(0)
-  const [rate, setRate] = useState('1')
   const [kind, setKind] = useState<'point' | 'range'>('point')
   const [start, setStart] = useState('0')
   const [end, setEnd] = useState('0')
@@ -56,14 +56,13 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
   useEffect(() => { void refresh().catch((reason) => setError(reason instanceof Error ? reason.message : 'Comments could not be loaded.')) }, [draft.id])
 
   const pointSeconds = (currentMs / 1000).toFixed(3)
+  const markers = useMemo(() => comments.map(({ id, anchor }) => ({ commentId: id, anchor })), [comments])
   const anchor = useMemo<ReviewAnchor>(() => kind === 'point'
     ? { kind: 'point', atMs: currentMs }
     : { kind: 'range', startMs: milliseconds(start), endMs: milliseconds(end) }, [kind, currentMs, start, end])
 
   function seek(milliseconds: number) {
-    if (!video.current) return
-    video.current.currentTime = Math.min(milliseconds, draft.durationMs) / 1000
-    setCurrentMs(Math.round(video.current.currentTime * 1000))
+    player.current?.seekTo(milliseconds)
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -103,10 +102,8 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
 
   return <div className="review-pane">
     <div className="review-player">
-      <video ref={video} controls preload="metadata" src={draftMediaUrl} onTimeUpdate={(event) => setCurrentMs(Math.round(event.currentTarget.currentTime * 1000))} />
+      <ReviewPlayer ref={player} src={draftMediaUrl} durationMs={draft.durationMs} label={`Version ${draft.version}: ${draft.file.displayName}`} markers={markers} onPlayheadChange={setCurrentMs} />
       <div className="player-state">
-        <output aria-label="Current playback time">{formatTimestamp(currentMs)}</output>
-        <Label>Playback speed<NativeSelect value={rate} onChange={(event) => { setRate(event.target.value); if (video.current) video.current.playbackRate = Number(event.target.value) }}>{['0.5', '0.75', '1', '1.25', '1.5', '2'].map((value) => <NativeSelectOption key={value} value={value}>{value}×</NativeSelectOption>)}</NativeSelect></Label>
         <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=1`} aria-label={`Download version ${draft.version}: ${draft.file.displayName}`}><Download /> Download</a></Button>
       </div>
     </div>

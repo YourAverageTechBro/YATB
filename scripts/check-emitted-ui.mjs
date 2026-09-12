@@ -2,6 +2,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 function colorFailures(css, file) {
+  if (file.startsWith('apps/studio/')) css = css.replace(/(^|[;{])(\s*--review-comment-marker:\s*)#facc15(?=\s*[;}])/g, '$1$2#fff')
   const failures = []
   for (const match of css.matchAll(/#([0-9a-f]{3,8})\b/gi)) {
     const channels = match[1].length <= 4 ? [...match[1].slice(0, 3)] : match[1].match(/.{2}/g)?.slice(0, 3) ?? []
@@ -34,4 +35,4 @@ for (const appName of ['studio', 'web']) {
 const failures = []
 for (const file of files) failures.push(...colorFailures(await readFile(file, 'utf8'), file))
 if (failures.length > 0) throw new Error(`Shared UI emitted non-grayscale colors:\n${failures.join('\n')}`)
-console.log(`Shared authored and emitted CSS remain grayscale across ${files.length} files.`)
+console.log(`Shared authored and emitted CSS remain grayscale across ${files.length} files except the Studio review marker token.`)

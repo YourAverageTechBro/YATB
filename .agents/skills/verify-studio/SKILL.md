@@ -47,6 +47,7 @@ accessibility tree before each action. Use these stable accessible names:
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
 - `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, and `Download` identify private media delivery.
 - `Video drafts`, `Upload draft`, `Draft version`, `Playback speed`, `Current playback time`, `Comment timing`, `Review comment`, and `Add comment` identify versioned review.
+- `Play video`, `Pause video`, `Replay video`, `Seek video`, `Mute video`, `Unmute video`, and `Volume` identify custom player controls. `Enter full screen` and `Exit full screen` toggle fullscreen when supported.
 - `Download version <number>: <filename>` identifies the selected draft download. `Comments for version <number>` identifies its focusable comments viewport.
 - `Compare versions`, `Compare drafts`, `Left draft`, and `Right draft` identify the two-version comparison.
 - `Start seconds`, `End seconds`, and `Use playhead` create timestamp ranges; comment timestamp buttons seek the active player.
@@ -124,6 +125,12 @@ STUDIO_TEST_EMAIL=<email> STUDIO_TEST_PASSWORD=<password> \
 STUDIO_REVIEW_FIXTURE=<absolute-mp4-path> STUDIO_REVIEW_PERF=1 \
 node .agents/skills/verify-studio/scripts/verify-review.mjs
 ```
+
+The review script checks media delivery and stored review data. Drive the
+custom player in the browser to verify actual playback, sound, fullscreen,
+timeline markers, and independent comparison controls. Follow
+[`features/draft-review.md`](features/draft-review.md) and
+[`features/draft-comparison.md`](features/draft-comparison.md).
 
 Seed 200 tasks through the application boundary and measure list and board responses:
 
