@@ -42,6 +42,7 @@ describe('draft review pane', () => {
 
   it('makes each version comment region reachable by keyboard after the composer', () => {
     const markup = renderToStaticMarkup(createElement(ReviewPane, { draft }))
+    expect(markup).toContain('<aside class="review-rail" aria-label="Review version 1">')
     expect(markup).toContain('aria-label="Comments for version 1" tabindex="0"')
     expect(markup.indexOf('aria-label="Review comment"')).toBeLessThan(markup.indexOf('aria-label="Comments for version 1"'))
     expect(markup).toContain('No review notes yet.')

@@ -110,25 +110,27 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
         <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=1`} aria-label={`Download version ${draft.version}: ${draft.file.displayName}`}><Download /> Download</a></Button>
       </div>
     </div>
-    <Card className="comment-composer">
-      <form onSubmit={(event) => void submit(event)}>
-        <div className="comment-anchor-controls">
-          <Label>Comment timing<NativeSelect value={kind} onChange={(event) => setKind(event.target.value as 'point' | 'range')}><NativeSelectOption value="point">Point</NativeSelectOption><NativeSelectOption value="range">Range</NativeSelectOption></NativeSelect></Label>
-          {kind === 'point'
-            ? <Label>Timestamp<Input value={pointSeconds} readOnly /></Label>
-            : <><Label>Start seconds<Input type="number" min="0" step="0.001" value={start} onChange={(event) => setStart(event.target.value)} required /></Label><Button variant="outline" type="button" onClick={() => setStart(pointSeconds)}>Use playhead</Button><Label>End seconds<Input type="number" min="0" step="0.001" value={end} onChange={(event) => setEnd(event.target.value)} required /></Label><Button variant="outline" type="button" onClick={() => setEnd(pointSeconds)}>Use playhead</Button></>}
-        </div>
-        <RichEditor ariaLabel="Review comment" value={body} onChange={setBody} />
-        <Label className={buttonVariants({ variant: 'outline', className: 'upload-button' })}>Attach images or video<Input className="sr-only" type="file" accept="image/*,video/*" multiple onChange={(event) => { setAttachments([...(event.target.files ?? [])].slice(0, 12).map((file) => ({ id: crypto.randomUUID(), file }))); event.target.value = '' }} /></Label>
-        {attachments.length > 0 && <ul className="attachment-selection" aria-label="Selected attachments" tabIndex={0}>{attachments.map((attachment) => <li key={attachment.id}><span>{attachment.file.name}</span><Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${attachment.file.name}`} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><X /></Button></li>)}</ul>}
-        {error && <p role="alert" className="dialog-error">{error}</p>}
-        <Button type="submit" disabled={saving}><MessageSquare /> {saving ? 'Saving…' : 'Add comment'}</Button>
-      </form>
-    </Card>
-    <section className="review-comments" aria-label={`Comments for version ${draft.version}`} tabIndex={0}>
-      <h3>Comments <Badge variant="secondary">{comments.length}</Badge></h3>
-      {comments.length === 0 ? <p className="footage-empty">No review notes yet.</p> : comments.map((comment) => <CommentCard key={comment.id} comment={comment} onSeek={seek} onChanged={refresh} />)}
-    </section>
+    <aside className="review-rail" aria-label={`Review version ${draft.version}`}>
+      <Card className="comment-composer">
+        <form onSubmit={(event) => void submit(event)}>
+          <div className="comment-anchor-controls">
+            <Label>Comment timing<NativeSelect value={kind} onChange={(event) => setKind(event.target.value as 'point' | 'range')}><NativeSelectOption value="point">Point</NativeSelectOption><NativeSelectOption value="range">Range</NativeSelectOption></NativeSelect></Label>
+            {kind === 'point'
+              ? <Label>Timestamp<Input value={pointSeconds} readOnly /></Label>
+              : <><Label>Start seconds<Input type="number" min="0" step="0.001" value={start} onChange={(event) => setStart(event.target.value)} required /></Label><Button variant="outline" type="button" onClick={() => setStart(pointSeconds)}>Use playhead</Button><Label>End seconds<Input type="number" min="0" step="0.001" value={end} onChange={(event) => setEnd(event.target.value)} required /></Label><Button variant="outline" type="button" onClick={() => setEnd(pointSeconds)}>Use playhead</Button></>}
+          </div>
+          <RichEditor ariaLabel="Review comment" value={body} onChange={setBody} />
+          <Label className={buttonVariants({ variant: 'outline', className: 'upload-button' })}>Attach images or video<Input className="sr-only" type="file" accept="image/*,video/*" multiple onChange={(event) => { setAttachments([...(event.target.files ?? [])].slice(0, 12).map((file) => ({ id: crypto.randomUUID(), file }))); event.target.value = '' }} /></Label>
+          {attachments.length > 0 && <ul className="attachment-selection" aria-label="Selected attachments" tabIndex={0}>{attachments.map((attachment) => <li key={attachment.id}><span>{attachment.file.name}</span><Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${attachment.file.name}`} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><X /></Button></li>)}</ul>}
+          {error && <p role="alert" className="dialog-error">{error}</p>}
+          <Button type="submit" disabled={saving}><MessageSquare /> {saving ? 'Saving…' : 'Add comment'}</Button>
+        </form>
+      </Card>
+      <section className="review-comments" aria-label={`Comments for version ${draft.version}`} tabIndex={0}>
+        <h3>Comments <Badge variant="secondary">{comments.length}</Badge></h3>
+        {comments.length === 0 ? <p className="footage-empty">No review notes yet.</p> : comments.map((comment) => <CommentCard key={comment.id} comment={comment} onSeek={seek} onChanged={refresh} />)}
+      </section>
+    </aside>
   </div>
 }
 
