@@ -1,0 +1,39 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "yatb-studio",
+  "account_id": "32967fffa44c1d38bc86ab6e4e419edb",
+  "compatibility_date": "2026-09-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": { "enabled": true },
+  "vars": {
+    "APP_ORIGIN": "https://studio.youraveragetechbro.com",
+    "EMAIL_MODE": "cloudflare",
+    "EMAIL_FROM": "studio@youraveragetechbro.com"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "yatb-studio",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "yatb-studio-media"
+    }
+  ],
+  "send_email": [
+    {
+      "name": "AUTH_EMAIL",
+      "allowed_destination_addresses": [
+        "dohyun@youraveragetechbro.com",
+        "jivedwinedompales@gmail.com"
+      ]
+    }
+  ]
+}

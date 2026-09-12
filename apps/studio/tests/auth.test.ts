@@ -1,0 +1,25 @@
+import { describe, expect, it } from 'vitest'
+import {
+  normalizeEmail,
+  sessionEmailAuthorized,
+} from '../src/domain/auth'
+
+describe('Studio authentication boundary', () => {
+  it('normalizes an allowlisted email before matching', () => {
+    expect(normalizeEmail('  Dohyun@YourAverageTechBro.com ')).toBe(
+      'dohyun@youraveragetechbro.com',
+    )
+  })
+
+  it('denies a missing session email', () => {
+    expect(sessionEmailAuthorized(undefined, true)).toBe(false)
+  })
+
+  it('allows an enabled session email', () => {
+    expect(sessionEmailAuthorized('dohyun@example.com', true)).toBe(true)
+  })
+
+  it('revokes a session as soon as D1 reports the address disabled', () => {
+    expect(sessionEmailAuthorized('dohyun@example.com', false)).toBe(false)
+  })
+})

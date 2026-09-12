@@ -7,10 +7,13 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace @yatb/web",
+    "dev:studio": "npm run dev --workspace @yatb/studio",
     "check": "npm run check --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "preview": "npm run preview --workspace @yatb/web",
-    "deploy:web": "npm run deploy --workspace @yatb/web"
+    "preview:studio": "npm run preview --workspace @yatb/studio",
+    "deploy:web": "npm run deploy --workspace @yatb/web",
+    "deploy:studio": "npm run deploy --workspace @yatb/studio"
   },
   "engines": {
     "node": ">=22.20.0"
