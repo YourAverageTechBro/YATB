@@ -1,5 +1,4 @@
 import '@tanstack/react-start/server-only'
-import { EmailMessage } from 'cloudflare:email'
 
 export type StudioEmail = Readonly<{
   to: string
@@ -14,17 +13,6 @@ type EmailBindings = Readonly<{
   EMAIL_MODE: string
 }>
 
-function mimeMessage(from: string, email: StudioEmail): string {
-  return [
-    `From: Your Average Tech Bro Studio <${from}>`,
-    `To: ${email.to}`,
-    `Subject: ${email.subject}`,
-    'Content-Type: text/plain; charset=UTF-8',
-    '',
-    email.text,
-  ].join('\r\n')
-}
-
 export async function sendStudioEmail(
   bindings: EmailBindings,
   email: StudioEmail,
@@ -38,11 +26,10 @@ export async function sendStudioEmail(
     return
   }
 
-  await bindings.AUTH_EMAIL.send(
-    new EmailMessage(
-      bindings.EMAIL_FROM,
-      email.to,
-      mimeMessage(bindings.EMAIL_FROM, email),
-    ),
-  )
+  await bindings.AUTH_EMAIL.send({
+    from: { name: 'Your Average Tech Bro Studio', email: bindings.EMAIL_FROM },
+    to: email.to,
+    subject: email.subject,
+    text: email.text,
+  })
 }

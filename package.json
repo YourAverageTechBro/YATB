@@ -15,7 +15,10 @@
     "preview": "npm run preview --workspace @yatb/web",
     "preview:studio": "npm run preview --workspace @yatb/studio",
     "deploy:web": "npm run deploy --workspace @yatb/web",
-    "deploy:studio": "npm run deploy --workspace @yatb/studio"
+    "deploy:studio": "npm run deploy:studio:production",
+    "deploy:studio:production": "npm run production:deploy --workspace @yatb/studio",
+    "validate:studio:production": "npm run production:validate --workspace @yatb/studio",
+    "migrate:studio:production": "npm run production:migrate --workspace @yatb/studio"
   },
   "engines": {
     "node": ">=22.20.0"
