@@ -8,6 +8,8 @@ The color theme control applies a black-and-white light, dark, or system theme o
 - `theme-dark` applies the dark palette.
 - `theme-system` follows the browser preference.
 - `theme-persist` restores an explicit choice before the page paints.
+- `theme-sidebar` inverts the public brand panel and authenticated sidebar
+  between a light surface with dark text and a dark surface with light text.
 
 ## How to get to it (user POV)
 
@@ -23,9 +25,13 @@ Preconditions:
 
 - **Choose dark.** Select `Dark` from `Color theme`. The page uses only
   grayscale colors except the exact yellow review-marker token, the HTML theme
-  is `dark`, and local storage contains `dark`.
+  is `dark`, and local storage contains `dark`. Confirm that the public brand
+  panel and authenticated sidebar have a dark computed background with light
+  computed text.
 - **Reload.** Reload the page. The palette never flashes light, and the control shows `Dark` after hydration.
-- **Choose light.** Select `Light`. The HTML theme and stored value change to `light`, and text retains visible contrast.
+- **Choose light.** Select `Light`. The HTML theme and stored value change to
+  `light`. Confirm that the public brand panel and authenticated sidebar have a
+  light computed background with dark computed text.
 - **Follow system.** Select `System`. Change the browser color preference and confirm the page follows it without another selection.
 - **Use the shell.** Sign in and repeat light and dark selection from the sidebar. The login page retains the last choice after sign out.
 - **Use the keyboard.** Focus `Color theme` with the keyboard, open it with Space, change the value with Arrow keys, and press Enter. A visible focus outline remains around the trigger.
