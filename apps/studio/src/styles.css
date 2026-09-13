@@ -75,11 +75,12 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .video-detail footer { display: flex; flex-wrap: wrap; gap: 9px; }
 .video-detail { max-width: 940px; margin: 0 auto; padding: 42px 24px; }
 .video-detail > a { color: var(--muted-foreground); text-decoration: none; font-size: 13px; }
-.video-detail header { margin: 28px 0 18px; }
-.video-detail h1 { margin: 7px 0 0; font-size: 36px; letter-spacing: -.045em; }
+.video-detail > .video-detail-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 28px 0 18px; }
+.video-detail-heading > div { flex: 1 1 420px; min-width: 0; }
+.video-detail-heading > button { flex: 0 0 auto; }
+.video-detail-heading h1 { margin: 7px 0 0; overflow-wrap: anywhere; font-size: 36px; letter-spacing: -.045em; }
 .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .rich-editor { border: 1px solid var(--border); border-radius: 8px; background: var(--muted); overflow: hidden; }
-.rich-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-bottom: 1px solid var(--border); }
 .rich-surface { min-height: 260px; padding: 13px; outline: 0; font-weight: 400; line-height: 1.55; }
 .rich-surface:focus { box-shadow: inset 0 0 0 2px var(--ring); }
 .rich-surface p:first-child, .rich-surface h1:first-child, .rich-surface h2:first-child, .rich-surface h3:first-child { margin-top: 0; }
