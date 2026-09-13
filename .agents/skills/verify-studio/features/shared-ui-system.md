@@ -13,8 +13,8 @@ route behavior or application state.
   while Studio retains playback and comment state.
 - `shared-tokens` provides the zero-chroma light and dark palette while Studio
   retains its light, dark, and system preference.
-- `shared-editor-link` preserves an editor selection while the HTTPS link
-  dialog owns focus.
+- `shared-editor-surface` keeps script and review-comment editing toolbar-free
+  while preserving native keyboard editing and structured rich content.
 
 ## How to get to it (user POV)
 
@@ -51,11 +51,10 @@ Preconditions:
 - **Drive overlays.** Sign in. Open and cancel `New video`, save a named view,
   and open and cancel `Delete video`. Confirm the delete dialog names the task
   and returns focus without deleting it.
-- **Drive the editor link.** Select exact script text with the keyboard, open
-  `Link` from the keyboard, and submit a non-HTTPS URL through the `Add link` dialog. Confirm the dialog
-  remains open with an error. Submit an HTTPS URL, save, reload, and confirm the
-  selected text is still an anchor. Opening the dialog without a selection must
-  report `Select text in the script first.` rather than succeeding.
+- **Drive editor surfaces.** Confirm `Video script` and `Review comment` expose
+  an editable surface without a formatting toolbar. Select exact text and use
+  Cmd+B or Ctrl+B, then Cmd+I or Ctrl+I. Save and reload, and confirm the marks
+  persist. Existing HTTPS links in a fixture must continue to render as anchors.
 - **Drive footage.** Upload the text and MP4 fixtures together, confirm separate
   progress rows complete and are replaced by their footage cards, rename the
   text file inline, and trigger its download.
@@ -66,9 +65,6 @@ Preconditions:
 
 ## Gotchas
 
-- Radix portals move focus outside the editor. The editor must cache a
-  non-collapsed selection while it still owns the selection and verify the same
-  range before inserting an anchor.
 - The theme control is intentionally hidden until hydration; the head script,
   not a first-frame control assertion, prevents a palette flash.
 - Native file inputs remain visually hidden behind shared buttons, so use the

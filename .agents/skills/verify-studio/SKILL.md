@@ -55,7 +55,7 @@ accessibility tree before each action. Use these stable accessible names:
 - `Color theme` selects `System`, `Light`, or `Dark` on public and private pages.
 - `Toggle menu` opens Web's mobile navigation; `Frequently Asked Questions`
   contains the Web accordion.
-- `Add link` opens the script link dialog; `HTTPS URL` and `Add link` submit it.
+- `Video script` and `Review comment` identify toolbar-free rich text surfaces. Native Cmd/Ctrl+B and Cmd/Ctrl+I apply bold and italic formatting.
 
 Use `npx wrangler d1 execute yatb-studio --local --cwd apps/studio --command
 "<read-only SQL>"` to confirm D1 side effects. Read captured links from
