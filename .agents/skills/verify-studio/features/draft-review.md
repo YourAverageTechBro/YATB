@@ -46,7 +46,7 @@ Preconditions:
   without horizontal overflow or covering the timeline. Confirm the player,
   composer, and comments stack in that order and the bounded comments region
   scrolls independently.
-- **Point.** Pause the player, choose point timing, format a rich `Review comment`, attach an image, and choose `Add comment`. Reload and confirm author, timestamp, rich body, and attachment persist.
+- **Point.** Pause the player, choose point timing, and confirm `Review comment` has no formatting toolbar. Enter a rich comment using native Cmd/Ctrl+B and Cmd/Ctrl+I, attach an image, and choose `Add comment`. Reload and confirm author, timestamp, rich body, and attachment persist.
 - **Range.** Choose range timing, capture start and end with `Use playhead`, and save. Reject an end before start and a timestamp beyond known duration; confirm D1 contains neither invalid row.
 - **Seek.** Click each comment timestamp. Confirm actual player time equals the point or range start.
 - **Reuse.** Attach an image and video. Confirm both render in the comment and the same media IDs appear under `Footage upload` without duplicate R2 objects.

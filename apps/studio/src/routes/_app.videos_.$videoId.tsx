@@ -108,7 +108,16 @@ function VideoDetail() {
   return (
     <main className="video-detail">
       <a href="/videos">← Videos</a>
-      <header><p className="eyebrow">Production video</p><h1>{video.title}</h1></header>
+      <header className="video-detail-heading">
+        <div><p className="eyebrow">Production video</p><h1>{video.title}</h1></div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild><Button variant="destructive" type="button">Delete video</Button></AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Delete {video.title}?</AlertDialogTitle><AlertDialogDescription>This hides the task immediately and schedules its footage for permanent removal.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => void erase()}>Delete video</AlertDialogAction></AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </header>
       {conflict && <Alert className="conflict">
         <AlertTitle>This video changed in another session.</AlertTitle>
         <AlertDescription><Button variant="outline" size="sm" type="button" onClick={() => loadLatest(conflict)}>Load latest version</Button></AlertDescription>
@@ -125,13 +134,6 @@ function VideoDetail() {
           <Label>Script<RichEditor value={script} onChange={setScript} /></Label>
           <footer>
             <Button type="submit">Save changes</Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild><Button variant="destructive" type="button">Delete video</Button></AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader><AlertDialogTitle>Delete {video.title}?</AlertDialogTitle><AlertDialogDescription>This hides the task immediately and schedules its footage for permanent removal.</AlertDialogDescription></AlertDialogHeader>
-                <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => void erase()}>Delete video</AlertDialogAction></AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </footer>
         </form>
       </Card>

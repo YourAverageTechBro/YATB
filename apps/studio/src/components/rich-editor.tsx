@@ -1,14 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import { Button } from '@yatb/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@yatb/ui/dialog'
-import { Input } from '@yatb/ui/input'
-import { Label } from '@yatb/ui/label'
+import { type KeyboardEvent, useEffect, useRef } from 'react'
 import { type RichDocument, type RichInline, type RichMark } from '#/server/rich-document'
 import { assembleRichDocument, type RichEditorFlowNode } from './rich-editor-model'
 
 type Props = Readonly<{ value: RichDocument; onChange: (value: RichDocument) => void; ariaLabel?: string }>
-type SelectionPoint = Readonly<{ path: readonly number[]; offset: number }>
-type SelectionSnapshot = Readonly<{ start: SelectionPoint; end: SelectionPoint; text: string }>
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] ?? character)
@@ -86,38 +80,10 @@ function readDocument(root: HTMLElement): RichDocument {
   return assembleRichDocument(flow)
 }
 
-function selectionPoint(root: HTMLElement, node: Node, offset: number): SelectionPoint | null {
-  const path: number[] = []
-  let current: Node | null = node
-  while (current && current !== root) {
-    const parentNode: ParentNode | null = current.parentNode
-    if (!parentNode) return null
-    const index = Array.prototype.indexOf.call(parentNode.childNodes, current) as number
-    if (index < 0) return null
-    path.unshift(index)
-    current = parentNode
-  }
-  return current === root ? { path, offset } : null
-}
-
-function resolveSelectionPoint(root: HTMLElement, point: SelectionPoint): Node | null {
-  let current: Node = root
-  for (const index of point.path) {
-    const child = current.childNodes.item(index)
-    if (!child) return null
-    current = child
-  }
-  return current
-}
-
 export function RichEditor({ value, onChange, ariaLabel = 'Video script' }: Props) {
   const editor = useRef<HTMLDivElement>(null)
   const renderedHtml = useRef('')
   const pendingLocalHtml = useRef<string | null>(null)
-  const linkSelection = useRef<SelectionSnapshot | null>(null)
-  const [linkOpen, setLinkOpen] = useState(false)
-  const [linkValue, setLinkValue] = useState('')
-  const [linkError, setLinkError] = useState('')
 
   useEffect(() => {
     const html = documentHtml(value)
@@ -134,12 +100,6 @@ export function RichEditor({ value, onChange, ariaLabel = 'Video script' }: Prop
     }
   }, [value])
 
-  useEffect(() => {
-    const remember = () => rememberLinkSelection()
-    document.addEventListener('selectionchange', remember)
-    return () => document.removeEventListener('selectionchange', remember)
-  }, [])
-
   function emitChange() {
     if (!editor.current) return
     const next = readDocument(editor.current)
@@ -149,82 +109,17 @@ export function RichEditor({ value, onChange, ariaLabel = 'Video script' }: Prop
     onChange(next)
   }
 
-  function command(name: string, argument?: string) {
-    editor.current?.focus()
-    document.execCommand(name, false, argument)
-    emitChange()
-  }
-
-  function rememberLinkSelection() {
-    const selection = window.getSelection()
-    const range = selection?.rangeCount ? selection.getRangeAt(0) : null
-    const root = editor.current
-    if (!range || !root || range.collapsed || !root.contains(range.startContainer) || !root.contains(range.endContainer)) return
-    const start = selectionPoint(root, range.startContainer, range.startOffset)
-    const end = selectionPoint(root, range.endContainer, range.endOffset)
-    if (!start || !end) return
-    linkSelection.current = {
-      start,
-      end,
-      text: range.toString(),
-    }
-  }
-
-  function openLink() {
-    setLinkValue('')
-    setLinkError(linkSelection.current ? '' : 'Select text in the script first.')
-    setLinkOpen(true)
-  }
-
-  function addLink(event: React.FormEvent<HTMLFormElement>) {
+  function handleKeyboardShortcut(event: KeyboardEvent<HTMLDivElement>) {
+    if ((!event.metaKey && !event.ctrlKey) || event.altKey) return
+    const key = event.key.toLowerCase()
+    if (key !== 'b' && key !== 'i') return
     event.preventDefault()
-    event.stopPropagation()
-    try {
-      if (new URL(linkValue).protocol === 'https:') {
-        const snapshot = linkSelection.current
-        const root = editor.current
-        if (!snapshot || !root) {
-          setLinkError('Select text in the script first.')
-          return
-        }
-        const start = resolveSelectionPoint(root, snapshot.start)
-        const end = resolveSelectionPoint(root, snapshot.end)
-        if (!start || !end) {
-          setLinkError('The selected text changed. Select it again.')
-          return
-        }
-        const range = document.createRange()
-        range.setStart(start, snapshot.start.offset)
-        range.setEnd(end, snapshot.end.offset)
-        if (range.toString() !== snapshot.text) {
-          setLinkError('The selected text changed. Select it again.')
-          return
-        }
-        const anchor = document.createElement('a')
-        anchor.href = linkValue
-        anchor.rel = 'noreferrer'
-        anchor.appendChild(range.extractContents())
-        range.insertNode(anchor)
-        editor.current?.normalize()
-        emitChange()
-        linkSelection.current = null
-        setLinkOpen(false)
-        return
-      }
-    } catch {}
-    setLinkError('Links must use HTTPS.')
+    document.execCommand(key === 'b' ? 'bold' : 'italic')
+    emitChange()
   }
 
   return (
     <section className="rich-editor" aria-label={ariaLabel}>
-      <div className="rich-toolbar" aria-label={`${ariaLabel} formatting`}>
-        <Button variant="outline" size="sm" type="button" onClick={() => command('formatBlock', 'h2')}>Heading</Button>
-        <Button variant="outline" size="sm" type="button" onClick={() => command('insertUnorderedList')}>Bullets</Button>
-        <Button variant="outline" size="sm" type="button" onClick={() => command('insertOrderedList')}>Numbered</Button>
-        <Button variant="outline" size="sm" type="button" onClick={() => command('bold')}>Bold</Button>
-        <Button variant="outline" size="sm" type="button" onClick={() => command('italic')}>Italic</Button>
-        <Button variant="outline" size="sm" type="button" onPointerDown={(event) => { event.preventDefault(); rememberLinkSelection() }} onClick={openLink}>Link</Button>
-      </div>
       <div
         ref={editor}
         className="rich-surface"
@@ -232,20 +127,9 @@ export function RichEditor({ value, onChange, ariaLabel = 'Video script' }: Prop
         role="textbox"
         aria-multiline="true"
         suppressContentEditableWarning
-        onKeyUp={rememberLinkSelection}
-        onPointerUp={rememberLinkSelection}
+        onKeyDown={handleKeyboardShortcut}
         onInput={emitChange}
       />
-      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Add link</DialogTitle><DialogDescription>Attach a secure HTTPS reference to the selected text.</DialogDescription></DialogHeader>
-          <form className="dialog-form" onSubmit={addLink}>
-            <Label>HTTPS URL<Input type="url" value={linkValue} onChange={(event) => { setLinkValue(event.target.value); setLinkError('') }} aria-invalid={Boolean(linkError)} required autoFocus /></Label>
-            {linkError && <p className="dialog-error" role="alert">{linkError}</p>}
-            <DialogFooter><Button variant="outline" type="button" onClick={() => setLinkOpen(false)}>Cancel</Button><Button type="submit">Add link</Button></DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </section>
   )
 }
