@@ -59,8 +59,9 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .video-list { display: grid; gap: 28px; padding: 28px 0; }
 .video-list h2, .board-column h2 { font-size: 14px; margin: 0 0 10px; }
 .video-list > div { display: grid; gap: 9px; }
+.video-card-link { display: block; color: inherit; text-decoration: none; border-radius: 12px; }
 .video-card { padding: 14px; display: grid; gap: 7px; }
-.video-card a { color: var(--foreground); text-decoration: none; }
+.video-card > a { color: var(--foreground); text-decoration: none; }
 .video-card p, .video-card small { margin: 0; color: var(--muted-foreground); font-size: 13px; }
 .video-card label { display: grid; gap: 5px; color: var(--muted-foreground); font-size: 12px; }
 .board { padding-top: 28px; display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 12px; overflow-x: auto; }

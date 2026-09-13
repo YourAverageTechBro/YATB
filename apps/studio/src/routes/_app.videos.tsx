@@ -64,17 +64,26 @@ function VideoCard({ video, board = false }: { video: VideoSummary; board?: bool
     await router.invalidate()
   }
 
+  if (!board) return <a className="video-card-link" href={`/videos/${video.id}`}>
+    <Card className="video-card">
+      <strong>{video.title}</strong>
+      <p>{video.production.format} · {video.production.promotion}</p>
+      {video.publishDate && <small>Publish {video.publishDate}</small>}
+      <Badge variant="secondary">{STATUS[video.status].label}</Badge>
+    </Card>
+  </a>
+
   return <Card className="video-card">
     <a href={`/videos/${video.id}`}><strong>{video.title}</strong></a>
     <p>{video.production.format} · {video.production.promotion}</p>
     {video.publishDate && <small>Publish {video.publishDate}</small>}
-    {board ? <Label>
+    <Label>
       Move to
       <Select value={video.status} onValueChange={(value) => void move(value as VideoSummary['status'])}>
         <SelectTrigger aria-label={`Move ${video.title} to status`}><SelectValue /></SelectTrigger>
         <SelectContent>{VIDEO_STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS[status].label}</SelectItem>)}</SelectContent>
       </Select>
-    </Label> : <Badge variant="secondary">{STATUS[video.status].label}</Badge>}
+    </Label>
     {conflict && <Alert><AlertDescription>This video changed elsewhere. The latest version is now loaded.</AlertDescription></Alert>}
   </Card>
 }
