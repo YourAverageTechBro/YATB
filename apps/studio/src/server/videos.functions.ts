@@ -45,21 +45,31 @@ export const loadPlanning = createServerFn({ method: 'GET' })
   .validator(parsePlanningQuery)
   .handler(async ({ data }) => {
     const session = await readSession()
-    const { listSavedViews, listVideos } = await import('./videos.server')
+    const { listOrganicVideoOptions, listSavedViews, listVideos } = await import('./videos.server')
     const pageSize = 20
-    const [page, savedViews] = await Promise.all([
+    const [page, savedViews, organicVideoOptions] = await Promise.all([
       listVideos(data.config, pageSize + 1, (data.page - 1) * pageSize),
       listSavedViews(session.user.id),
+      listOrganicVideoOptions(),
     ])
-    return { videos: page.slice(0, pageSize), savedViews, hasMore: page.length > pageSize }
+    return {
+      videos: page.slice(0, pageSize),
+      savedViews,
+      organicVideoOptions,
+      hasMore: page.length > pageSize,
+    }
   })
 
 export const loadVideo = createServerFn({ method: 'GET' })
   .validator(parseVideoId)
   .handler(async ({ data }) => {
     await readSession()
-    const { getVideo } = await import('./videos.server')
-    return getVideo(data)
+    const { getVideo, listOrganicVideoOptions } = await import('./videos.server')
+    const [video, organicVideoOptions] = await Promise.all([
+      getVideo(data),
+      listOrganicVideoOptions(data),
+    ])
+    return { video, organicVideoOptions }
   })
 
 export const createVideo = createServerFn({ method: 'POST' })

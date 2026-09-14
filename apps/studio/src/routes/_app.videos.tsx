@@ -20,6 +20,7 @@ import {
   parsePlanningQuery,
   type Production,
   type VideoFormat,
+  type VideoId,
   type VideoListConfig,
   type VideoSummary,
 } from '#/domain/videos'
@@ -47,10 +48,16 @@ export const Route = createFileRoute('/_app/videos')({
   component: Videos,
 })
 
-function production(format: VideoFormat, promotion: string): Production {
+function production(
+  format: VideoFormat,
+  promotion: string,
+  organicVideoId: VideoId | null,
+): Production {
   return format === 'short'
     ? { format, promotion: promotion === 'advertisement' ? 'advertisement' : 'organic' }
-    : { format, promotion: promotion === 'integration' ? 'integration' : 'organic' }
+    : promotion === 'integration'
+      ? { format, promotion, organicVideoId }
+      : { format, promotion: 'organic' }
 }
 
 function VideoCard({ video, board = false }: { video: VideoSummary; board?: boolean }) {
@@ -89,13 +96,15 @@ function VideoCard({ video, board = false }: { video: VideoSummary; board?: bool
 }
 
 function Videos() {
-  const { config, page, videos, savedViews, hasMore } = Route.useLoaderData()
+  const { config, page, videos, savedViews, organicVideoOptions, hasMore } = Route.useLoaderData()
   const navigate = useNavigate({ from: Route.fullPath })
   const router = useRouter()
   const [creating, setCreating] = useState(false)
   const [title, setTitle] = useState('')
   const [format, setFormat] = useState<VideoFormat>('short')
   const [promotionName, setPromotionName] = useState('organic')
+  const [organicVideoId, setOrganicVideoId] = useState<VideoId | 'none'>('none')
+  const [createError, setCreateError] = useState<string | null>(null)
   const [savingView, setSavingView] = useState(false)
   const [viewName, setViewName] = useState('')
 
@@ -107,8 +116,23 @@ function Videos() {
 
   async function submitCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const video = await createVideo({ data: { title, production: production(format, promotionName), publishDate: null, script: emptyRichDocument() } })
-    await navigate({ to: '/videos/$videoId', params: { videoId: video.id }, search: config })
+    const result = await createVideo({
+      data: {
+        title,
+        production: production(
+          format,
+          promotionName,
+          organicVideoId === 'none' ? null : organicVideoId,
+        ),
+        publishDate: null,
+        script: emptyRichDocument(),
+      },
+    })
+    if (result.kind === 'invalid-link') {
+      setCreateError(result.message)
+      return
+    }
+    await navigate({ to: '/videos/$videoId', params: { videoId: result.video.id }, search: config })
   }
 
   async function saveCurrentView(event: React.FormEvent<HTMLFormElement>) {
@@ -128,7 +152,7 @@ function Videos() {
   return <main className="workspace">
     <header className="workspace-header">
       <div><p className="eyebrow">Production</p><h1>Videos</h1></div>
-      <Button type="button" onClick={() => setCreating(true)}><Plus /> New video</Button>
+      <Button type="button" onClick={() => { setCreateError(null); setCreating(true) }}><Plus /> New video</Button>
     </header>
     <section className="planning-toolbar" aria-label="Video view controls">
       <Select value={config.status} onValueChange={(value) => update({ status: value as VideoListConfig['status'] })}><SelectTrigger aria-label="Status filter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{VIDEO_STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS[status].label}</SelectItem>)}</SelectContent></Select>
@@ -155,8 +179,14 @@ function Videos() {
         <DialogHeader><DialogTitle>New video</DialogTitle><DialogDescription>Add a short or long video to the production schedule.</DialogDescription></DialogHeader>
         <form className="dialog-form" onSubmit={(event) => void submitCreate(event)}>
           <Label>Title<Input value={title} onChange={(event) => setTitle(event.target.value)} required maxLength={200} autoFocus /></Label>
-          <Label>Format<Select value={format} onValueChange={(value) => { const next = value as VideoFormat; setFormat(next); setPromotionName('organic') }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select></Label>
-          <Label>Promotion<Select value={promotionName} onValueChange={setPromotionName}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{legalPromotions(format).map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Label>
+          {createError && <Alert><AlertDescription>{createError}</AlertDescription></Alert>}
+          <Label>Format<Select value={format} onValueChange={(value) => { const next = value as VideoFormat; setFormat(next); setPromotionName('organic'); setOrganicVideoId('none'); setCreateError(null) }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select></Label>
+          <Label>Promotion<Select value={promotionName} onValueChange={(value) => { setPromotionName(value); if (value !== 'integration') setOrganicVideoId('none'); setCreateError(null) }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{legalPromotions(format).map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Label>
+          {format === 'long' && promotionName === 'integration' && <div className="linked-video-field">
+            <Label>Organic video (optional)<Select value={organicVideoId} onValueChange={(value) => { setOrganicVideoId(value as VideoId | 'none'); setCreateError(null) }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not linked</SelectItem>{organicVideoOptions.map((video) => <SelectItem key={video.id} value={video.id}>{video.title}</SelectItem>)}</SelectContent></Select></Label>
+            <p className="field-help">Choose the organic long-form video that will carry this integration.</p>
+            {organicVideoOptions.length === 0 && <p className="field-help">No organic long-form videos available.</p>}
+          </div>}
           <DialogFooter><Button variant="outline" type="button" onClick={() => setCreating(false)}>Cancel</Button><Button type="submit">Create</Button></DialogFooter>
         </form>
       </DialogContent>

@@ -17,37 +17,50 @@ import {
   type Production,
   type Video,
   type VideoFormat,
+  type VideoId,
 } from '#/domain/videos'
 import { type RichDocument } from '#/server/rich-document'
 import { loadVideo, removeVideo, saveVideo } from '#/server/videos.functions'
 
 export const Route = createFileRoute('/_app/videos_/$videoId')({
   loader: async ({ params }) => {
-    const video = await loadVideo({ data: params.videoId })
-    if (!video) throw notFound()
-    return video
+    const result = await loadVideo({ data: params.videoId })
+    if (!result.video) throw notFound()
+    return { video: result.video, organicVideoOptions: result.organicVideoOptions }
   },
   component: VideoDetail,
 })
 
-function asProduction(format: VideoFormat, promotion: string): Production {
+function asProduction(
+  format: VideoFormat,
+  promotion: string,
+  organicVideoId: VideoId | null,
+): Production {
   return format === 'short'
     ? { format, promotion: promotion === 'advertisement' ? 'advertisement' : 'organic' }
-    : { format, promotion: promotion === 'integration' ? 'integration' : 'organic' }
+    : promotion === 'integration'
+      ? { format, promotion, organicVideoId }
+      : { format, promotion: 'organic' }
 }
 
 function VideoDetail() {
-  const loaded = Route.useLoaderData()
+  const { video: loaded, organicVideoOptions } = Route.useLoaderData()
   const navigate = useNavigate()
   const router = useRouter()
   const [video, setVideo] = useState(loaded)
   const [title, setTitle] = useState(loaded.title)
   const [format, setFormat] = useState<VideoFormat>(loaded.production.format)
   const [promotion, setPromotion] = useState(loaded.production.promotion)
+  const [organicVideoId, setOrganicVideoId] = useState<VideoId | 'none'>(
+    loaded.production.promotion === 'integration'
+      ? loaded.production.organicVideoId ?? 'none'
+      : 'none',
+  )
   const [status, setStatus] = useState(loaded.status)
   const [publishDate, setPublishDate] = useState(loaded.publishDate ?? '')
   const [script, setScript] = useState<RichDocument>(loaded.script)
   const [conflict, setConflict] = useState<Video | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [footageRevision, setFootageRevision] = useState(0)
 
   useEffect(() => {
@@ -55,10 +68,16 @@ function VideoDetail() {
     setTitle(loaded.title)
     setFormat(loaded.production.format)
     setPromotion(loaded.production.promotion)
+    setOrganicVideoId(
+      loaded.production.promotion === 'integration'
+        ? loaded.production.organicVideoId ?? 'none'
+        : 'none',
+    )
     setStatus(loaded.status)
     setPublishDate(loaded.publishDate ?? '')
     setScript(loaded.script)
     setConflict(null)
+    setSaveError(null)
   }, [loaded])
 
   function loadLatest(latest: Video) {
@@ -66,10 +85,16 @@ function VideoDetail() {
     setTitle(latest.title)
     setFormat(latest.production.format)
     setPromotion(latest.production.promotion)
+    setOrganicVideoId(
+      latest.production.promotion === 'integration'
+        ? latest.production.organicVideoId ?? 'none'
+        : 'none',
+    )
     setStatus(latest.status)
     setPublishDate(latest.publishDate ?? '')
     setScript(latest.script)
     setConflict(null)
+    setSaveError(null)
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -79,7 +104,11 @@ function VideoDetail() {
         id: video.id,
         expectedRevision: video.revision,
         title,
-        production: asProduction(format, promotion),
+        production: asProduction(
+          format,
+          promotion,
+          organicVideoId === 'none' ? null : organicVideoId,
+        ),
         status,
         publishDate: publishDate || null,
         script,
@@ -89,11 +118,16 @@ function VideoDetail() {
       loadLatest(result.video)
       await router.invalidate()
     }
+    if (result.kind === 'invalid-link') setSaveError(result.message)
     if (result.kind === 'conflict') setConflict(result.latest)
     if (result.kind === 'not-found') {
       await navigate({ to: '/videos', search: DEFAULT_LIST_CONFIG })
     }
   }
+
+  const persistedOrganicVideoId = video.production.promotion === 'integration'
+    ? video.production.organicVideoId
+    : null
 
   async function erase() {
     const result = await removeVideo({
@@ -124,12 +158,21 @@ function VideoDetail() {
       </Alert>}
       <Card className="video-form-card">
         <form onSubmit={(event) => void submit(event)}>
+          {saveError && <Alert><AlertDescription>{saveError}</AlertDescription></Alert>}
           <Label>Title<Input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} required /></Label>
           <div className="field-grid">
-            <Label>Format<Select value={format} onValueChange={(value) => { const next = value as VideoFormat; setFormat(next); setPromotion('organic') }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select></Label>
-            <Label>Promotion<Select value={promotion} onValueChange={(value) => setPromotion(value as typeof promotion)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{legalPromotions(format).map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Label>
+            <Label>Format<Select value={format} onValueChange={(value) => { const next = value as VideoFormat; setFormat(next); setPromotion('organic'); setOrganicVideoId('none'); setSaveError(null) }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select></Label>
+            <Label>Promotion<Select value={promotion} onValueChange={(value) => { setPromotion(value as typeof promotion); if (value !== 'integration') setOrganicVideoId('none'); setSaveError(null) }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{legalPromotions(format).map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Label>
             <Label>Status<Select value={status} onValueChange={(value) => setStatus(value as typeof status)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS).map(([key, item]) => <SelectItem key={key} value={key}>{item.label}</SelectItem>)}</SelectContent></Select></Label>
             <Label>Publish date<Input type="date" value={publishDate} onChange={(event) => setPublishDate(event.target.value)} /></Label>
+            {format === 'long' && promotion === 'integration' && <div className="linked-video-field field-grid-wide">
+              <Label>Organic video (optional)<Select value={organicVideoId} onValueChange={(value) => { setOrganicVideoId(value as VideoId | 'none'); setSaveError(null) }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not linked</SelectItem>{organicVideoOptions.map((option) => <SelectItem key={option.id} value={option.id}>{option.title}</SelectItem>)}</SelectContent></Select></Label>
+              <div className="linked-video-help">
+                <p className="field-help">Choose the organic long-form video that will carry this integration.</p>
+                {organicVideoOptions.length === 0 && <p className="field-help">No organic long-form videos available.</p>}
+                {persistedOrganicVideoId && <Button asChild variant="link" size="sm"><a href={`/videos/${persistedOrganicVideoId}`}>Open linked video</a></Button>}
+              </div>
+            </div>}
           </div>
           <Label>Script<RichEditor value={script} onChange={setScript} /></Label>
           <footer>
