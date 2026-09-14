@@ -8,6 +8,8 @@ Conditional writes preserve the latest edit and tombstones remove a task from ev
 - `revision-latest` returns the current task after a stale edit.
 - `delete-tombstone` records deletion without returning the task.
 - `delete-direct` returns not found for a deleted direct URL.
+- `delete-link-cleanup` clears outgoing and inbound organic-video links without
+  leaving dangling references.
 
 ## How to get to it (user POV)
 
@@ -31,4 +33,6 @@ Preconditions:
 ## Gotchas
 
 - A stale delete is a conflict and must not tombstone the latest revision.
+- Tombstoning an organic long-form target increments every linked integration's
+  revision as it clears the relationship.
 - The active-row predicate belongs in every list, detail, conditional update, and delete query.

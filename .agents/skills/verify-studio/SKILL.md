@@ -41,9 +41,12 @@ accessibility tree before each action. Use these stable accessible names:
 - `Forgot password?` opens reset request.
 - `Sign out` ends a session.
 - `Videos` and `No videos yet` identify the protected shell.
-- `New video`, `Title`, `Format`, `Promotion`, and `Create` identify video creation.
+- `New video`, `Title`, `Format`, `Promotion`, `Organic video (optional)`, and
+  `Create` identify video creation. The optional select uses `Not linked` for
+  an empty relationship.
 - `Video view controls`, `Saved views`, and `Save view` identify planning controls.
 - `Script`, `Save changes`, and `Delete video` identify the task editor.
+- `Open linked video` opens the persisted organic long-form target.
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
 - `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, `Cancel <filename>`, and `Download` identify private media delivery.
 - `Video drafts`, `Upload draft`, `Draft version`, `Playback speed`, `Current playback time`, `Comment timing`, `Review comment`, and `Add comment` identify versioned review.

@@ -108,6 +108,7 @@ function richScript() {
 }
 
 const run = `STUDIO-02 ${Date.now()}`
+const missingOrganicVideoId = crypto.randomUUID()
 const cookie = await signIn(email, password)
 const ids = await serverFunctionIds()
 const db = planningDatabase()
@@ -117,7 +118,6 @@ const fixtures = [
   ['short-organic', { format: 'short', promotion: 'organic' }, null],
   ['short-advertisement', { format: 'short', promotion: 'advertisement' }, '2026-09-30'],
   ['long-organic', { format: 'long', promotion: 'organic' }, null],
-  ['long-integration', { format: 'long', promotion: 'integration' }, '2026-10-15'],
 ]
 
 for (const [suffix, production, publishDate] of fixtures) {
@@ -129,6 +129,33 @@ for (const [suffix, production, publishDate] of fixtures) {
   })
 }
 
+const organicLong = db.prepare(
+  'SELECT id FROM video WHERE title = ? AND format = ? AND promotion = ?',
+).get(`${run} long-organic`, 'long', 'organic')
+assert(organicLong, 'Organic long-form candidate was not persisted')
+await callServerFunction(ids, cookie, 'createVideo', {
+  title: `${run} long-integration`,
+  production: {
+    format: 'long',
+    promotion: 'integration',
+    organicVideoId: organicLong.id,
+  },
+  publishDate: '2026-10-15',
+  script: emptyScript,
+})
+
+const invalidLinkResponse = await callServerFunction(ids, cookie, 'createVideo', {
+  title: `${run} invalid-integration-link`,
+  production: {
+    format: 'long',
+    promotion: 'integration',
+    organicVideoId: missingOrganicVideoId,
+  },
+  publishDate: null,
+  script: emptyScript,
+})
+assert(invalidLinkResponse.includes('invalid-link'), 'Missing organic video did not return invalid-link')
+
 await callServerFunction(ids, cookie, 'createVideo', {
   title: `${run} invalid-short-integration`,
   production: { format: 'short', promotion: 'integration' },
@@ -137,10 +164,15 @@ await callServerFunction(ids, cookie, 'createVideo', {
 }, 'This promotion is not available')
 
 const created = db.prepare(
-  'SELECT id, title, format, promotion, status, publish_date, revision FROM video WHERE title LIKE ? ORDER BY title',
+  'SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, revision FROM video WHERE title LIKE ? ORDER BY title',
 ).all(`${run}%`)
 assert(created.length === 4, `Expected four legal production rows, found ${created.length}`)
 assert(!created.some((row) => row.title.endsWith('invalid-short-integration')), 'Invalid promotion reached D1')
+assert(!created.some((row) => row.title.endsWith('invalid-integration-link')), 'Invalid organic video link reached D1')
+assert(
+  created.find((row) => row.title.endsWith('long-integration'))?.linked_organic_video_id === organicLong.id,
+  'Long-form integration did not persist its organic video link',
+)
 
 const organicShort = created.find((row) => row.title.endsWith('short-organic'))
 assert(organicShort, 'Organic short was not persisted')
@@ -240,8 +272,8 @@ boardUrl.search = new URLSearchParams({
 const board = await fetch(boardUrl, { headers: { Cookie: cookie } })
 const boardHtml = await board.text()
 assert(board.ok, `Filtered board returned ${board.status}`)
-assert(boardHtml.includes(edited.title), 'Filtered board omitted the matching persisted video')
-assert(!boardHtml.includes(`${run} long-organic`), 'Filtered board included a nonmatching video')
+assert(boardHtml.includes(`href="/videos/${organicShort.id}"`), 'Filtered board omitted the matching persisted video')
+assert(!boardHtml.includes(`href="/videos/${organicLong.id}"`), 'Filtered board included a nonmatching video')
 
 const deleted = created.find((row) => row.title.endsWith('short-advertisement'))
 assert(deleted, 'Advertisement short was not persisted')
@@ -256,6 +288,7 @@ assert(deletedPage.status === 404, `Deleted direct URL returned ${deletedPage.st
 console.log(`run=${run}`)
 console.log('legal_production_rows=4')
 console.log('invalid_production_rejected=true')
+console.log('integration_organic_link=true invalid_link_rejected=true')
 console.log('rich_script_persisted=true unsafe_link_rejected=true')
 console.log('optimistic_conflict=true final_revision=7')
 console.log('all_statuses_persisted=true')

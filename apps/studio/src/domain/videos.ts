@@ -6,7 +6,8 @@ export type VideoFormat = 'short' | 'long'
 
 export type Production =
   | { format: 'short'; promotion: 'organic' | 'advertisement' }
-  | { format: 'long'; promotion: 'organic' | 'integration' }
+  | { format: 'long'; promotion: 'organic' }
+  | { format: 'long'; promotion: 'integration'; organicVideoId: VideoId | null }
 
 export const STATUS = {
   'not-started': { label: 'Not started', order: 0 },
@@ -69,6 +70,13 @@ export type Video = Readonly<{
 
 export type VideoSummary = Omit<Video, 'script'>
 
+export type OrganicVideoOption = Readonly<{
+  id: VideoId
+  title: string
+  status: VideoStatus
+  publishDate: string | null
+}>
+
 export type SavedView = Readonly<{
   id: SavedViewId
   name: string
@@ -80,7 +88,12 @@ export type SavedView = Readonly<{
 export type SaveVideoResult =
   | { kind: 'saved'; video: Video }
   | { kind: 'conflict'; latest: Video }
+  | { kind: 'invalid-link'; message: 'Choose an active organic long-form video.' }
   | { kind: 'not-found' }
+
+export type CreateVideoResult =
+  | { kind: 'created'; video: Video }
+  | { kind: 'invalid-link'; message: 'Choose an active organic long-form video.' }
 
 function invalid(message: string): never {
   throw new Error(message)
@@ -124,11 +137,19 @@ export function parseProduction(value: unknown): Production {
   const input = record(value, 'Production is required.')
   const format = string(input.format, 'Video format is required.')
   const promotion = string(input.promotion, 'Promotion is required.')
+  const organicVideoId = input.organicVideoId === undefined || input.organicVideoId === null
+    ? null
+    : parseVideoId(input.organicVideoId)
   if (format === 'short' && (promotion === 'organic' || promotion === 'advertisement')) {
+    if (organicVideoId !== null) invalid('Only long-form integrations can link an organic video.')
     return { format, promotion }
   }
-  if (format === 'long' && (promotion === 'organic' || promotion === 'integration')) {
+  if (format === 'long' && promotion === 'organic') {
+    if (organicVideoId !== null) invalid('Only long-form integrations can link an organic video.')
     return { format, promotion }
+  }
+  if (format === 'long' && promotion === 'integration') {
+    return { format, promotion, organicVideoId }
   }
   invalid('This promotion is not available for the selected format.')
 }

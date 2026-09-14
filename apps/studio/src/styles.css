@@ -80,6 +80,11 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .video-detail-heading > button { flex: 0 0 auto; }
 .video-detail-heading h1 { margin: 7px 0 0; overflow-wrap: anywhere; font-size: 36px; letter-spacing: -.045em; }
 .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.field-grid-wide { grid-column: 1 / -1; }
+.linked-video-field { min-width: 0; display: grid; gap: 7px; }
+.linked-video-help { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.field-help { min-width: 0; margin: 0; color: var(--muted-foreground); font-size: 12px; font-weight: 400; overflow-wrap: anywhere; }
+.linked-video-help [data-slot='button'] { flex: 0 0 auto; height: auto; padding: 0; }
 .rich-editor { border: 1px solid var(--border); border-radius: 8px; background: var(--muted); overflow: hidden; }
 .rich-surface { min-height: 260px; padding: 13px; outline: 0; font-weight: 400; line-height: 1.55; }
 .rich-surface:focus { box-shadow: inset 0 0 0 2px var(--ring); }

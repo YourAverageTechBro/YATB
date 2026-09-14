@@ -13,6 +13,8 @@ import {
   parseVideoId,
   type SavedView,
   type SavedViewId,
+  type CreateVideoResult,
+  type OrganicVideoOption,
   type SaveVideoResult,
   type Video,
   type VideoId,
@@ -22,7 +24,12 @@ import {
   type VideoSummary,
 } from '#/domain/videos'
 import { parseRichDocument, type RichDocument } from './rich-document'
-import { ACTIVE_VIDEO_SQL } from './video-sql'
+import {
+  ACTIVE_VIDEO_SQL,
+  CREATE_VIDEO_SQL,
+  UPDATE_VIDEO_SQL,
+  organicVideoOptionsSql,
+} from './video-sql'
 
 const bindings = env as Cloudflare.Env & { DB: D1Database }
 
@@ -66,7 +73,11 @@ function parseVideoRow(value: unknown): Video {
   return {
     id: parseVideoId(row.id),
     title: parseTitle(row.title),
-    production: parseProduction({ format: row.format, promotion: row.promotion }),
+    production: parseProduction({
+      format: row.format,
+      promotion: row.promotion,
+      organicVideoId: row.linked_organic_video_id,
+    }),
     status: parseStatus(row.status),
     publishDate: parsePublishDate(nullableString(row.publish_date, 'publish date')),
     script: parseRichDocument(scriptValue),
@@ -81,12 +92,26 @@ function parseVideoSummaryRow(value: unknown): VideoSummary {
   return {
     id: parseVideoId(row.id),
     title: parseTitle(row.title),
-    production: parseProduction({ format: row.format, promotion: row.promotion }),
+    production: parseProduction({
+      format: row.format,
+      promotion: row.promotion,
+      organicVideoId: row.linked_organic_video_id,
+    }),
     status: parseStatus(row.status),
     publishDate: parsePublishDate(nullableString(row.publish_date, 'publish date')),
     revision: parseRevision(number(row.revision, 'revision')),
     createdAt: number(row.created_at, 'creation time'),
     updatedAt: number(row.updated_at, 'update time'),
+  }
+}
+
+function parseOrganicVideoOptionRow(value: unknown): OrganicVideoOption {
+  const row = asRecord(value)
+  return {
+    id: parseVideoId(row.id),
+    title: parseTitle(row.title),
+    status: parseStatus(row.status),
+    publishDate: parsePublishDate(nullableString(row.publish_date, 'publish date')),
   }
 }
 
@@ -123,7 +148,7 @@ function scriptJson(script: RichDocument): string {
 
 async function activeVideo(id: VideoId): Promise<Video | null> {
   const row = await bindings.DB.prepare(
-    `SELECT id, title, format, promotion, status, publish_date, script_json, revision, created_at, updated_at
+    `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, script_json, revision, created_at, updated_at
      FROM video WHERE id = ? AND ${ACTIVE_VIDEO_SQL}`,
   ).bind(id).first<unknown>()
   return row === null ? null : parseVideoRow(row)
@@ -149,57 +174,95 @@ export async function listVideos(
     values.push(config.format)
   }
   const result = await bindings.DB.prepare(
-    `SELECT id, title, format, promotion, status, publish_date, revision, created_at, updated_at
+    `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, revision, created_at, updated_at
      FROM video WHERE ${clauses.join(' AND ')} ORDER BY ${orderBy(config.sort)} LIMIT ? OFFSET ?`,
   ).bind(...values, limit, offset).all<unknown>()
   return result.results.map(parseVideoSummaryRow)
+}
+
+export async function listOrganicVideoOptions(excludeId?: VideoId): Promise<OrganicVideoOption[]> {
+  const query = bindings.DB.prepare(organicVideoOptionsSql(excludeId !== undefined))
+  const result = excludeId
+    ? await query.bind(excludeId).all<unknown>()
+    : await query.all<unknown>()
+  return result.results.map(parseOrganicVideoOptionRow)
 }
 
 export async function getVideo(id: VideoId): Promise<Video | null> {
   return activeVideo(id)
 }
 
-export async function createVideo(input: CreateVideoInput): Promise<Video> {
+function linkedOrganicVideoId(production: Video['production']): VideoId | null {
+  return production.format === 'long' && production.promotion === 'integration'
+    ? production.organicVideoId
+    : null
+}
+
+const invalidLink = {
+  kind: 'invalid-link',
+  message: 'Choose an active organic long-form video.',
+} as const
+
+function isInvalidLinkError(error: unknown): boolean {
+  return String(error).includes('video-link-invalid')
+}
+
+export async function createVideo(input: CreateVideoInput): Promise<CreateVideoResult> {
   const id = parseVideoId(crypto.randomUUID())
   const now = Date.now()
-  await bindings.DB.prepare(
-    `INSERT INTO video (
-      id, title, format, promotion, status, publish_date, script_json, revision, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, 'not-started', ?, ?, 1, ?, ?)`,
-  ).bind(
-    id,
-    input.title,
-    input.production.format,
-    input.production.promotion,
-    input.publishDate,
-    scriptJson(input.script),
-    now,
-    now,
-  ).run()
+  const targetId = linkedOrganicVideoId(input.production)
+  let result: D1Result
+  try {
+    result = await bindings.DB.prepare(CREATE_VIDEO_SQL).bind(
+      id,
+      input.title,
+      input.production.format,
+      input.production.promotion,
+      targetId,
+      input.publishDate,
+      scriptJson(input.script),
+      now,
+      now,
+      targetId,
+      targetId,
+    ).run()
+  } catch (error) {
+    if (isInvalidLinkError(error)) return invalidLink
+    throw error
+  }
+  if (result.meta.changes !== 1) return invalidLink
   const video = await activeVideo(id)
   if (!video) throw new Error('Created video could not be loaded.')
-  return video
+  return { kind: 'created', video }
 }
 
 export async function updateVideo(input: EditVideoInput): Promise<SaveVideoResult> {
   const now = Date.now()
-  const result = await bindings.DB.prepare(
-    `UPDATE video SET
-      title = ?, format = ?, promotion = ?, status = ?, publish_date = ?, script_json = ?,
-      revision = revision + 1, updated_at = ?
-     WHERE id = ? AND revision = ? AND ${ACTIVE_VIDEO_SQL}`,
-  ).bind(
-    input.title,
-    input.production.format,
-    input.production.promotion,
-    input.status,
-    input.publishDate,
-    scriptJson(input.script),
-    now,
-    input.id,
-    input.expectedRevision,
-  ).run()
-  if (result.meta.changes !== 1) return saveResult(input.id)
+  const targetId = linkedOrganicVideoId(input.production)
+  let result: D1Result
+  try {
+    result = await bindings.DB.prepare(UPDATE_VIDEO_SQL).bind(
+      input.title,
+      input.production.format,
+      input.production.promotion,
+      targetId,
+      input.status,
+      input.publishDate,
+      scriptJson(input.script),
+      now,
+      input.id,
+      input.expectedRevision,
+      targetId,
+      targetId,
+    ).run()
+  } catch (error) {
+    if (isInvalidLinkError(error)) return invalidLink
+    throw error
+  }
+  if (result.meta.changes !== 1) {
+    const latest = await activeVideo(input.id)
+    return latest?.revision === input.expectedRevision ? invalidLink : failedSave(latest)
+  }
   const video = await activeVideo(input.id)
   if (!video) throw new Error('Updated video could not be loaded.')
   return { kind: 'saved', video }
@@ -225,7 +288,7 @@ export async function deleteVideo(
   expectedRevision: VideoRevision,
 ): Promise<SaveVideoResult | { kind: 'deleted' }> {
   const result = await bindings.DB.prepare(
-    `UPDATE video SET deleted_at = ?, revision = revision + 1, updated_at = ?
+    `UPDATE video SET deleted_at = ?, linked_organic_video_id = NULL, revision = revision + 1, updated_at = ?
      WHERE id = ? AND revision = ? AND ${ACTIVE_VIDEO_SQL}`,
   ).bind(Date.now(), Date.now(), id, expectedRevision).run()
   return result.meta.changes === 1 ? { kind: 'deleted' } : saveResult(id)
