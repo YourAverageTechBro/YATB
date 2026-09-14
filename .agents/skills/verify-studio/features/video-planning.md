@@ -8,6 +8,8 @@ An authenticated user creates and edits every legal video production type.
 - `planning-short-advertisement` stores a fully sponsored short.
 - `planning-long-organic` stores a long video without an integration.
 - `planning-long-integration` stores a long video with an ad integration.
+- `planning-integration-organic-link` optionally connects a long-form integration
+  to the active organic long-form video that will carry it.
 - `planning-status-date` stores one of five statuses and an optional calendar date.
 - `planning-pages` keeps large schedules reachable through bounded pages.
 
@@ -27,6 +29,13 @@ Preconditions:
 
 - **Create each type.** Use `New video` four times for organic short, advertisement short, organic long, and integrated long. Refresh after each save.
 - **Reject impossible choices.** Confirm short never offers integration and long never offers advertisement.
+- **Link an integration.** Create an organic long-form video. Create a long-form
+  integration, choose the organic video under `Organic video (optional)`, and
+  confirm the detail page offers `Open linked video` after creation. Choose
+  `Not linked`, save, and confirm the link disappears.
+- **Invalidate a target.** Link two integrations to the same organic video, then
+  change the organic video to an ineligible production type. Reload both
+  integrations and confirm each is unlinked without losing its other fields.
 - **Edit fields.** Change title, status, and publish date. Choose `Save changes`, reload, and confirm D1 matches the page.
 - **Page the schedule.** With more than 20 matching videos, choose `Next` and `Previous`. Confirm the filter and sort controls remain unchanged.
 - **Open from the card.** In list layout, choose blank space inside a video card
@@ -38,4 +47,6 @@ Preconditions:
 ## Gotchas
 
 - Production format and promotion form a closed union. Do not test impossible states by writing D1 directly.
+- Only active long-form organic videos appear in `Organic video (optional)`.
+  Candidate ordering is title-first and does not depend on the current planning page.
 - A syntactically shaped date still fails when it is not a real calendar day.
