@@ -9,6 +9,15 @@ root_status="$(curl -sS -o "$scratch_dir/root" -w '%{http_code}' "$studio_url/")
 test "$root_status" = "200"
 rg -q 'Welcome back' "$scratch_dir/root"
 
+verified_status="$(curl -sS -o "$scratch_dir/verified" -w '%{http_code}' "$studio_url/?verified=1")"
+test "$verified_status" = "200"
+rg -q 'Email verified, please sign in.' "$scratch_dir/verified"
+
+curl -sS -o "$scratch_dir/verification-error" "$studio_url/?verified=1&error=TOKEN_EXPIRED"
+if rg -q 'Email verified, please sign in.' "$scratch_dir/verification-error"; then
+  exit 1
+fi
+
 curl -sS -D "$scratch_dir/videos.headers" -o /dev/null "$studio_url/videos"
 rg -qi '^location: /\r?$' "$scratch_dir/videos.headers"
 
