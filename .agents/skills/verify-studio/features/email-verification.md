@@ -20,9 +20,12 @@ Preconditions:
 
 - **Open link.** Read the latest captured message with a read-only D1 query. Open its URL in the browser.
 - **Confirm.** Query the user row. `emailVerified` equals `1`.
-- **Proof.** Capture the callback result and the updated D1 row.
+- **Confirm notice.** The callback lands on `/?verified=1` and shows `Email verified, please sign in.`
+- **Confirm error precedence.** `/?verified=1&error=TOKEN_EXPIRED` does not show the success notice.
+- **Proof.** Capture the callback result, success notice, and updated D1 row.
 
 ## Gotchas
 
 - The captured URL contains a credential. Keep it out of committed evidence.
-- Verification redirects to `/`; it does not sign the user in.
+- Verification redirects to `/?verified=1`; it does not sign the user in.
+- A reset token or string `error` search parameter suppresses the success notice.
