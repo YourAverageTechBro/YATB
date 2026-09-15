@@ -14,7 +14,10 @@ import { Label } from '@yatb/ui/label'
 import { authClient } from '#/lib/auth-client'
 import { loadSession } from '#/server/auth.functions'
 import { ThemeControl } from '#/components/theme-control'
-import { parseAuthSearch } from '#/domain/auth'
+import {
+  parseAuthSearch,
+  shouldShowEmailVerifiedConfirmation,
+} from '#/domain/auth'
 import { DEFAULT_LIST_CONFIG } from '#/domain/videos'
 
 type Mode = 'sign-in' | 'sign-up' | 'forgot' | 'reset'
@@ -29,12 +32,15 @@ export const Route = createFileRoute('/')({
 })
 
 function Login() {
-  const { token, showEmailVerifiedConfirmation } = Route.useSearch()
+  const authSearch = Route.useSearch()
+  const { token } = authSearch
   const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>(token ? 'reset' : 'sign-in')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState(
-    showEmailVerifiedConfirmation ? 'Email verified, please sign in.' : '',
+    shouldShowEmailVerifiedConfirmation(authSearch)
+      ? 'Email verified, please sign in.'
+      : '',
   )
   const [showPassword, setShowPassword] = useState(false)
 

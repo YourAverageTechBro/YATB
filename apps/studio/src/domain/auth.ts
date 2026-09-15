@@ -4,19 +4,26 @@ export function normalizeEmail(email: string): string {
 
 export type AuthSearch = {
   token?: string
-  showEmailVerifiedConfirmation: boolean
+  verified?: 1
+  error?: string
 }
 
 export function parseAuthSearch(search: Record<string, unknown>): AuthSearch {
-  const token = typeof search.token === 'string' ? search.token : undefined
-
   return {
-    token,
-    showEmailVerifiedConfirmation:
-      token === undefined &&
-      typeof search.error !== 'string' &&
-      search.verified === '1',
+    token: typeof search.token === 'string' ? search.token : undefined,
+    verified: search.verified === '1' || search.verified === 1 ? 1 : undefined,
+    error: typeof search.error === 'string' ? search.error : undefined,
   }
+}
+
+export function shouldShowEmailVerifiedConfirmation(
+  search: AuthSearch,
+): boolean {
+  return (
+    search.token === undefined &&
+    search.error === undefined &&
+    search.verified === 1
+  )
 }
 
 export function sessionEmailAuthorized(

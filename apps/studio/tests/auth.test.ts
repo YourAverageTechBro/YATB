@@ -3,6 +3,7 @@ import {
   normalizeEmail,
   parseAuthSearch,
   sessionEmailAuthorized,
+  shouldShowEmailVerifiedConfirmation,
 } from '../src/domain/auth'
 
 describe('Studio authentication boundary', () => {
@@ -25,20 +26,29 @@ describe('Studio authentication boundary', () => {
   })
 
   it('shows the email verification confirmation only after a successful callback', () => {
-    expect(parseAuthSearch({ verified: '1' })).toEqual({
+    expect(
+      shouldShowEmailVerifiedConfirmation(parseAuthSearch({ verified: '1' })),
+    ).toBe(true)
+    expect(
+      shouldShowEmailVerifiedConfirmation(parseAuthSearch({ verified: 1 })),
+    ).toBe(true)
+    expect(
+      shouldShowEmailVerifiedConfirmation(
+        parseAuthSearch({ verified: '1', error: 'TOKEN_EXPIRED' }),
+      ),
+    ).toBe(false)
+    expect(parseAuthSearch({ verified: '1', ignored: true })).toEqual({
       token: undefined,
-      showEmailVerifiedConfirmation: true,
-    })
-    expect(parseAuthSearch({ verified: '1', error: 'TOKEN_EXPIRED' })).toEqual({
-      token: undefined,
-      showEmailVerifiedConfirmation: false,
+      verified: 1,
+      error: undefined,
     })
   })
 
   it('gives password reset state precedence over the verification confirmation', () => {
-    expect(parseAuthSearch({ token: 'reset-token', verified: '1' })).toEqual({
-      token: 'reset-token',
-      showEmailVerifiedConfirmation: false,
-    })
+    expect(
+      shouldShowEmailVerifiedConfirmation(
+        parseAuthSearch({ token: 'reset-token', verified: '1' }),
+      ),
+    ).toBe(false)
   })
 })
