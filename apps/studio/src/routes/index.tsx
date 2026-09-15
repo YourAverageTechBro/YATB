@@ -1,4 +1,9 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  redirect,
+  useNavigate,
+  type SearchSchemaInput,
+} from '@tanstack/react-router'
 import { ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Alert, AlertDescription } from '@yatb/ui/alert'
@@ -9,14 +14,14 @@ import { Label } from '@yatb/ui/label'
 import { authClient } from '#/lib/auth-client'
 import { loadSession } from '#/server/auth.functions'
 import { ThemeControl } from '#/components/theme-control'
+import { parseAuthSearch } from '#/domain/auth'
 import { DEFAULT_LIST_CONFIG } from '#/domain/videos'
 
 type Mode = 'sign-in' | 'sign-up' | 'forgot' | 'reset'
 
 export const Route = createFileRoute('/')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    token: typeof search.token === 'string' ? search.token : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown> & SearchSchemaInput) =>
+    parseAuthSearch(search),
   beforeLoad: async () => {
     if (await loadSession()) throw redirect({ to: '/videos', search: DEFAULT_LIST_CONFIG })
   },
@@ -24,11 +29,13 @@ export const Route = createFileRoute('/')({
 })
 
 function Login() {
-  const { token } = Route.useSearch()
+  const { token, showEmailVerifiedConfirmation } = Route.useSearch()
   const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>(token ? 'reset' : 'sign-in')
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(
+    showEmailVerifiedConfirmation ? 'Email verified, please sign in.' : '',
+  )
   const [showPassword, setShowPassword] = useState(false)
 
   function changeMode(nextMode: Mode) {
@@ -62,7 +69,7 @@ function Login() {
     }
 
     const result = mode === 'sign-up'
-      ? await authClient.signUp.email({ email, password, name, callbackURL: '/' })
+      ? await authClient.signUp.email({ email, password, name, callbackURL: '/?verified=1' })
       : await authClient.signIn.email({ email, password, callbackURL: '/videos' })
 
     if (result.error) {
