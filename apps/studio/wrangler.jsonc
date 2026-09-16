@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "yatb-studio",
-  "account_id": "32967fffa44c1d38bc86ab6e4e419edb",
+  "account_id": "2a59d9e0842dc0b3d920f591fe82702c",
   "compatibility_date": "2026-09-12",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
@@ -35,7 +35,7 @@
     {
       "binding": "DB",
       "database_name": "yatb-studio",
-      "database_id": "e2d62270-da2c-4def-b3ce-878f1e02af9d",
+      "database_id": "be13fc98-50a9-41d2-9e30-2edfbb0f2607",
       "migrations_dir": "migrations"
     }
   ],
