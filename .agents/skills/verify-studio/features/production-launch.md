@@ -14,6 +14,8 @@ comparison workflow on the production D1 database and private R2 bucket.
   `be13fc98-50a9-41d2-9e30-2edfbb0f2607`.
 - R2 bucket is the private bucket `yatb-studio-media`.
 - The Worker custom domain is `studio.youraveragetechbro.com`.
+- Cloudflare Builds deploys `main` with `npm run deploy:studio:production` and
+  uploads preview versions with `npx wrangler versions upload --cwd apps/studio`.
 - `BETTER_AUTH_SECRET` is an encrypted Worker secret.
 - `AUTH_EMAIL` accepts only the two allowlisted destinations and sender
   `studio@studio-mail.youraveragetechbro.com`.
