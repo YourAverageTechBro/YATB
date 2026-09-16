@@ -1,4 +1,4 @@
-import { Download, FileVideo, Pencil, Upload, X } from 'lucide-react'
+import { Download, Pencil, Upload, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button, buttonVariants } from '@yatb/ui/button'
 import { Card } from '@yatb/ui/card'
@@ -7,6 +7,7 @@ import { Label } from '@yatb/ui/label'
 import { Progress } from '@yatb/ui/progress'
 import { uploadFile, type UploadProgress } from '#/client/upload'
 import type { MediaFile } from '#/domain/media'
+import { MediaPreview } from './media-preview'
 
 type Pending = {
   id: string
@@ -141,9 +142,11 @@ export function FootageSection({ videoId, refreshToken = 0 }: { videoId: string;
       {files.length === 0 && pending.length === 0
         ? <p className="footage-empty">Drop in camera originals, audio, screen recordings, and references.</p>
         : <div className="footage-grid">{files.map((file) => <Card key={file.id} className="footage-card gap-0 py-0 shadow-none">
-          {file.contentType.startsWith('video/')
-            ? <video controls preload="metadata" src={`/api/videos/${videoId}/media/${file.id}`} />
-            : <div className="file-placeholder"><FileVideo size={24} /></div>}
+          <MediaPreview
+            contentType={file.contentType}
+            name={file.displayName}
+            src={`/api/videos/${videoId}/media/${file.id}`}
+          />
           {rename?.fileId === file.id
             ? <form className="footage-rename" onSubmit={(event) => void saveRename(event, file)}>
               <Label>File name<Input
@@ -160,7 +163,7 @@ export function FootageSection({ videoId, refreshToken = 0 }: { videoId: string;
               <div><Button size="sm" type="submit" disabled={rename.pending}>{rename.pending ? 'Saving…' : 'Save filename'}</Button><Button size="sm" variant="outline" type="button" disabled={rename.pending} onClick={() => setRename(null)}>Cancel rename</Button></div>
             </form>
             : <>
-              <div><strong>{file.displayName}</strong><small>{formatBytes(file.byteSize)}</small></div>
+              <div className="footage-metadata"><strong>{file.displayName}</strong><small>{formatBytes(file.byteSize)}</small></div>
               <footer>
                 <Button variant="ghost" size="sm" type="button" onClick={() => setRename({ fileId: file.id, value: file.displayName, pending: false })}><Pencil /> Rename</Button>
                 <Button asChild variant="ghost" size="sm"><a href={`/api/videos/${videoId}/media/${file.id}?download=1`}><Download /> Download</a></Button>
