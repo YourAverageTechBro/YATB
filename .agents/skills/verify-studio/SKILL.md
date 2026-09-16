@@ -45,7 +45,10 @@ accessibility tree before each action. Use these stable accessible names:
   `Create` identify video creation. The optional select uses `Not linked` for
   an empty relationship.
 - `Video view controls`, `Saved views`, and `Save view` identify planning controls.
-- `Script`, `Save changes`, and `Delete video` identify the task editor.
+- `Script` and `Delete video` identify the task editor. Changes save after
+  600 ms without another edit. Wait for the live `Saved` status before reloading to confirm
+  persistence. A queued valid edit continues saving after in-app navigation.
+  `Retry` appears when a background save fails.
 - `Open linked video` opens the persisted organic long-form target.
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
 - `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, `Cancel <filename>`, and `Download` identify private media delivery.

@@ -32,11 +32,28 @@ Preconditions:
 - **Link an integration.** Create an organic long-form video. Create a long-form
   integration, choose the organic video under `Organic video (optional)`, and
   confirm the detail page offers `Open linked video` after creation. Choose
-  `Not linked`, save, and confirm the link disappears.
+  `Not linked`, wait for `Saved`, and confirm the link disappears.
 - **Invalidate a target.** Link two integrations to the same organic video, then
   change the organic video to an ineligible production type. Reload both
   integrations and confirm each is unlinked without losing its other fields.
-- **Edit fields.** Change title, status, and publish date. Choose `Save changes`, reload, and confirm D1 matches the page.
+- **Edit fields.** Change title, status, publish date, and script. Pause typing,
+  wait for `Saving…` to become `Saved`, then reload and confirm D1 matches the page.
+  Type several title changes within 600 ms and confirm only the final title persists.
+- **Navigate during the debounce.** Change the title and immediately follow the
+  `Videos` link. Return to the video after one second and confirm the title saved.
+- **Keep typing during a save.** Slow the network, edit the title, and wait for
+  the save request to start. Continue typing and confirm the earlier response
+  does not replace the newer text. Wait for `Saved` and reload.
+- **Recover unsaved edits.** Clear the title and confirm validation appears
+  without losing the script. Restore the title and wait for `Saved`. Disconnect
+  the network, edit the title, and confirm the failure retains your edit.
+  Reconnect, choose `Retry`, wait for `Saved`, and reload.
+- **Handle conflicts.** Open a video in two sessions. Save a change in one, then
+  edit the other. Confirm the conflict pauses autosave and retains the draft.
+  Choose `Load latest version` and confirm the saved version appears.
+- **Delete during a save.** Slow the network, edit a field, and delete the video
+  while the request is pending. Confirm deletion waits for that save and returns
+  to the schedule without a revision conflict.
 - **Page the schedule.** With more than 20 matching videos, choose `Next` and `Previous`. Confirm the filter and sort controls remain unchanged.
 - **Open from the card.** In list layout, choose blank space inside a video card
   and confirm the browser opens that video. Tab to the card, confirm a visible
