@@ -22,10 +22,19 @@ import {
   type VideoFormat,
   type VideoId,
   type VideoListConfig,
+  type VideoStatus,
   type VideoSummary,
 } from '#/domain/videos'
 import { emptyRichDocument } from '#/server/rich-document'
 import { createSavedView, createVideo, loadPlanning, moveVideoStatus, removeSavedView } from '#/server/videos.functions'
+
+const VIDEO_STATUS_CHIP_CLASS = {
+  'not-started': 'video-status-chip--not-started',
+  filming: 'video-status-chip--filming',
+  'ready-to-edit': 'video-status-chip--ready-to-edit',
+  'ready-to-review': 'video-status-chip--ready-to-review',
+  published: 'video-status-chip--published',
+} satisfies Record<VideoStatus, string>
 
 function searchQuery(search: Record<string, unknown>) {
   try {
@@ -76,7 +85,7 @@ function VideoCard({ video, board = false }: { video: VideoSummary; board?: bool
       <strong>{video.title}</strong>
       <p>{video.production.format} · {video.production.promotion}</p>
       {video.publishDate && <small>Publish {video.publishDate}</small>}
-      <Badge variant="secondary">{STATUS[video.status].label}</Badge>
+      <Badge className={`video-status-chip ${VIDEO_STATUS_CHIP_CLASS[video.status]}`} variant="secondary">{STATUS[video.status].label}</Badge>
     </Card>
   </a>
 
