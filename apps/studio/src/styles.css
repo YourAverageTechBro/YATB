@@ -75,7 +75,7 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 4px 0 32px; }
 .pagination span { color: var(--muted-foreground); font-size: 13px; }
 .video-form-card { margin-top: 22px; }
-.video-form-card form { display: grid; gap: 14px; padding: 0 20px; }
+.video-edit-fields { display: grid; gap: 14px; padding: 0 20px; }
 .video-detail label:not(.upload-button) { display: grid; gap: 7px; font-size: 13px; font-weight: 620; }
 .video-detail label > [data-slot='select-trigger'], .dialog-form label > [data-slot='select-trigger'], .draft-selector label > [data-slot='select-trigger'], .comparison-side label > [data-slot='select-trigger'], .comment-anchor-controls label > [data-slot='select-trigger'] { width: 100%; }
 .video-detail footer { display: flex; flex-wrap: wrap; gap: 9px; }
