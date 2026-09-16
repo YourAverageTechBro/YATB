@@ -51,7 +51,7 @@ accessibility tree before each action. Use these stable accessible names:
   `Retry` appears when a background save fails.
 - `Open linked video` opens the persisted organic long-form target.
 - `Video pages`, `Previous`, and `Next` identify bounded planning pages.
-- `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, `Cancel <filename>`, and `Download` identify private media delivery.
+- `Footage upload`, `Add footage`, `Uploads`, `Rename`, `File name`, `Save filename`, `Cancel rename`, `Cancel <filename>`, and `Download` identify private media delivery. `Open image preview: <filename>`, `Video preview: <filename>`, and `Audio preview: <filename>` identify supported native previews; `Preview unavailable: <filename>` identifies the safe fallback.
 - `Video drafts`, `Upload draft`, `Draft version`, `Playback speed`, `Current playback time`, `Comment timing`, `Review comment`, and `Add comment` identify versioned review.
 - `Play video`, `Pause video`, `Replay video`, `Seek video`, `Mute video`, `Unmute video`, and `Volume` identify custom player controls. `Enter full screen` and `Exit full screen` toggle fullscreen when supported.
 - `Download version <number>: <filename>` identifies the selected draft download. `Comments for version <number>` identifies its focusable comments viewport.

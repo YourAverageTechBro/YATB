@@ -9,6 +9,7 @@ export const MAX_DRAFT_DURATION_MS = 24 * 60 * 60 * 1000
 export type UploadSessionId = string
 export type MediaFileId = string
 export type MediaPurpose = 'footage' | 'draft'
+export type MediaPreviewKind = 'image' | 'video' | 'audio' | 'file'
 export type UploadPurpose =
   | Readonly<{ kind: 'footage' }>
   | Readonly<{ kind: 'draft'; durationMs: number }>
@@ -63,6 +64,41 @@ export type BeginUpload = Readonly<{
 }>
 
 export type ByteRange = Readonly<{ offset: number; length: number }>
+
+const PREVIEW_CONTENT_TYPES: Readonly<Record<Exclude<MediaPreviewKind, 'file'>, ReadonlySet<string>>> = {
+  image: new Set([
+    'image/avif',
+    'image/bmp',
+    'image/gif',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ]),
+  video: new Set([
+    'video/mp4',
+    'video/ogg',
+    'video/quicktime',
+    'video/webm',
+  ]),
+  audio: new Set([
+    'audio/aac',
+    'audio/flac',
+    'audio/mp4',
+    'audio/mpeg',
+    'audio/ogg',
+    'audio/wav',
+    'audio/webm',
+    'audio/x-m4a',
+    'audio/x-wav',
+  ]),
+}
+
+export function mediaPreviewKind(contentType: string): MediaPreviewKind {
+  if (PREVIEW_CONTENT_TYPES.image.has(contentType)) return 'image'
+  if (PREVIEW_CONTENT_TYPES.video.has(contentType)) return 'video'
+  if (PREVIEW_CONTENT_TYPES.audio.has(contentType)) return 'audio'
+  return 'file'
+}
 
 function invalid(message: string): never {
   throw new Error(message)

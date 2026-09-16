@@ -8,6 +8,7 @@ import {
   UPLOAD_PART_SIZE,
   cleanupDelay,
   expectedPartBytes,
+  mediaPreviewKind,
   parseBeginUpload,
   parseDisplayName,
   parseSingleByteRange,
@@ -47,6 +48,22 @@ describe('footage domain', () => {
     expect(parseDisplayName('  final\u0000 take.mp4  ')).toBe('final take.mp4')
     expect(cleanupDelay(1)).toBe(120_000)
     expect(cleanupDelay(30)).toBe(86_400_000)
+  })
+
+  it('classifies only exact safe media types for inline previews', () => {
+    for (const contentType of ['image/avif', 'image/bmp', 'image/gif', 'image/jpeg', 'image/png', 'image/webp']) {
+      expect(mediaPreviewKind(contentType)).toBe('image')
+    }
+    for (const contentType of ['video/mp4', 'video/ogg', 'video/quicktime', 'video/webm']) {
+      expect(mediaPreviewKind(contentType)).toBe('video')
+    }
+    for (const contentType of ['audio/aac', 'audio/flac', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/webm', 'audio/x-m4a', 'audio/x-wav']) {
+      expect(mediaPreviewKind(contentType)).toBe('audio')
+    }
+    expect(mediaPreviewKind('image/svg+xml')).toBe('file')
+    expect(mediaPreviewKind('text/html')).toBe('file')
+    expect(mediaPreviewKind('application/octet-stream')).toBe('file')
+    expect(mediaPreviewKind('VIDEO/MP4')).toBe('file')
   })
 
   it('retries only transient upload failures', () => {

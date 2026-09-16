@@ -14,6 +14,7 @@ import { addComment, loadComments, removeComment, saveComment } from '#/server/r
 import { emptyRichDocument, type RichDocument } from '#/server/rich-document'
 import { RichDocumentView } from './rich-document-view'
 import { RichEditor } from './rich-editor'
+import { MediaPreview } from './media-preview'
 import { ReviewPlayer, type ReviewPlayerHandle } from './review-player'
 
 type Attachment = Readonly<{ id: string; file: File }>
@@ -164,9 +165,12 @@ function CommentCard({ comment, onSeek, onChanged }: { comment: ReviewComment; o
     {editing
       ? <form onSubmit={(event) => void save(event)}><RichEditor ariaLabel="Edit review comment" value={body} onChange={setBody} /><footer><Button type="submit">Save comment</Button><Button type="button" variant="outline" onClick={() => { setBody(comment.body); setEditing(false) }}>Cancel</Button></footer></form>
       : <RichDocumentView value={comment.body} />}
-    {comment.attachments.length > 0 && <div className="comment-attachments">{comment.attachments.map((attachment) => attachment.contentType.startsWith('image/')
-      ? <a key={attachment.id} href={`/api/videos/${comment.videoId}/media/${attachment.id}`} target="_blank" rel="noreferrer"><img src={`/api/videos/${comment.videoId}/media/${attachment.id}`} alt={attachment.displayName} /></a>
-      : <video key={attachment.id} controls preload="metadata" src={`/api/videos/${comment.videoId}/media/${attachment.id}`} />)}</div>}
+    {comment.attachments.length > 0 && <div className="comment-attachments">{comment.attachments.map((attachment) => <MediaPreview
+      key={attachment.id}
+      contentType={attachment.contentType}
+      name={attachment.displayName}
+      src={`/api/videos/${comment.videoId}/media/${attachment.id}`}
+    />)}</div>}
     {error && <p role="alert" className="dialog-error">{error}</p>}
     {!editing && <footer><Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Edit comment</Button><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm">Delete comment</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete this comment?</AlertDialogTitle><AlertDialogDescription>The uploaded attachment files remain available in task footage.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => void erase()}>Delete comment</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></footer>}
   </Card>
