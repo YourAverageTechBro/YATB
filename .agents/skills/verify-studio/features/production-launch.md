@@ -9,11 +9,13 @@ comparison workflow on the production D1 database and private R2 bucket.
 
 ## Resource contract
 
-- Cloudflare account is `32967fffa44c1d38bc86ab6e4e419edb`.
+- Cloudflare account is `2a59d9e0842dc0b3d920f591fe82702c`.
 - D1 database is `yatb-studio` with id
-  `e2d62270-da2c-4def-b3ce-878f1e02af9d`.
+  `be13fc98-50a9-41d2-9e30-2edfbb0f2607`.
 - R2 bucket is the private bucket `yatb-studio-media`.
 - The Worker custom domain is `studio.youraveragetechbro.com`.
+- Cloudflare Builds deploys `main` with `npm run deploy:studio:production` and
+  uploads preview versions with `npx wrangler versions upload --cwd apps/studio`.
 - `BETTER_AUTH_SECRET` is an encrypted Worker secret.
 - `AUTH_EMAIL` accepts only the two allowlisted destinations and sender
   `studio@studio-mail.youraveragetechbro.com`.

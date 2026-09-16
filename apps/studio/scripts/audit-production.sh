@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-account_id='32967fffa44c1d38bc86ab6e4e419edb'
-database_id='e2d62270-da2c-4def-b3ce-878f1e02af9d'
+account_id='2a59d9e0842dc0b3d920f591fe82702c'
+database_id='be13fc98-50a9-41d2-9e30-2edfbb0f2607'
 origin='https://studio.youraveragetechbro.com'
 
 whoami_output="$(npx wrangler whoami --cwd apps/studio)"
