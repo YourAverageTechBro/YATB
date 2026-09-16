@@ -16,7 +16,7 @@ An authenticated user uploads immutable edit versions, reviews them with custom 
 - `comment-range` stores a rich comment whose start is before its end and whose end does not exceed the draft duration.
 - `comment-seek` moves the active player to a clicked point or range start.
 - `comment-mutation` updates with an optimistic revision and deletes through a confirmation dialog.
-- `comment-attachment` stores image or video bytes once as parent footage and renders that same media in the comment.
+- `comment-attachment` stores image or video bytes once as parent footage and renders that same media through the shared preview in the comment.
 
 ## How to get to it (user POV)
 
@@ -49,7 +49,7 @@ Preconditions:
 - **Point.** Pause the player, choose point timing, and confirm `Review comment` has no formatting toolbar. Enter a rich comment using native Cmd/Ctrl+B and Cmd/Ctrl+I, attach an image, and choose `Add comment`. Reload and confirm author, timestamp, rich body, and attachment persist.
 - **Range.** Choose range timing, capture start and end with `Use playhead`, and save. Reject an end before start and a timestamp beyond known duration; confirm D1 contains neither invalid row.
 - **Seek.** Click each comment timestamp. Confirm actual player time equals the point or range start.
-- **Reuse.** Attach an image and video. Confirm both render in the comment and the same media IDs appear under `Footage upload` without duplicate R2 objects.
+- **Reuse.** Attach an image and video. Confirm `Open image preview: <filename>` and `Video preview: <filename>` render in the comment, then confirm the same media IDs and preview names appear under `Footage upload` without duplicate R2 objects.
 - **Mutate.** Edit a comment, reload, and confirm the new body. Exercise the delete dialog cancel path, then confirm deletion through the supported verification boundary. A stale edit must report a conflict instead of overwriting.
 - **Isolate.** Request a draft under a different task ID and confirm `404`; try to link cross-task or draft-purpose media and confirm rejection.
 
