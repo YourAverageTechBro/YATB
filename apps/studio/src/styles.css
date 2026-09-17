@@ -138,7 +138,7 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .review-pane > * { min-width: 0; }
 .review-player { grid-column: 1; position: sticky; top: 20px; }
 .custom-player { --review-comment-marker: #facc15; min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
-.custom-player > video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--sidebar); }
+.custom-player > video { display: block; width: 100%; aspect-ratio: var(--review-video-aspect-ratio, 16 / 9); object-fit: contain; background: var(--sidebar); }
 .custom-player:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .custom-player-controls { padding: 8px 12px 10px; }
 .custom-player-control-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
