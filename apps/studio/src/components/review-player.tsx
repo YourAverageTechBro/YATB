@@ -1,5 +1,5 @@
 import { Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react'
-import { forwardRef, useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { forwardRef, useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import { Button } from '@yatb/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { Slider } from '@yatb/ui/slider'
@@ -26,6 +26,12 @@ type PlayerSnapshot = Readonly<{
   muted: boolean
   playbackRate: number
 }>
+type PlayerStyle = CSSProperties & Readonly<{ '--review-video-aspect-ratio'?: number }>
+
+export function intrinsicAspectRatio(width: number, height: number): number | undefined {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return undefined
+  return width / height
+}
 
 export function clampPlayheadMs(milliseconds: number, durationMs: number): number {
   if (!Number.isFinite(milliseconds) || !Number.isFinite(durationMs) || durationMs <= 0) return 0
@@ -64,6 +70,7 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
   const [fullscreen, setFullscreen] = useState(false)
   const [fullscreenAvailable, setFullscreenAvailable] = useState(false)
   const [notice, setNotice] = useState('')
+  const [aspectRatio, setAspectRatio] = useState<number>()
   const paints = useMemo(() => buildTimelinePaint(markers, durationMs), [markers, durationMs])
   const duration = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0
   const disabled = snapshot.phase !== 'ready' || duration === 0
@@ -91,6 +98,8 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
     document.addEventListener('fullscreenchange', changed)
     return () => document.removeEventListener('fullscreenchange', changed)
   }, [])
+
+  useEffect(() => setAspectRatio(undefined), [src])
 
   function seekTo(milliseconds: number) {
     const media = video.current
@@ -143,9 +152,11 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
     event.preventDefault()
   }
 
-  return <section className="custom-player" ref={container} aria-label={label} tabIndex={0} onKeyDown={shortcut}>
+  const playerStyle: PlayerStyle = aspectRatio === undefined ? {} : { '--review-video-aspect-ratio': aspectRatio }
+
+  return <section className="custom-player" ref={container} style={playerStyle} aria-label={label} tabIndex={0} onKeyDown={shortcut}>
     <video ref={video} src={src} preload="metadata" playsInline tabIndex={-1} aria-label={label}
-      onClick={() => void togglePlayback()} onLoadedMetadata={synchronize} onDurationChange={synchronize}
+      onClick={() => void togglePlayback()} onLoadedMetadata={(event) => { setAspectRatio(intrinsicAspectRatio(event.currentTarget.videoWidth, event.currentTarget.videoHeight)); synchronize() }} onDurationChange={synchronize}
       onPlay={synchronize} onPause={synchronize} onEnded={synchronize} onTimeUpdate={synchronize}
       onVolumeChange={synchronize} onRateChange={synchronize} onError={synchronize} onEmptied={synchronize} />
     <div className="custom-player-controls">

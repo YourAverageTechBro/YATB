@@ -1,7 +1,22 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { buildTimelinePaint, clampPlayheadMs, ReviewPlayer, type ReviewTimelineMarker } from '../src/components/review-player'
+import { buildTimelinePaint, clampPlayheadMs, intrinsicAspectRatio, ReviewPlayer, type ReviewTimelineMarker } from '../src/components/review-player'
+
+describe('review video dimensions', () => {
+  it('derives intrinsic aspect ratios only from usable dimensions', () => {
+    expect(intrinsicAspectRatio(1080, 1920)).toBe(9 / 16)
+    expect(intrinsicAspectRatio(1920, 1080)).toBe(16 / 9)
+    expect(intrinsicAspectRatio(0, 1080)).toBeUndefined()
+    expect(intrinsicAspectRatio(1920, Number.NaN)).toBeUndefined()
+  })
+
+  it('uses a landscape fallback until video metadata supplies a ratio', () => {
+    const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8')
+    expect(css).toContain('aspect-ratio: var(--review-video-aspect-ratio, 16 / 9)')
+  })
+})
 
 describe('review timeline', () => {
   it('paints overlapping ranges before exact grouped points without changing the input', () => {
