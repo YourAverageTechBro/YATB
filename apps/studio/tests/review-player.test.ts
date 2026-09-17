@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { buildTimelinePaint, clampPlayheadMs, intrinsicAspectRatio, ReviewPlayer, type ReviewTimelineMarker } from '../src/components/review-player'
+import { buildTimelinePaint, clampPlayheadMs, intrinsicAspectRatio, intrinsicVideoGeometry, ReviewPlayer, type ReviewTimelineMarker } from '../src/components/review-player'
 
 describe('review video dimensions', () => {
   it('derives intrinsic aspect ratios only from usable dimensions', () => {
@@ -12,9 +12,17 @@ describe('review video dimensions', () => {
     expect(intrinsicAspectRatio(1920, Number.NaN)).toBeUndefined()
   })
 
-  it('uses a landscape fallback until video metadata supplies a ratio', () => {
+  it('classifies validated video geometry for layout', () => {
+    expect(intrinsicVideoGeometry(1080, 1920)).toEqual({ aspectRatio: 9 / 16, orientation: 'portrait' })
+    expect(intrinsicVideoGeometry(1920, 1080)).toEqual({ aspectRatio: 16 / 9, orientation: 'landscape' })
+    expect(intrinsicVideoGeometry(0, 1080)).toBeUndefined()
+  })
+
+  it('caps portrait playback on-page and removes the cap in fullscreen', () => {
     const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8')
     expect(css).toContain('aspect-ratio: var(--review-video-aspect-ratio, 16 / 9)')
+    expect(css).toContain(".custom-player[data-video-orientation='portrait'] > video { width: auto; max-width: 100%; max-height: min(640px, calc(100dvh - 180px)); margin-inline: auto; }")
+    expect(css).toContain('max-width: none; max-height: none;')
   })
 })
 

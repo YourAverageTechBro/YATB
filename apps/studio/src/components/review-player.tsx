@@ -27,10 +27,20 @@ type PlayerSnapshot = Readonly<{
   playbackRate: number
 }>
 type PlayerStyle = CSSProperties & Readonly<{ '--review-video-aspect-ratio'?: number }>
+type VideoGeometry = Readonly<{
+  aspectRatio: number
+  orientation: 'landscape' | 'portrait'
+}>
 
 export function intrinsicAspectRatio(width: number, height: number): number | undefined {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return undefined
   return width / height
+}
+
+export function intrinsicVideoGeometry(width: number, height: number): VideoGeometry | undefined {
+  const aspectRatio = intrinsicAspectRatio(width, height)
+  if (aspectRatio === undefined) return undefined
+  return { aspectRatio, orientation: aspectRatio < 1 ? 'portrait' : 'landscape' }
 }
 
 export function clampPlayheadMs(milliseconds: number, durationMs: number): number {
@@ -70,7 +80,7 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
   const [fullscreen, setFullscreen] = useState(false)
   const [fullscreenAvailable, setFullscreenAvailable] = useState(false)
   const [notice, setNotice] = useState('')
-  const [aspectRatio, setAspectRatio] = useState<number>()
+  const [geometry, setGeometry] = useState<VideoGeometry>()
   const paints = useMemo(() => buildTimelinePaint(markers, durationMs), [markers, durationMs])
   const duration = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0
   const disabled = snapshot.phase !== 'ready' || duration === 0
@@ -99,7 +109,7 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
     return () => document.removeEventListener('fullscreenchange', changed)
   }, [])
 
-  useEffect(() => setAspectRatio(undefined), [src])
+  useEffect(() => setGeometry(undefined), [src])
 
   function seekTo(milliseconds: number) {
     const media = video.current
@@ -152,11 +162,11 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
     event.preventDefault()
   }
 
-  const playerStyle: PlayerStyle = aspectRatio === undefined ? {} : { '--review-video-aspect-ratio': aspectRatio }
+  const playerStyle: PlayerStyle = geometry === undefined ? {} : { '--review-video-aspect-ratio': geometry.aspectRatio }
 
-  return <section className="custom-player" ref={container} style={playerStyle} aria-label={label} tabIndex={0} onKeyDown={shortcut}>
+  return <section className="custom-player" data-video-orientation={geometry?.orientation ?? 'landscape'} ref={container} style={playerStyle} aria-label={label} tabIndex={0} onKeyDown={shortcut}>
     <video ref={video} src={src} preload="metadata" playsInline tabIndex={-1} aria-label={label}
-      onClick={() => void togglePlayback()} onLoadedMetadata={(event) => { setAspectRatio(intrinsicAspectRatio(event.currentTarget.videoWidth, event.currentTarget.videoHeight)); synchronize() }} onDurationChange={synchronize}
+      onClick={() => void togglePlayback()} onLoadedMetadata={(event) => { setGeometry(intrinsicVideoGeometry(event.currentTarget.videoWidth, event.currentTarget.videoHeight)); synchronize() }} onDurationChange={synchronize}
       onPlay={synchronize} onPause={synchronize} onEnded={synchronize} onTimeUpdate={synchronize}
       onVolumeChange={synchronize} onRateChange={synchronize} onError={synchronize} onEmptied={synchronize} />
     <div className="custom-player-controls">
