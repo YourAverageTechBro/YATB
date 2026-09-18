@@ -139,6 +139,7 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .review-player { grid-column: 1; position: sticky; top: 20px; }
 .custom-player { --review-comment-marker: #facc15; min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
 .custom-player > video { display: block; width: 100%; aspect-ratio: var(--review-video-aspect-ratio, 16 / 9); object-fit: contain; background: var(--sidebar); }
+.custom-player[data-video-orientation='portrait'] > video { width: auto; max-width: 100%; max-height: min(640px, calc(100dvh - 180px)); margin-inline: auto; }
 .custom-player:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .custom-player-controls { padding: 8px 12px 10px; }
 .custom-player-control-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -153,7 +154,7 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .comment-marker-key { flex-shrink: 0; width: 3px; height: 10px; background: var(--review-comment-marker); }
 .custom-player-message { margin: 8px 0 0; font-size: 12px; }
 .custom-player:fullscreen { display: flex; flex-direction: column; border: 0; border-radius: 0; }
-.custom-player:fullscreen > video { flex: 1; min-height: 0; aspect-ratio: auto; }
+.custom-player:fullscreen > video { flex: 1; width: 100%; min-height: 0; max-width: none; max-height: none; margin-inline: 0; aspect-ratio: auto; }
 .player-state { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; padding-top: 10px; }
 .review-rail { grid-column: 2; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 18px; min-width: 0; height: min(48rem, calc(100dvh - 40px)); position: sticky; top: 20px; }
 .comment-composer { gap: 0; }
