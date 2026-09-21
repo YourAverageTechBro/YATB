@@ -55,6 +55,7 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .workspace-header { display: flex; justify-content: space-between; align-items: end; }
 .workspace-header h1 { font-size: 38px; margin: 7px 0 0; letter-spacing: -.045em; }
 .planning-toolbar { margin-top: 34px; display: flex; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+.layout-controls { display: flex; gap: 6px; }
 .saved-views { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
 .video-list { display: grid; gap: 28px; padding: 28px 0; }
 .video-list h2, .board-column h2 { font-size: 14px; margin: 0 0 10px; }
@@ -74,6 +75,26 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .board-column { min-height: 360px; min-width: 180px; border: 1px solid var(--border); background: var(--muted); border-radius: 10px; padding: 12px; display: grid; align-content: start; gap: 9px; }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 4px 0 32px; }
 .pagination span { color: var(--muted-foreground); font-size: 13px; }
+.calendar-shell { padding: 24px 0 36px; }
+.calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.calendar-header h2 { margin: 0; font-size: 24px; letter-spacing: -.035em; }
+.calendar-header > div { display: flex; gap: 7px; }
+.calendar-weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--border); border-bottom: 0; border-radius: 12px 12px 0 0; overflow: hidden; background: var(--muted); }
+.calendar-weekdays span { padding: 8px 10px; color: var(--muted-foreground); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.video-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+.calendar-day { min-width: 0; min-height: 150px; padding: 9px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--card); }
+.calendar-day:nth-last-child(-n + 7):first-child, .calendar-day:last-child { border-radius: 0 0 12px 0; }
+.calendar-day > time { display: block; margin-bottom: 7px; color: var(--muted-foreground); font-size: 12px; font-weight: 650; }
+.calendar-day > div { display: grid; gap: 6px; }
+.calendar-day--outside { background: color-mix(in srgb, var(--muted) 55%, var(--card)); }
+.calendar-day--outside > time { opacity: .45; }
+.calendar-video-card { min-width: 0; display: grid; gap: 4px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; color: var(--foreground); background: var(--background); text-decoration: none; }
+.calendar-video-card:hover { border-color: var(--ring); }
+.calendar-video-card strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.calendar-video-card > span { overflow: hidden; color: var(--muted-foreground); font-size: 10px; text-overflow: ellipsis; text-transform: capitalize; white-space: nowrap; }
+.calendar-video-card .video-status-chip { justify-self: start; max-width: 100%; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.calendar-agenda { display: none; }
+.calendar-empty { margin-top: 0; }
 .video-form-card { margin-top: 22px; }
 .video-edit-fields { display: grid; gap: 14px; padding: 0 20px; }
 .video-detail label:not(.upload-button) { display: grid; gap: 7px; font-size: 13px; font-weight: 620; }
@@ -268,6 +289,13 @@ html[data-theme='dark'] {
   .studio-sidebar-collapse { display: inline-flex; }
   .workspace { padding: 34px 24px; }
   .planning-toolbar { overflow-x: auto; flex-wrap: nowrap; }
+  .planning-toolbar > * { flex: 0 0 auto; }
+  .calendar-header { align-items: flex-start; flex-direction: column; }
+  .calendar-weekdays, .video-calendar { display: none; }
+  .calendar-agenda { display: grid; gap: 18px; }
+  .agenda-day { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .agenda-day > time { position: sticky; top: 66px; color: var(--muted-foreground); font-size: 12px; font-weight: 650; }
+  .agenda-day > div { min-width: 0; display: grid; gap: 7px; }
   .field-grid { grid-template-columns: 1fr; }
   .footage-section > header { align-items: stretch; flex-direction: column; }
   .review-workspace > header, .draft-selector, .comparison-side > header { align-items: stretch; flex-direction: column; }

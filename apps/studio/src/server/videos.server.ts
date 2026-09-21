@@ -24,10 +24,12 @@ import {
   type VideoSummary,
 } from '#/domain/videos'
 import { parseRichDocument, type RichDocument } from './rich-document'
+import { calendarMonthRange, type CalendarMonth } from '#/domain/calendar'
 import {
   ACTIVE_VIDEO_SQL,
   CREATE_VIDEO_SQL,
   UPDATE_VIDEO_SQL,
+  calendarVideosSql,
   organicVideoOptionsSql,
 } from './video-sql'
 
@@ -177,6 +179,24 @@ export async function listVideos(
     `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, revision, created_at, updated_at
      FROM video WHERE ${clauses.join(' AND ')} ORDER BY ${orderBy(config.sort)} LIMIT ? OFFSET ?`,
   ).bind(...values, limit, offset).all<unknown>()
+  return result.results.map(parseVideoSummaryRow)
+}
+
+export async function listCalendarVideos(
+  config: Extract<VideoListConfig, { layout: 'calendar' }>,
+  month: CalendarMonth,
+): Promise<VideoSummary[]> {
+  const { start, end } = calendarMonthRange(month)
+  const values: string[] = [start, end]
+  if (config.status !== 'all') {
+    values.push(config.status)
+  }
+  if (config.format !== 'all') {
+    values.push(config.format)
+  }
+  const result = await bindings.DB.prepare(
+    calendarVideosSql(config.status !== 'all', config.format !== 'all'),
+  ).bind(...values).all<unknown>()
   return result.results.map(parseVideoSummaryRow)
 }
 

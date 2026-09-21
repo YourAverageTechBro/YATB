@@ -8,6 +8,13 @@ WHERE ${ORGANIC_LONG_VIDEO_SQL}${excludeCurrent ? ' AND id != ?' : ''}
 ORDER BY title COLLATE NOCASE ASC, id ASC`
 }
 
+export function calendarVideosSql(filterStatus: boolean, filterFormat: boolean): string {
+  return `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, revision, created_at, updated_at
+FROM video
+WHERE ${ACTIVE_VIDEO_SQL} AND publish_date >= ? AND publish_date < ?${filterStatus ? ' AND status = ?' : ''}${filterFormat ? ' AND format = ?' : ''}
+ORDER BY publish_date ASC, title COLLATE NOCASE ASC, id ASC`
+}
+
 export const CREATE_VIDEO_SQL = `INSERT INTO video (
   id, title, format, promotion, linked_organic_video_id, status, publish_date,
   script_json, revision, created_at, updated_at

@@ -44,7 +44,10 @@ accessibility tree before each action. Use these stable accessible names:
 - `New video`, `Title`, `Format`, `Promotion`, `Organic video (optional)`, and
   `Create` identify video creation. The optional select uses `Not linked` for
   an empty relationship.
-- `Video view controls`, `Saved views`, and `Save view` identify planning controls.
+- `Video view controls`, `Video layout`, `List`, `Board`, `Calendar`, `Saved views`, and `Save view` identify planning controls.
+- `Previous month`, `Today`, and `Next month` navigate the calendar. Its desktop
+  grid and mobile agenda contain metadata-only links to `/videos/<id>`; media
+  previews belong only on the video detail route.
 - `Script` and `Delete video` identify the task editor. Changes save after
   600 ms without another edit. Wait for the live `Saved` status before reloading to confirm
   persistence. A queued valid edit continues saving after in-app navigation.

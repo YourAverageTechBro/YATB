@@ -1,3 +1,5 @@
+import { parseCalendarMonth, type CalendarMonth } from './calendar'
+
 export type VideoId = string
 export type SavedViewId = string
 export type VideoRevision = number
@@ -23,6 +25,7 @@ export const VIDEO_STATUSES = Object.keys(STATUS) as VideoStatus[]
 export type VideoSort = 'updated-desc' | 'publish-date-asc' | 'title-asc'
 export type ListLayout = 'list'
 export type BoardLayout = 'board'
+export type CalendarLayout = 'calendar'
 export type VideoListConfig =
   | {
       layout: ListLayout
@@ -38,6 +41,13 @@ export type VideoListConfig =
       format: VideoFormat | 'all'
       sort: VideoSort
     }
+  | {
+      layout: CalendarLayout
+      groupBy: 'none'
+      status: VideoStatus | 'all'
+      format: VideoFormat | 'all'
+      sort: 'publish-date-asc'
+    }
 
 export const DEFAULT_LIST_CONFIG: VideoListConfig = {
   layout: 'list',
@@ -47,13 +57,17 @@ export const DEFAULT_LIST_CONFIG: VideoListConfig = {
   sort: 'updated-desc',
 }
 
-export type PlanningQuery = Readonly<{ config: VideoListConfig; page: number }>
+export type PlanningQuery = Readonly<{
+  config: VideoListConfig
+  page: number
+  month: CalendarMonth
+}>
 
 export function parsePlanningQuery(value: unknown): PlanningQuery {
   const input = record(value, 'Planning query is required.')
   const page = input.page === undefined ? 1 : Number(input.page)
   if (!Number.isSafeInteger(page) || page < 1) invalid('Page is invalid.')
-  return { config: parseListConfig(input.config ?? input), page }
+  return { config: parseListConfig(input.config ?? input), page, month: parseCalendarMonth(input.month) }
 }
 
 export type Video = Readonly<{
@@ -192,8 +206,23 @@ export function parseListConfig(value: unknown): VideoListConfig {
     return { layout, groupBy, ...filters }
   }
   if (layout === 'board' && groupBy === 'status') return { layout, groupBy, ...filters }
+  if (layout === 'calendar' && groupBy === 'none' && filters.sort === 'publish-date-asc') {
+    return { layout, groupBy, ...filters, sort: 'publish-date-asc' }
+  }
   invalid('Layout and grouping are incompatible.')
 }
+
+export const LAYOUT_CONFIG = {
+  list: (config: VideoListConfig): VideoListConfig => ({ ...config, layout: 'list', groupBy: 'none' }),
+  board: (config: VideoListConfig): VideoListConfig => ({ ...config, layout: 'board', groupBy: 'status' }),
+  calendar: (config: VideoListConfig): VideoListConfig => ({
+    layout: 'calendar',
+    groupBy: 'none',
+    status: config.status,
+    format: config.format,
+    sort: 'publish-date-asc',
+  }),
+} satisfies Record<VideoListConfig['layout'], (config: VideoListConfig) => VideoListConfig>
 
 export function parsePublishDate(value: unknown): string | null {
   const date = optionalString(value, 'Publish date is invalid.')
