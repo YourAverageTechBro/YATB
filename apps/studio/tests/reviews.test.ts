@@ -28,6 +28,7 @@ function comparisonDraft(id: string, videoId: string, version: number): Draft {
     videoId,
     version,
     durationMs: 12_000,
+    compactMp4: { state: 'ready', byteSize: 80 },
     file: {
       id: crypto.randomUUID(),
       videoId,

@@ -1,6 +1,7 @@
 import { MAX_DRAFT_DURATION_MS, parseMediaId, type MediaFile } from './media'
 import { parseRevision, parseVideoId, type VideoId } from './videos'
 import { parseRichDocument, type RichDocument } from '../server/rich-document'
+import type { MediaDerivative } from './derivatives'
 
 export type DraftId = string
 export type ReviewCommentId = string
@@ -27,6 +28,7 @@ export type Draft = Readonly<{
   version: number
   durationMs: number
   file: MediaFile
+  compactMp4: MediaDerivative
   author: ReviewAuthor
   createdAt: number
 }>

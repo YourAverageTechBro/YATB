@@ -156,6 +156,7 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .custom-player:fullscreen { display: flex; flex-direction: column; border: 0; border-radius: 0; }
 .custom-player:fullscreen > video { flex: 1; width: 100%; min-height: 0; max-width: none; max-height: none; margin-inline: 0; aspect-ratio: auto; }
 .player-state { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; padding-top: 10px; }
+.draft-downloads { display: flex; flex-wrap: wrap; gap: 8px; }
 .review-rail { grid-column: 2; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 18px; min-width: 0; height: min(48rem, calc(100dvh - 40px)); position: sticky; top: 20px; }
 .comment-composer { gap: 0; }
 .comment-composer form { display: grid; min-width: 0; gap: 14px; padding: 0 18px; }
