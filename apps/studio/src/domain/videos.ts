@@ -21,6 +21,7 @@ export const STATUS = {
 
 export type VideoStatus = keyof typeof STATUS
 export const VIDEO_STATUSES = Object.keys(STATUS) as VideoStatus[]
+export type VideoStatusFilter = readonly VideoStatus[]
 
 export type VideoSort = 'updated-desc' | 'publish-date-asc' | 'title-asc'
 export type ListLayout = 'list'
@@ -30,21 +31,21 @@ export type VideoListConfig =
   | {
       layout: ListLayout
       groupBy: 'none' | 'status' | 'format'
-      status: VideoStatus | 'all'
+      status: VideoStatusFilter
       format: VideoFormat | 'all'
       sort: VideoSort
     }
   | {
       layout: BoardLayout
       groupBy: 'status'
-      status: VideoStatus | 'all'
+      status: VideoStatusFilter
       format: VideoFormat | 'all'
       sort: VideoSort
     }
   | {
       layout: CalendarLayout
       groupBy: 'none'
-      status: VideoStatus | 'all'
+      status: VideoStatusFilter
       format: VideoFormat | 'all'
       sort: 'publish-date-asc'
     }
@@ -52,7 +53,7 @@ export type VideoListConfig =
 export const DEFAULT_LIST_CONFIG: VideoListConfig = {
   layout: 'list',
   groupBy: 'none',
-  status: 'all',
+  status: VIDEO_STATUSES,
   format: 'all',
   sort: 'updated-desc',
 }
@@ -183,8 +184,44 @@ function parseFormatFilter(value: unknown): VideoFormat | 'all' {
     : invalid('Format filter is invalid.')
 }
 
-function parseStatusFilter(value: unknown): VideoStatus | 'all' {
-  return value === 'all' ? value : parseStatus(value)
+export function parseStatusFilter(value: unknown): VideoStatusFilter {
+  let values: unknown[]
+  if (Array.isArray(value)) {
+    values = value
+  } else if (value === 'all') {
+    return VIDEO_STATUSES
+  } else if (value === 'none') {
+    return []
+  } else if (typeof value === 'string') {
+    if (value.startsWith('[')) {
+      try {
+        const parsed: unknown = JSON.parse(value)
+        if (!Array.isArray(parsed)) invalid('Status filter is invalid.')
+        values = parsed
+      } catch {
+        invalid('Status filter is invalid.')
+      }
+    } else {
+      values = value.split(',')
+    }
+  } else {
+    invalid('Status filter is invalid.')
+  }
+  const selected = new Set(values.map(parseStatus))
+  return VIDEO_STATUSES.filter((status) => selected.has(status))
+}
+
+export function encodeStatusFilter(statuses: VideoStatusFilter): string {
+  if (statuses.length === VIDEO_STATUSES.length) return 'all'
+  if (statuses.length === 0) return 'none'
+  return statuses.join(',')
+}
+
+export function statusFilterLabel(statuses: VideoStatusFilter): string {
+  if (statuses.length === VIDEO_STATUSES.length) return 'All statuses'
+  if (statuses.length === 0) return 'No statuses'
+  if (statuses.length === 1) return STATUS[statuses[0]!].label
+  return `${statuses.length} statuses`
 }
 
 function parseSort(value: unknown): VideoSort {
@@ -251,8 +288,9 @@ export function parseSavedViewName(value: unknown): string {
 }
 
 export function filterVideos(videos: readonly VideoSummary[], config: VideoListConfig): VideoSummary[] {
+  const statuses = new Set(config.status)
   return videos.filter((video) =>
-    (config.status === 'all' || video.status === config.status)
+    statuses.has(video.status)
     && (config.format === 'all' || video.production.format === config.format),
   )
 }

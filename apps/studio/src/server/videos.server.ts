@@ -31,6 +31,7 @@ import {
   UPDATE_VIDEO_SQL,
   calendarVideosSql,
   organicVideoOptionsSql,
+  statusFilterSql,
 } from './video-sql'
 
 const bindings = env as Cloudflare.Env & { DB: D1Database }
@@ -167,10 +168,9 @@ export async function listVideos(
 ): Promise<VideoSummary[]> {
   const clauses = [ACTIVE_VIDEO_SQL]
   const values: string[] = []
-  if (config.status !== 'all') {
-    clauses.push('status = ?')
-    values.push(config.status)
-  }
+  const status = statusFilterSql(config.status)
+  if (status.clause) clauses.push(status.clause.replace(/^ AND /, ''))
+  values.push(...status.values)
   if (config.format !== 'all') {
     clauses.push('format = ?')
     values.push(config.format)
@@ -187,15 +187,13 @@ export async function listCalendarVideos(
   month: CalendarMonth,
 ): Promise<VideoSummary[]> {
   const { start, end } = calendarMonthRange(month)
-  const values: string[] = [start, end]
-  if (config.status !== 'all') {
-    values.push(config.status)
-  }
+  const status = statusFilterSql(config.status)
+  const values: string[] = [start, end, ...status.values]
   if (config.format !== 'all') {
     values.push(config.format)
   }
   const result = await bindings.DB.prepare(
-    calendarVideosSql(config.status !== 'all', config.format !== 'all'),
+    calendarVideosSql(config.status, config.format !== 'all'),
   ).bind(...values).all<unknown>()
   return result.results.map(parseVideoSummaryRow)
 }
@@ -333,7 +331,7 @@ export async function createSavedView(
     `INSERT INTO saved_view (
       id, owner_user_id, name, layout, group_by, status_filter, format_filter, sort, created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).bind(id, ownerUserId, name, config.layout, config.groupBy, config.status, config.format, config.sort, now, now).run()
+  ).bind(id, ownerUserId, name, config.layout, config.groupBy, JSON.stringify(config.status), config.format, config.sort, now, now).run()
   const row = await bindings.DB.prepare(
     `SELECT id, name, layout, group_by, status_filter, format_filter, sort, created_at, updated_at
      FROM saved_view WHERE id = ? AND owner_user_id = ?`,

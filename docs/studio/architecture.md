@@ -115,7 +115,9 @@ type ReviewAnchor =
   | { kind: 'range'; startMs: number; endMs: number }
 ```
 
-One status registry owns labels, sort order, and board columns. Rich text is
+One status registry owns labels, sort order, board columns, and canonical
+multiselect ordering. Planning URLs encode the exact selection as `all`, `none`,
+or a comma-separated list. Saved views persist that selection as a JSON array. Rich text is
 bounded editor JSON. The parser accepts only supported nodes, safe HTTP links,
 and a fixed serialized size. The renderer never accepts stored HTML.
 

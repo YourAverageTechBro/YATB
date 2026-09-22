@@ -9,7 +9,7 @@ calendar intentionally fixes grouping to none and sorting to publish date.
 - `view-board` renders the five status columns.
 - `view-calendar` renders every scheduled video in a complete month without pagination.
 - `view-calendar-mobile` renders the same month as a chronological agenda.
-- `view-filter-sort` combines status and format filters with a fixed sort choice.
+- `view-filter-sort` combines a status multiselect, format filter, and fixed sort choice.
 - `view-saved-owner` restores a view only for its owner.
 - `view-saved-delete` removes a saved configuration only for its owner.
 - `view-board-move` advances a card through the five statuses with optimistic conflict handling.
@@ -28,7 +28,15 @@ Preconditions:
 
 - **Arrange a list.** Group a mixed schedule by status and sort by publish date. Confirm each format and multiple status groups remain visible.
 - **Check status colors.** Confirm all five status chips use distinct colors with readable text in the Light, Dark, and System themes. Switch the operating system appearance while System is selected and confirm the palette follows it.
-- **Arrange a board.** Choose `Board`, filter a status, and confirm cards appear in the matching column. Move one card to another status and confirm only its persisted status changes; a stale concurrent move must show an alert instead of overwriting.
+- **Filter statuses.** Open the status filter and select two statuses. Confirm both
+  sets of cards appear, the trigger reports `2 statuses`, and the URL stores a
+  comma-separated status value. Reload and confirm the selection survives.
+  Choose `Clear` and confirm `No statuses selected`; choose `Select all` and
+  confirm `All statuses`. The menu stays open while individual checkboxes toggle.
+- **Arrange a board.** Choose `Board`, select multiple statuses, and confirm cards
+  appear in each matching column. Move one card to another status and confirm only
+  its persisted status changes; a stale concurrent move must show an alert instead
+  of overwriting.
 - **Arrange a calendar.** Choose `Calendar` and confirm group and sort controls
   disappear while status and format filters remain. Navigate across a year
   boundary with `Previous month` and `Next month`, then use `Today`. Confirm
@@ -42,7 +50,9 @@ Preconditions:
   truncate without horizontal overflow.
 - **Check the empty month.** Open a month without publish dates and confirm the
   calendar-specific `No scheduled videos` message appears.
-- **Save and restore.** Save the board configuration, change the controls, then select the name from `Saved views`.
+- **Save and restore.** Save a board configuration with two selected statuses,
+  change the controls, then select the name from `Saved views`. Confirm both
+  statuses are restored.
 - **Use the saved-view menu.** Open `Saved views` with the keyboard, move through
   its items with Arrow keys, close it with Escape and confirm focus returns to
   the trigger, then reopen it and apply one view. With no saved views, confirm
@@ -56,4 +66,5 @@ Preconditions:
 - Board layout always groups by status.
 - Calendar layout always groups by none, sorts by publish date, excludes videos
   without a publish date, and never paginates the selected month.
-- Saved views retain layout, filters, grouping, and sort. They do not retain a page number.
+- Saved views retain layout, filters, grouping, and sort. Status selections are
+  stored as JSON arrays. They do not retain a page number.
