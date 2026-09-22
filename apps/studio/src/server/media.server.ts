@@ -14,6 +14,8 @@ import {
   type UploadState,
 } from '#/domain/media'
 import type { Draft, ReviewAuthor } from '#/domain/reviews'
+import type { MediaDerivativeState } from '#/domain/derivatives'
+import { ensureDraftDerivative } from './compression.server'
 import { ACTIVE_VIDEO_SQL } from './video-sql'
 
 type Bindings = Cloudflare.Env & { DB: D1Database; MEDIA: R2Bucket }
@@ -71,6 +73,8 @@ type DraftRow = {
   user_id: string
   user_name: string
   user_email: string
+  derivative_state?: MediaDerivativeState | null
+  derivative_byte_size?: number | null
 }
 
 function publicFile(row: FileRow): MediaFile {
@@ -126,11 +130,19 @@ function publicAuthor(row: DraftRow): ReviewAuthor {
   return { id: row.user_id, name: row.user_name, email: row.user_email }
 }
 
-async function storedDraft(fileId: string, videoId: string, file: MediaFile): Promise<Draft | null> {
+async function storedDraft(
+  fileId: string,
+  videoId: string,
+  file: MediaFile,
+  includeDerivative = true,
+): Promise<Draft | null> {
   const row = await bindings.DB.prepare(
     `SELECT d.id, d.video_id, d.version, d.duration_ms, d.created_at,
+            x.state AS derivative_state, x.byte_size AS derivative_byte_size,
             u.id AS user_id, u.name AS user_name, u.email AS user_email
      FROM draft d JOIN user u ON u.id = d.created_by_user_id
+     LEFT JOIN media_derivative x ON x.source_media_file_id = d.media_file_id
+       AND x.profile = 'compact-mp4-v1'
      WHERE d.media_file_id = ? AND d.video_id = ?`,
   ).bind(fileId, videoId).first<DraftRow>()
   return row && {
@@ -139,6 +151,10 @@ async function storedDraft(fileId: string, videoId: string, file: MediaFile): Pr
     version: row.version,
     durationMs: row.duration_ms,
     file,
+    compactMp4: {
+      state: includeDerivative ? row.derivative_state ?? 'queued' : 'queued',
+      byteSize: includeDerivative ? row.derivative_byte_size ?? null : null,
+    },
     author: publicAuthor(row),
     createdAt: row.created_at,
   }
@@ -160,7 +176,7 @@ async function snapshot(row: UploadRow): Promise<UploadSnapshot> {
     const file = publicFile(stored)
     if (row.purpose === 'footage') result = { kind: 'footage', file }
     else {
-      const draft = await storedDraft(row.file_id, row.video_id, file)
+      const draft = await storedDraft(row.file_id, row.video_id, file, false)
       if (!draft) throw new MediaError(500, 'Draft publication is incomplete.')
       result = { kind: 'draft', file, draft }
     }
@@ -360,6 +376,15 @@ async function publish(row: UploadRow, object: R2Object): Promise<UploadSnapshot
   }
   const ready = await uploadRow(row.id, row.video_id)
   if (!ready || ready.state !== 'ready') throw new MediaError(500, 'File publication did not finish.')
+  if (row.purpose === 'draft' && row.draft_duration_ms !== null) {
+    await ensureDraftDerivative({
+      videoId: row.video_id,
+      sourceFileId: row.file_id,
+      byteSize: row.byte_size,
+      contentType: row.content_type,
+      durationMs: row.draft_duration_ms,
+    }).catch((error) => console.error('Draft compression could not be enqueued', error))
+  }
   return snapshot(ready)
 }
 
@@ -498,6 +523,12 @@ export async function cleanupTombstonedVideos(envBindings: Bindings, now = Date.
       const files = await envBindings.DB.prepare(
         'SELECT object_key FROM media_file WHERE video_id = ?',
       ).bind(video.id).all<{ object_key: string }>()
+      const derivatives = await envBindings.DB.prepare(
+        'SELECT object_key FROM media_derivative WHERE video_id = ?',
+      ).bind(video.id).all<{ object_key: string }>()
+      for (let index = 0; index < derivatives.results.length; index += 1000) {
+        await envBindings.MEDIA.delete(derivatives.results.slice(index, index + 1000).map((file) => file.object_key))
+      }
       for (let index = 0; index < files.results.length; index += 1000) {
         await envBindings.MEDIA.delete(files.results.slice(index, index + 1000).map((file) => file.object_key))
       }

@@ -1,6 +1,7 @@
 import '@tanstack/react-start/server-only'
 import { env } from 'cloudflare:workers'
 import type { MediaFile } from '#/domain/media'
+import type { MediaDerivativeState } from '#/domain/derivatives'
 import {
   parseReviewAnchor,
   type CreateReviewComment,
@@ -37,6 +38,8 @@ type DraftRow = {
   user_id: string
   user_name: string
   user_email: string
+  derivative_state: MediaDerivativeState | null
+  derivative_byte_size: number | null
 }
 
 type CommentRow = {
@@ -91,6 +94,10 @@ function draft(row: DraftRow): Draft {
     version: row.version,
     durationMs: row.duration_ms,
     file: file(row),
+    compactMp4: {
+      state: row.derivative_state ?? 'queued',
+      byteSize: row.derivative_byte_size,
+    },
     author: author(row),
     createdAt: row.created_at,
   }
@@ -142,10 +149,12 @@ export async function listDrafts(videoId: string): Promise<Draft[]> {
     `SELECT d.id, d.video_id, d.version, d.duration_ms, d.created_at,
             f.id AS file_id, f.display_name, f.byte_size, f.content_type,
             f.created_at AS file_created_at, f.updated_at AS file_updated_at,
+            x.state AS derivative_state, x.byte_size AS derivative_byte_size,
             u.id AS user_id, u.name AS user_name, u.email AS user_email
      FROM draft d
      JOIN media_file f ON f.id = d.media_file_id AND f.video_id = d.video_id AND f.purpose = 'draft'
      JOIN user u ON u.id = d.created_by_user_id
+     LEFT JOIN media_derivative x ON x.source_media_file_id = f.id AND x.profile = 'compact-mp4-v1'
      WHERE d.video_id = ? ORDER BY d.version DESC`,
   ).bind(videoId).all<DraftRow>()
   return result.results.map(draft)

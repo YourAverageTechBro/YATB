@@ -10,6 +10,7 @@ import { ScrollArea } from '@yatb/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { uploadFile } from '#/client/upload'
 import { anchorStartMs, formatTimestamp, type Draft, type ReviewAnchor, type ReviewComment } from '#/domain/reviews'
+import type { MediaDerivativeState } from '#/domain/derivatives'
 import { addComment, loadComments, removeComment, saveComment } from '#/server/reviews.functions'
 import { emptyRichDocument, type RichDocument } from '#/server/rich-document'
 import { RichDocumentView } from './rich-document-view'
@@ -50,6 +51,32 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [commentRequestId, setCommentRequestId] = useState(() => crypto.randomUUID())
+  const [compactState, setCompactState] = useState<MediaDerivativeState>(draft.compactMp4.state)
+
+  useEffect(() => {
+    setCompactState(draft.compactMp4.state)
+    if (draft.compactMp4.state === 'ready' || draft.compactMp4.state === 'not_beneficial'
+        || draft.compactMp4.state === 'unsupported') return
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const poll = async () => {
+      let terminal = false
+      try {
+        const response = await fetch(`${draftMediaUrl}?download=compressed`, { method: 'HEAD' })
+        if (cancelled) return
+        if (response.ok) { setCompactState('ready'); terminal = true }
+        else if (response.status === 409) { setCompactState('not_beneficial'); terminal = true }
+        else if (response.status === 422) { setCompactState('unsupported'); terminal = true }
+        else if (response.status === 503) setCompactState('failed')
+        else setCompactState('processing')
+      } catch {
+        if (!cancelled) setCompactState('failed')
+      }
+      if (!cancelled && !terminal) timer = setTimeout(poll, 5_000)
+    }
+    timer = setTimeout(poll, 2_000)
+    return () => { cancelled = true; if (timer) clearTimeout(timer) }
+  }, [draft.id, draft.compactMp4.state, draftMediaUrl])
 
   async function refresh() {
     setComments(await loadComments({ data: { videoId: draft.videoId, draftId: draft.id } }))
@@ -106,7 +133,24 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
     <div className="review-player">
       <ReviewPlayer ref={player} src={draftMediaUrl} durationMs={draft.durationMs} label={`Version ${draft.version}: ${draft.file.displayName}`} markers={markers} onPlayheadChange={setCurrentMs} />
       <div className="player-state">
-        <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=1`} aria-label={`Download version ${draft.version}: ${draft.file.displayName}`}><Download /> Download</a></Button>
+        <div className="draft-downloads">
+          {compactState === 'ready'
+            ? <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=compressed`} aria-label={`Download smaller MP4 for version ${draft.version}: ${draft.file.displayName}`}><Download /> Download smaller MP4</a></Button>
+            : <Button variant="outline" size="sm" disabled title={compactState === 'not_beneficial'
+              ? 'The original is already as small as the compact MP4.'
+              : compactState === 'unsupported'
+                ? 'This video is too large or long for compact download processing.'
+                : compactState === 'failed'
+                  ? 'The compact MP4 could not be prepared.'
+                  : 'The compact MP4 is being prepared.'}><Download /> {compactState === 'not_beneficial'
+                ? 'Original is already optimized'
+                : compactState === 'unsupported'
+                  ? 'Smaller MP4 unavailable'
+                  : compactState === 'failed'
+                    ? 'Smaller MP4 unavailable'
+                    : 'Preparing smaller MP4…'}</Button>}
+          <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=1`} aria-label={`Download original version ${draft.version}: ${draft.file.displayName}`}><Download /> Download original</a></Button>
+        </div>
       </div>
     </div>
     <aside className="review-rail" aria-label={`Review version ${draft.version}`}>

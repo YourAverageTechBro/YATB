@@ -45,19 +45,24 @@ export const loadPlanning = createServerFn({ method: 'GET' })
   .validator(parsePlanningQuery)
   .handler(async ({ data }) => {
     const session = await readSession()
-    const { listOrganicVideoOptions, listSavedViews, listVideos } = await import('./videos.server')
+    const { listCalendarVideos, listOrganicVideoOptions, listSavedViews, listVideos } = await import('./videos.server')
     const pageSize = 20
-    const [page, savedViews, organicVideoOptions] = await Promise.all([
-      listVideos(data.config, pageSize + 1, (data.page - 1) * pageSize),
+    const [videos, savedViews, organicVideoOptions] = await Promise.all([
+      data.config.layout === 'calendar'
+        ? listCalendarVideos(data.config, data.month)
+        : listVideos(data.config, pageSize + 1, (data.page - 1) * pageSize),
       listSavedViews(session.user.id),
       listOrganicVideoOptions(),
     ])
-    return {
-      videos: page.slice(0, pageSize),
-      savedViews,
-      organicVideoOptions,
-      hasMore: page.length > pageSize,
-    }
+    const common = { savedViews, organicVideoOptions }
+    return data.config.layout === 'calendar'
+      ? { kind: 'calendar' as const, videos, ...common }
+      : {
+          kind: 'collection' as const,
+          videos: videos.slice(0, pageSize),
+          hasMore: videos.length > pageSize,
+          ...common,
+        }
   })
 
 export const loadVideo = createServerFn({ method: 'GET' })

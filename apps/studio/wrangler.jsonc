@@ -25,6 +25,38 @@
     }
   },
   "triggers": { "crons": ["*/15 * * * *"] },
+  "durable_objects": {
+    "bindings": [
+      { "name": "VIDEO_TRANSCODER", "class_name": "CompressionContainer" }
+    ]
+  },
+  "migrations": [
+    { "tag": "compression-container-v1", "new_sqlite_classes": ["CompressionContainer"] }
+  ],
+  "containers": [
+    {
+      "name": "video-transcoder",
+      "class_name": "CompressionContainer",
+      "image": "./container/Dockerfile",
+      "max_instances": 1,
+      "instance_type": "standard-1"
+    }
+  ],
+  "queues": {
+    "producers": [
+      { "binding": "VIDEO_COMPRESSION_QUEUE", "queue": "yatb-video-compression" }
+    ],
+    "consumers": [
+      {
+        "queue": "yatb-video-compression",
+        "max_batch_size": 1,
+        "max_batch_timeout": 5,
+        "max_retries": 4,
+        "retry_delay": 60,
+        "max_concurrency": 1
+      }
+    ]
+  },
   "secrets": { "required": ["BETTER_AUTH_SECRET"] },
   "vars": {
     "APP_ORIGIN": "https://studio.youraveragetechbro.com",

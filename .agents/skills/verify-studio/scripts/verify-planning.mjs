@@ -238,13 +238,20 @@ for (const status of ['filming', 'ready-to-edit', 'ready-to-review', 'published'
   assert(db.prepare('SELECT status FROM video WHERE id = ?').get(organicShort.id).status === status, `Status ${status} did not persist`)
 }
 
+const organicLongRevision = db.prepare('SELECT revision FROM video WHERE id = ?').get(organicLong.id)
+await callServerFunction(ids, cookie, 'moveVideoStatus', {
+  id: organicLong.id,
+  expectedRevision: organicLongRevision.revision,
+  status: 'filming',
+})
+
 const viewName = `${run} review board`
 await callServerFunction(ids, cookie, 'createSavedView', {
   name: viewName,
   config: {
     layout: 'board',
     groupBy: 'status',
-    status: 'ready-to-review',
+    status: ['filming', 'ready-to-review'],
     format: 'long',
     sort: 'publish-date-asc',
   },
@@ -255,6 +262,10 @@ const savedView = db.prepare(
    WHERE saved_view.name = ?`,
 ).get(viewName)
 assert(savedView?.email === email, 'Saved view was not scoped to the signed-in user')
+assert(
+  savedView?.status_filter === '["filming","ready-to-review"]',
+  'Saved view did not persist the status selection as a JSON array',
+)
 const secondCookie = await signIn(secondEmail, secondPassword)
 const secondPage = await fetch(`${baseUrl}/videos`, { headers: { Cookie: secondCookie } })
 const secondHtml = await secondPage.text()
@@ -265,15 +276,18 @@ const boardUrl = new URL('/videos', baseUrl)
 boardUrl.search = new URLSearchParams({
   layout: 'board',
   groupBy: 'status',
-  status: 'published',
-  format: 'short',
+  status: 'filming,published',
+  format: 'all',
   sort: 'title-asc',
 }).toString()
 const board = await fetch(boardUrl, { headers: { Cookie: cookie } })
 const boardHtml = await board.text()
 assert(board.ok, `Filtered board returned ${board.status}`)
 assert(boardHtml.includes(`href="/videos/${organicShort.id}"`), 'Filtered board omitted the matching persisted video')
-assert(!boardHtml.includes(`href="/videos/${organicLong.id}"`), 'Filtered board included a nonmatching video')
+assert(boardHtml.includes(`href="/videos/${organicLong.id}"`), 'Filtered board omitted the second selected status')
+const integration = created.find((row) => row.title.endsWith('long-integration'))
+assert(integration, 'Integration was not persisted')
+assert(!boardHtml.includes(`href="/videos/${integration.id}"`), 'Filtered board included an unselected status')
 
 const deleted = created.find((row) => row.title.endsWith('short-advertisement'))
 assert(deleted, 'Advertisement short was not persisted')
@@ -293,7 +307,7 @@ console.log('rich_script_persisted=true unsafe_link_rejected=true')
 console.log('optimistic_conflict=true final_revision=7')
 console.log('all_statuses_persisted=true')
 console.log('saved_view_owner_scoped=true second_user_does_not_inherit=true')
-console.log('filtered_board_rendered=true')
+console.log('status_multiselect_saved=true filtered_board_union_rendered=true')
 console.log('tombstone_written=true deleted_direct_status=404')
 
 db.close()

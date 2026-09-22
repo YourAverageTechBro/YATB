@@ -3,28 +3,33 @@ import { Badge } from '@yatb/ui/badge'
 import { Button } from '@yatb/ui/button'
 import { Card } from '@yatb/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@yatb/ui/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@yatb/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@yatb/ui/dropdown-menu'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { ChevronDown, Clapperboard, LayoutGrid, List, Plus, Trash2 } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clapperboard, LayoutGrid, List, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import {
   DEFAULT_LIST_CONFIG,
+  LAYOUT_CONFIG,
   STATUS,
   VIDEO_STATUSES,
+  encodeStatusFilter,
   groupVideos,
   legalPromotions,
   parseListConfig,
   parsePlanningQuery,
+  statusFilterLabel,
   type Production,
   type VideoFormat,
   type VideoId,
   type VideoListConfig,
   type VideoStatus,
+  type VideoStatusFilter,
   type VideoSummary,
 } from '#/domain/videos'
+import { buildCalendarMonth, calendarMonthLabel, currentCalendarMonth, shiftCalendarMonth } from '#/domain/calendar'
 import { emptyRichDocument } from '#/server/rich-document'
 import { createSavedView, createVideo, loadPlanning, moveVideoStatus, removeSavedView } from '#/server/videos.functions'
 
@@ -36,6 +41,47 @@ const VIDEO_STATUS_CHIP_CLASS = {
   published: 'video-status-chip--published',
 } satisfies Record<VideoStatus, string>
 
+function planningSearch(config: VideoListConfig, page: number, month: ReturnType<typeof currentCalendarMonth>) {
+  return {
+    layout: config.layout,
+    groupBy: config.groupBy,
+    status: encodeStatusFilter(config.status),
+    format: config.format,
+    sort: config.sort,
+    page,
+    month,
+  }
+}
+
+function StatusFilter({ statuses, onChange }: {
+  statuses: VideoStatusFilter
+  onChange: (statuses: VideoStatusFilter) => void
+}) {
+  const label = statusFilterLabel(statuses)
+  const selected = new Set(statuses)
+  function toggle(status: VideoStatus, checked: boolean) {
+    if (checked) selected.add(status)
+    else selected.delete(status)
+    onChange(VIDEO_STATUSES.filter((item) => selected.has(item)))
+  }
+  return <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant="outline" type="button" aria-label={`Status filter: ${label}`}>{label} <ChevronDown /></Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="start" aria-label="Status filter options">
+      <DropdownMenuItem onSelect={(event) => { event.preventDefault(); onChange(VIDEO_STATUSES) }}>Select all</DropdownMenuItem>
+      <DropdownMenuItem onSelect={(event) => { event.preventDefault(); onChange([]) }}>Clear</DropdownMenuItem>
+      <DropdownMenuSeparator />
+      {VIDEO_STATUSES.map((status) => <DropdownMenuCheckboxItem
+        key={status}
+        checked={selected.has(status)}
+        onCheckedChange={(checked) => toggle(status, checked === true)}
+        onSelect={(event) => event.preventDefault()}
+      >{STATUS[status].label}</DropdownMenuCheckboxItem>)}
+    </DropdownMenuContent>
+  </DropdownMenu>
+}
+
 function searchQuery(search: Record<string, unknown>) {
   try {
     return parsePlanningQuery({
@@ -45,15 +91,16 @@ function searchQuery(search: Record<string, unknown>) {
       format: search.format ?? DEFAULT_LIST_CONFIG.format,
       sort: search.sort ?? DEFAULT_LIST_CONFIG.sort,
       page: search.page ?? 1,
+      month: search.month ?? currentCalendarMonth(),
     })
   } catch {
-    return { config: DEFAULT_LIST_CONFIG, page: 1 }
+    return { config: DEFAULT_LIST_CONFIG, page: 1, month: currentCalendarMonth() }
   }
 }
 
 export const Route = createFileRoute('/_app/videos')({
   loaderDeps: ({ search }) => searchQuery(search),
-  loader: async ({ deps }) => ({ config: deps.config, page: deps.page, ...await loadPlanning({ data: deps }) }),
+  loader: async ({ deps }) => ({ ...deps, ...await loadPlanning({ data: deps }) }),
   component: Videos,
 })
 
@@ -104,8 +151,36 @@ function VideoCard({ video, board = false }: { video: VideoSummary; board?: bool
   </Card>
 }
 
+function CalendarVideoCard({ video }: { video: VideoSummary }) {
+  return <a className="calendar-video-card" href={`/videos/${video.id}`} aria-label={`${video.title}, ${video.production.format}, ${video.production.promotion}, ${STATUS[video.status].label}, publish ${video.publishDate}`}>
+    <strong title={video.title}>{video.title}</strong>
+    <span>{video.production.format} · {video.production.promotion}</span>
+    <Badge className={`video-status-chip ${VIDEO_STATUS_CHIP_CLASS[video.status]}`} variant="secondary">{STATUS[video.status].label}</Badge>
+  </a>
+}
+
+function VideoCalendar({ month, videos }: { month: ReturnType<typeof currentCalendarMonth>; videos: readonly VideoSummary[] }) {
+  const days = buildCalendarMonth(month, videos)
+  return <>
+    <div className="calendar-weekdays" aria-hidden="true">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => <span key={day}>{day}</span>)}</div>
+    <section className="video-calendar" aria-label={`${calendarMonthLabel(month)} calendar`}>
+      {days.map((day) => <div className={`calendar-day${day.inMonth ? '' : ' calendar-day--outside'}`} key={day.date}>
+        <time dateTime={day.date}>{day.day}</time>
+        <div>{day.videos.map((video) => <CalendarVideoCard key={video.id} video={video} />)}</div>
+      </div>)}
+    </section>
+    <section className="calendar-agenda" aria-label={`${calendarMonthLabel(month)} agenda`}>
+      {days.filter((day) => day.inMonth && day.videos.length > 0).map((day) => <div className="agenda-day" key={day.date}>
+        <time dateTime={day.date}>{new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${day.date}T00:00:00Z`))}</time>
+        <div>{day.videos.map((video) => <CalendarVideoCard key={video.id} video={video} />)}</div>
+      </div>)}
+    </section>
+  </>
+}
+
 function Videos() {
-  const { config, page, videos, savedViews, organicVideoOptions, hasMore } = Route.useLoaderData()
+  const planning = Route.useLoaderData()
+  const { config, page, month, videos, savedViews, organicVideoOptions } = planning
   const navigate = useNavigate({ from: Route.fullPath })
   const router = useRouter()
   const [creating, setCreating] = useState(false)
@@ -117,10 +192,18 @@ function Videos() {
   const [savingView, setSavingView] = useState(false)
   const [viewName, setViewName] = useState('')
 
-  function update(next: Partial<VideoListConfig>) {
-    const candidate = { ...config, ...next }
-    const safe = parseListConfig(candidate.layout === 'board' ? { ...candidate, groupBy: 'status' } : candidate)
-    void navigate({ search: { ...safe, page: 1 } })
+  function updateFilters(next: { status?: VideoListConfig['status']; format?: VideoListConfig['format'] }) {
+    void navigate({ search: planningSearch(parseListConfig({ ...config, ...next }), 1, month) })
+  }
+
+  function setLayout(layout: VideoListConfig['layout']) {
+    void navigate({ search: planningSearch(LAYOUT_CONFIG[layout](config), 1, month) })
+  }
+
+  function updateCollection(next: { groupBy?: 'none' | 'status' | 'format'; sort?: VideoListConfig['sort'] }) {
+    if (config.layout === 'calendar') return
+    const safe = parseListConfig({ ...config, ...next })
+    void navigate({ search: planningSearch(safe, 1, month) })
   }
 
   async function submitCreate(event: React.FormEvent<HTMLFormElement>) {
@@ -141,7 +224,7 @@ function Videos() {
       setCreateError(result.message)
       return
     }
-    await navigate({ to: '/videos/$videoId', params: { videoId: result.video.id }, search: config })
+    await navigate({ to: '/videos/$videoId', params: { videoId: result.video.id }, search: planningSearch(config, page, month) })
   }
 
   async function saveCurrentView(event: React.FormEvent<HTMLFormElement>) {
@@ -158,30 +241,37 @@ function Videos() {
   }
 
   const groups = groupVideos(videos, config)
+  const hasActiveFilters = config.status.length !== VIDEO_STATUSES.length || config.format !== 'all'
   return <main className="workspace">
     <header className="workspace-header">
       <div><p className="eyebrow">Production</p><h1>Videos</h1></div>
       <Button type="button" onClick={() => { setCreateError(null); setCreating(true) }}><Plus /> New video</Button>
     </header>
     <section className="planning-toolbar" aria-label="Video view controls">
-      <Select value={config.status} onValueChange={(value) => update({ status: value as VideoListConfig['status'] })}><SelectTrigger aria-label="Status filter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{VIDEO_STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS[status].label}</SelectItem>)}</SelectContent></Select>
-      <Select value={config.format} onValueChange={(value) => update({ format: value as VideoListConfig['format'] })}><SelectTrigger aria-label="Format filter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All formats</SelectItem><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select>
-      <Select value={config.sort} onValueChange={(value) => update({ sort: value as VideoListConfig['sort'] })}><SelectTrigger aria-label="Sort videos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="updated-desc">Recently updated</SelectItem><SelectItem value="publish-date-asc">Publish date</SelectItem><SelectItem value="title-asc">Title</SelectItem></SelectContent></Select>
-      {config.layout === 'list' && <Select value={config.groupBy} onValueChange={(value) => update({ groupBy: value as 'none' | 'status' | 'format' })}><SelectTrigger aria-label="Group videos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">No grouping</SelectItem><SelectItem value="status">Group by status</SelectItem><SelectItem value="format">Group by format</SelectItem></SelectContent></Select>}
-      <Button variant="outline" type="button" onClick={() => update({ layout: config.layout === 'list' ? 'board' : 'list' })}>
-        {config.layout === 'list' ? <><LayoutGrid /> Board</> : <><List /> List</>}
-      </Button>
+      <StatusFilter statuses={config.status} onChange={(status) => updateFilters({ status })} />
+      <Select value={config.format} onValueChange={(value) => updateFilters({ format: value as VideoListConfig['format'] })}><SelectTrigger aria-label="Format filter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All formats</SelectItem><SelectItem value="short">Short</SelectItem><SelectItem value="long">Long</SelectItem></SelectContent></Select>
+      {config.layout !== 'calendar' && <Select value={config.sort} onValueChange={(value) => updateCollection({ sort: value as VideoListConfig['sort'] })}><SelectTrigger aria-label="Sort videos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="updated-desc">Recently updated</SelectItem><SelectItem value="publish-date-asc">Publish date</SelectItem><SelectItem value="title-asc">Title</SelectItem></SelectContent></Select>}
+      {config.layout === 'list' && <Select value={config.groupBy} onValueChange={(value) => updateCollection({ groupBy: value as 'none' | 'status' | 'format' })}><SelectTrigger aria-label="Group videos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">No grouping</SelectItem><SelectItem value="status">Group by status</SelectItem><SelectItem value="format">Group by format</SelectItem></SelectContent></Select>}
+      <div className="layout-controls" role="group" aria-label="Video layout">
+        <Button variant={config.layout === 'list' ? 'default' : 'outline'} type="button" aria-pressed={config.layout === 'list'} onClick={() => setLayout('list')}><List /> List</Button>
+        <Button variant={config.layout === 'board' ? 'default' : 'outline'} type="button" aria-pressed={config.layout === 'board'} onClick={() => setLayout('board')}><LayoutGrid /> Board</Button>
+        <Button variant={config.layout === 'calendar' ? 'default' : 'outline'} type="button" aria-pressed={config.layout === 'calendar'} onClick={() => setLayout('calendar')}><CalendarDays /> Calendar</Button>
+      </div>
       <Button variant="outline" type="button" onClick={() => setSavingView(true)}>Save view</Button>
-      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" type="button">Saved views <ChevronDown /></Button></DropdownMenuTrigger><DropdownMenuContent align="start">{savedViews.length === 0 ? <DropdownMenuItem disabled>No saved views</DropdownMenuItem> : savedViews.map((view) => <DropdownMenuItem key={view.id} onSelect={() => void navigate({ search: { ...view.config, page: 1 } })}>{view.name}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
+      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" type="button">Saved views <ChevronDown /></Button></DropdownMenuTrigger><DropdownMenuContent align="start">{savedViews.length === 0 ? <DropdownMenuItem disabled>No saved views</DropdownMenuItem> : savedViews.map((view) => <DropdownMenuItem key={view.id} onSelect={() => void navigate({ search: planningSearch(view.config, 1, month) })}>{view.name}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
     </section>
     {savedViews.length > 0 && <div className="saved-views">
       {savedViews.map((view) => <Badge variant="outline" key={view.id}>{view.name}<Button variant="ghost" size="icon-xs" aria-label={`Delete ${view.name}`} type="button" onClick={() => void deleteView(view.id)}><Trash2 /></Button></Badge>)}
     </div>}
-    {videos.length === 0 && page === 1 ? <section className="empty-state"><div className="empty-icon"><Clapperboard size={25} /></div><h2>No videos yet</h2><p>Your production schedule will live here.</p></section> : config.layout === 'board' ? <section className="board">{VIDEO_STATUSES.map((status) => <div className="board-column" key={status}><h2>{STATUS[status].label}</h2>{groups.get(status)?.map((video) => <VideoCard key={video.id} video={video} board />)}</div>)}</section> : <section className="video-list">{[...groups].map(([group, grouped]) => <div key={group}><h2>{group === 'all' ? 'All videos' : group in STATUS ? STATUS[group as keyof typeof STATUS].label : group}</h2>{grouped.map((video) => <VideoCard key={video.id} video={video} />)}</div>)}</section>}
-    {(page > 1 || hasMore) && <nav className="pagination" aria-label="Video pages">
-      <Button variant="outline" type="button" disabled={page === 1} onClick={() => void navigate({ search: { ...config, page: page - 1 } })}>Previous</Button>
+    {config.layout === 'calendar' && <section className="calendar-shell">
+      <header className="calendar-header"><h2>{calendarMonthLabel(month)}</h2><div><Button variant="outline" size="icon" aria-label="Previous month" onClick={() => void navigate({ search: planningSearch(config, 1, shiftCalendarMonth(month, -1)) })}><ChevronLeft /></Button><Button variant="outline" onClick={() => void navigate({ search: planningSearch(config, 1, currentCalendarMonth()) })}>Today</Button><Button variant="outline" size="icon" aria-label="Next month" onClick={() => void navigate({ search: planningSearch(config, 1, shiftCalendarMonth(month, 1)) })}><ChevronRight /></Button></div></header>
+      {videos.length === 0 ? <section className="empty-state calendar-empty"><div className="empty-icon"><CalendarDays size={25} /></div><h2>{config.status.length === 0 ? 'No statuses selected' : 'No scheduled videos'}</h2><p>{config.status.length === 0 ? 'Select at least one status to see videos.' : `No matching videos have a publish date in ${calendarMonthLabel(month)}.`}</p></section> : <VideoCalendar month={month} videos={videos} />}
+    </section>}
+    {config.layout !== 'calendar' && (videos.length === 0 && page === 1 ? <section className="empty-state"><div className="empty-icon"><Clapperboard size={25} /></div><h2>{config.status.length === 0 ? 'No statuses selected' : hasActiveFilters ? 'No matching videos' : 'No videos yet'}</h2><p>{config.status.length === 0 ? 'Select at least one status to see videos.' : hasActiveFilters ? 'Try changing the active filters.' : 'Your production schedule will live here.'}</p></section> : config.layout === 'board' ? <section className="board">{VIDEO_STATUSES.map((status) => <div className="board-column" key={status}><h2>{STATUS[status].label}</h2>{groups.get(status)?.map((video) => <VideoCard key={video.id} video={video} board />)}</div>)}</section> : <section className="video-list">{[...groups].map(([group, grouped]) => <div key={group}><h2>{group === 'all' ? 'All videos' : group in STATUS ? STATUS[group as keyof typeof STATUS].label : group}</h2>{grouped.map((video) => <VideoCard key={video.id} video={video} />)}</div>)}</section>)}
+    {planning.kind === 'collection' && (page > 1 || planning.hasMore) && <nav className="pagination" aria-label="Video pages">
+      <Button variant="outline" type="button" disabled={page === 1} onClick={() => void navigate({ search: planningSearch(config, page - 1, month) })}>Previous</Button>
       <span>Page {page}</span>
-      <Button variant="outline" type="button" disabled={!hasMore} onClick={() => void navigate({ search: { ...config, page: page + 1 } })}>Next</Button>
+      <Button variant="outline" type="button" disabled={!planning.hasMore} onClick={() => void navigate({ search: planningSearch(config, page + 1, month) })}>Next</Button>
     </nav>}
     <Dialog open={creating} onOpenChange={setCreating}>
       <DialogContent>

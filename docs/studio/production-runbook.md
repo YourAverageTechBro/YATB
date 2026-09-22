@@ -10,6 +10,10 @@ truth for the Worker, its custom domain, bindings, schedule, and observability.
   `e2d62270-da2c-4def-b3ce-878f1e02af9d`.
 - The private R2 bucket is named `yatb-studio-media`. Do not add a public
   development URL or custom domain to the bucket.
+- The `yatb-video-compression` Queue exists in the same account. Creating it is
+  a one-time operation (`npx wrangler queues create yatb-video-compression
+  --cwd apps/studio`); routine deploys must not recreate it.
+- The account has Workers Paid enabled for the `video-transcoder` Container.
 - `studio-mail.youraveragetechbro.com` is an active Cloudflare Email Sending
   domain. Its approved sender is `studio@studio-mail.youraveragetechbro.com`.
 - The `AUTH_EMAIL` binding restricts delivery to
@@ -23,6 +27,7 @@ Confirm the non-secret resources without changing them.
 npx wrangler whoami
 npx wrangler d1 info yatb-studio --cwd apps/studio
 npx wrangler r2 bucket info yatb-studio-media --cwd apps/studio
+npx wrangler queues info yatb-video-compression --cwd apps/studio
 ```
 
 ## Prepare
@@ -56,6 +61,8 @@ cutover authority to the root for STUDIO-07.
 
 Apply every pending migration before deploying code that expects it. Wrangler
 records applied migrations and creates a D1 backup before each application.
+The media-derivative migration must therefore land before the Worker begins
+serving draft lists or consuming compression jobs.
 
 ```sh
 npm run migrate:studio:production

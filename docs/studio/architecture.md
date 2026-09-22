@@ -115,7 +115,9 @@ type ReviewAnchor =
   | { kind: 'range'; startMs: number; endMs: number }
 ```
 
-One status registry owns labels, sort order, and board columns. Rich text is
+One status registry owns labels, sort order, board columns, and canonical
+multiselect ordering. Planning URLs encode the exact selection as `all`, `none`,
+or a comma-separated list. Saved views persist that selection as a JSON array. Rich text is
 bounded editor JSON. The parser accepts only supported nodes, safe HTTP links,
 and a fixed serialized size. The renderer never accepts stored HTML.
 
@@ -139,6 +141,7 @@ Application tables are small and query-oriented.
 | `upload_session` | Idempotency key, R2 upload id, immutable object key, state | Upload retry and completion |
 | `file` | One task, one object key, mutable display name, ready state | Footage and task media lists |
 | `draft` | One ready file and unique task-local version | Version list and review selection |
+| `media_derivative` | One versioned profile per immutable draft source | Compression state and authenticated download |
 | `review_comment` | One draft, one author, valid point or range, bounded rich text | Draft comments ordered by time |
 | `comment_attachment` | Same-task comment and file references | Comment rendering |
 
@@ -223,10 +226,18 @@ comparison route renders the same review component twice in a desktop
 parent owns only the selected draft ids.
 
 Cloudflare Stream is not part of the initial architecture. R2 does not
-transcode, so representative production exports must pass the playback fixture
-gate. If those exports include browser-incompatible codecs, a later approved PR
-may add Stream as a disposable playback derivative while keeping R2 originals.
-No non-Cloudflare media provider is considered.
+transcode. A Queue consumer streams eligible draft originals from private R2
+through one Worker-owned FFmpeg Container, then stores a versioned compact MP4
+as a separate R2 object. D1 owns the retryable derivative state; the original
+upload, draft, and `?download=1` route remain unchanged. The compact object is
+published only when it is smaller than the source. Jobs are bounded to 3 GiB
+and 12 minutes, retried at most four times, reconciled by the existing cron,
+and deleted with their task. The authenticated media route gives ready
+derivatives the same GET, HEAD, and single-range behavior as originals.
+
+Cloudflare Stream remains outside this architecture. Browser-incompatible
+playback formats may still justify Stream later, while these disposable
+download derivatives continue to preserve R2 originals.
 
 ## Verification contract
 

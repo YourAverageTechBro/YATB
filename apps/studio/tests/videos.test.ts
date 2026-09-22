@@ -4,16 +4,21 @@ import { resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import {
   failedSave,
+  encodeStatusFilter,
   filterVideos,
   groupVideos,
   parseListConfig,
   parsePlanningQuery,
   parseProduction,
   parseSavedViewName,
+  parseStatusFilter,
+  statusFilterLabel,
+  VIDEO_STATUSES,
   type Video,
 } from '../src/domain/videos'
+import { buildCalendarMonth, calendarMonthRange, parseCalendarMonth, shiftCalendarMonth } from '../src/domain/calendar'
 import { emptyRichDocument } from '../src/server/rich-document'
-import { ACTIVE_VIDEO_SQL, UPDATE_VIDEO_SQL, organicVideoOptionsSql } from '../src/server/video-sql'
+import { ACTIVE_VIDEO_SQL, UPDATE_VIDEO_SQL, calendarVideosSql, organicVideoOptionsSql, statusFilterSql } from '../src/server/video-sql'
 
 const first: Video = {
   id: '1b0e913b-645c-4306-a71d-78115390b46d',
@@ -42,6 +47,8 @@ function planningDatabase(): DatabaseSync {
   db.exec('PRAGMA foreign_keys = ON; CREATE TABLE "user" ("id" TEXT PRIMARY KEY NOT NULL);')
   db.exec(readFileSync(resolve(process.cwd(), 'migrations/0002_planning.sql'), 'utf8'))
   db.exec(readFileSync(resolve(process.cwd(), 'migrations/0005_integration_organic_link.sql'), 'utf8'))
+  db.exec(readFileSync(resolve(process.cwd(), 'migrations/0007_video_calendar.sql'), 'utf8'))
+  db.exec(readFileSync(resolve(process.cwd(), 'migrations/0008_status_multiselect.sql'), 'utf8'))
   return db
 }
 
@@ -103,14 +110,135 @@ describe('video planning domain', () => {
   })
 
   it('accepts only positive planning pages', () => {
-    expect(parsePlanningQuery({ layout: 'list', groupBy: 'none', status: 'all', format: 'all', sort: 'updated-desc', page: '2' }).page).toBe(2)
-    expect(() => parsePlanningQuery({ layout: 'list', groupBy: 'none', status: 'all', format: 'all', sort: 'updated-desc', page: 0 })).toThrow('Page')
+    expect(parsePlanningQuery({ layout: 'list', groupBy: 'none', status: 'all', format: 'all', sort: 'updated-desc', page: '2', month: '2026-09' }).page).toBe(2)
+    expect(() => parsePlanningQuery({ layout: 'list', groupBy: 'none', status: 'all', format: 'all', sort: 'updated-desc', page: 0, month: '2026-09' })).toThrow('Page')
+  })
+
+  it('normalizes readable status filters into canonical status order', () => {
+    expect(parseStatusFilter('published,filming,published')).toEqual(['filming', 'published'])
+    expect(parseStatusFilter('all')).toEqual(VIDEO_STATUSES)
+    expect(parseStatusFilter('none')).toEqual([])
+    expect(parseStatusFilter('["ready-to-review","not-started"]')).toEqual(['not-started', 'ready-to-review'])
+    expect(encodeStatusFilter(VIDEO_STATUSES)).toBe('all')
+    expect(encodeStatusFilter([])).toBe('none')
+    expect(encodeStatusFilter(['filming', 'published'])).toBe('filming,published')
+    expect(statusFilterLabel([])).toBe('No statuses')
+    expect(statusFilterLabel(['published'])).toBe('Published')
+    expect(statusFilterLabel(['filming', 'published'])).toBe('2 statuses')
+    expect(() => parseStatusFilter('filming,unknown')).toThrow('Status is invalid')
+  })
+
+  it('models calendar as a fixed publish-date view with a strict month', () => {
+    expect(parseListConfig({ layout: 'calendar', groupBy: 'none', status: 'all', format: 'all', sort: 'publish-date-asc' })).toMatchObject({ layout: 'calendar' })
+    expect(() => parseListConfig({ layout: 'calendar', groupBy: 'status', status: 'all', format: 'all', sort: 'publish-date-asc' })).toThrow('incompatible')
+    expect(() => parseCalendarMonth('2026-9')).toThrow('month')
+    expect(() => parseCalendarMonth('2026-13')).toThrow('month')
+  })
+
+  it('builds a stable six-week UTC grid across leap days and year shifts', () => {
+    expect(shiftCalendarMonth('2026-01', -1)).toBe('2025-12')
+    expect(shiftCalendarMonth('2026-12', 1)).toBe('2027-01')
+    expect(calendarMonthRange('2024-02')).toEqual({ start: '2024-02-01', end: '2024-03-01' })
+    const days = buildCalendarMonth('2024-02', [{ ...second, publishDate: '2024-02-29' }])
+    expect(days).toHaveLength(42)
+    expect(days[0]?.date).toBe('2024-01-28')
+    expect(days.at(-1)?.date).toBe('2024-03-09')
+    expect(days.find((day) => day.date === '2024-02-29')?.videos).toHaveLength(1)
+  })
+
+  it('loads every scheduled video in the requested month without pagination', () => {
+    const db = planningDatabase()
+    for (let index = 0; index < 25; index += 1) {
+      const id = `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`
+      insertVideo(db, id, index % 2 === 0 ? 'short' : 'long', 'organic')
+      db.prepare('UPDATE video SET publish_date = ? WHERE id = ?').run(`2026-09-${String(index + 1).padStart(2, '0')}`, id)
+    }
+    insertVideo(db, ids.missing, 'short', 'organic')
+    db.prepare("UPDATE video SET publish_date = '2026-10-01' WHERE id = ?").run(ids.missing)
+    const rows = db.prepare(calendarVideosSql(VIDEO_STATUSES, false)).all('2026-09-01', '2026-10-01')
+    expect(rows).toHaveLength(25)
+    expect(rows[0]?.publish_date).toBe('2026-09-01')
+    expect(rows.at(-1)?.publish_date).toBe('2026-09-25')
+    db.close()
+  })
+
+  it('preserves existing saved views while allowing calendar views', () => {
+    const db = new DatabaseSync(':memory:')
+    db.exec('PRAGMA foreign_keys = ON; CREATE TABLE "user" ("id" TEXT PRIMARY KEY NOT NULL);')
+    db.exec("INSERT INTO user (id) VALUES ('owner')")
+    db.exec(readFileSync(resolve(process.cwd(), 'migrations/0002_planning.sql'), 'utf8'))
+    db.exec(`INSERT INTO saved_view VALUES (
+      '${ids.target}', 'owner', 'Existing board', 'board', 'status', 'all', 'all', 'updated-desc', 1, 1
+    )`)
+    db.exec(`INSERT INTO saved_view VALUES (
+      '${ids.firstSource}', 'owner', 'Existing review queue', 'list', 'none', 'ready-to-review', 'all', 'updated-desc', 1, 1
+    )`)
+    db.exec(readFileSync(resolve(process.cwd(), 'migrations/0005_integration_organic_link.sql'), 'utf8'))
+    db.exec(readFileSync(resolve(process.cwd(), 'migrations/0007_video_calendar.sql'), 'utf8'))
+    db.exec(readFileSync(resolve(process.cwd(), 'migrations/0008_status_multiselect.sql'), 'utf8'))
+    expect(db.prepare('SELECT name, layout, group_by FROM saved_view ORDER BY name').all()).toEqual([
+      { name: 'Existing board', layout: 'board', group_by: 'status' },
+      { name: 'Existing review queue', layout: 'list', group_by: 'none' },
+    ])
+    expect(db.prepare("SELECT status_filter FROM saved_view WHERE name = 'Existing board'").get()).toEqual({
+      status_filter: JSON.stringify(VIDEO_STATUSES),
+    })
+    expect(db.prepare("SELECT status_filter FROM saved_view WHERE name = 'Existing review queue'").get()).toEqual({
+      status_filter: '["ready-to-review"]',
+    })
+    db.exec(`INSERT INTO saved_view VALUES (
+      '${ids.otherTarget}', 'owner', 'Calendar', 'calendar', 'none', '["filming","published"]', 'all', 'publish-date-asc', 2, 2
+    )`)
+    expect(db.prepare("SELECT layout, status_filter FROM saved_view WHERE name = 'Calendar'").get()).toEqual({
+      layout: 'calendar',
+      status_filter: '["filming","published"]',
+    })
+    db.close()
+  })
+
+  it('renders metadata-only calendar cards that link to the video detail', () => {
+    const route = readFileSync(resolve(process.cwd(), 'src/routes/_app.videos.tsx'), 'utf8')
+    const card = route.slice(route.indexOf('function CalendarVideoCard'), route.indexOf('function VideoCalendar'))
+    expect(card).toContain('href={`/videos/${video.id}`}')
+    expect(card).toContain('video.production.format')
+    expect(card).toContain('video.production.promotion')
+    expect(card).toContain('STATUS[video.status].label')
+    expect(card).not.toMatch(/<(?:img|video|picture|source)\b/)
+    expect(card).not.toContain('MediaPreview')
+    expect(card).not.toMatch(/<(?:button|select|input)\b/i)
   })
 
   it('filters, sorts, and groups the visible task collection', () => {
     const config = parseListConfig({ layout: 'list', groupBy: 'format', status: 'all', format: 'all', sort: 'title-asc' })
     expect(filterVideos([first, second], { ...config, format: 'long' })).toEqual([second])
+    expect(filterVideos([first, second], { ...config, status: ['filming', 'published'] })).toEqual([first, second])
+    expect(filterVideos([first, second], { ...config, status: [] })).toEqual([])
     expect([...groupVideos([first, second], config)]).toEqual([['long', [second]], ['short', [first]]])
+  })
+
+  it('queries the union of selected statuses and returns no rows for an empty selection', () => {
+    const db = planningDatabase()
+    insertVideo(db, ids.target, 'short', 'organic')
+    insertVideo(db, ids.otherTarget, 'long', 'organic')
+    insertVideo(db, ids.firstSource, 'short', 'organic')
+    db.prepare("UPDATE video SET status = 'filming', publish_date = '2026-09-01' WHERE id = ?").run(ids.target)
+    db.prepare("UPDATE video SET status = 'published', publish_date = '2026-09-02' WHERE id = ?").run(ids.otherTarget)
+    db.prepare("UPDATE video SET status = 'ready-to-edit', publish_date = '2026-09-03' WHERE id = ?").run(ids.firstSource)
+
+    expect(db.prepare(calendarVideosSql(['filming', 'published'], false)).all(
+      '2026-09-01',
+      '2026-10-01',
+      'filming',
+      'published',
+    ).map((row) => row.status)).toEqual(['filming', 'published'])
+    expect(db.prepare(calendarVideosSql([], false)).all('2026-09-01', '2026-10-01')).toEqual([])
+    expect(statusFilterSql(['filming', 'published'])).toEqual({
+      clause: ' AND status IN (?, ?)',
+      values: ['filming', 'published'],
+    })
+    expect(statusFilterSql([])).toEqual({ clause: ' AND 0 = 1', values: [] })
+    expect(statusFilterSql(VIDEO_STATUSES)).toEqual({ clause: '', values: [] })
+    db.close()
   })
 
   it('classifies a failed conditional save without inventing a fourth state', () => {

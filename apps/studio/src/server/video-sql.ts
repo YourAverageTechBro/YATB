@@ -1,3 +1,5 @@
+import { VIDEO_STATUSES, type VideoStatusFilter } from '#/domain/videos'
+
 export const ACTIVE_VIDEO_SQL = 'deleted_at IS NULL'
 export const ORGANIC_LONG_VIDEO_SQL = `${ACTIVE_VIDEO_SQL} AND format = 'long' AND promotion = 'organic'`
 
@@ -6,6 +8,23 @@ export function organicVideoOptionsSql(excludeCurrent: boolean): string {
 FROM video
 WHERE ${ORGANIC_LONG_VIDEO_SQL}${excludeCurrent ? ' AND id != ?' : ''}
 ORDER BY title COLLATE NOCASE ASC, id ASC`
+}
+
+export function statusFilterSql(statuses: VideoStatusFilter): Readonly<{ clause: string; values: VideoStatusFilter }> {
+  if (statuses.length === VIDEO_STATUSES.length) return { clause: '', values: [] }
+  if (statuses.length === 0) return { clause: ' AND 0 = 1', values: [] }
+  return {
+    clause: ` AND status IN (${Array.from({ length: statuses.length }, () => '?').join(', ')})`,
+    values: statuses,
+  }
+}
+
+export function calendarVideosSql(statuses: VideoStatusFilter, filterFormat: boolean): string {
+  const status = statusFilterSql(statuses)
+  return `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, revision, created_at, updated_at
+FROM video
+WHERE ${ACTIVE_VIDEO_SQL} AND publish_date >= ? AND publish_date < ?${status.clause}${filterFormat ? ' AND format = ?' : ''}
+ORDER BY publish_date ASC, title COLLATE NOCASE ASC, id ASC`
 }
 
 export const CREATE_VIDEO_SQL = `INSERT INTO video (
