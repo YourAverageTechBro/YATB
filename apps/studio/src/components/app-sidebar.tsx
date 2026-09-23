@@ -1,4 +1,4 @@
-import { Clapperboard, LogOut } from 'lucide-react'
+import { Clapperboard, Files, LogOut } from 'lucide-react'
 import { Button } from '@yatb/ui/button'
 import {
   Sidebar,
@@ -19,9 +19,10 @@ import { ThemeControl } from './theme-control'
 type AppSidebarProps = Readonly<{
   user: { name: string; email: string }
   onSignOut: () => void
+  pathname?: string
 }>
 
-export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
+export function AppSidebar({ user, onSignOut, pathname = '/videos' }: AppSidebarProps) {
   const { isMobile, setOpenMobile } = useSidebar()
 
   function closeMobileNavigation() {
@@ -42,8 +43,13 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
           <nav aria-label="Studio navigation">
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive tooltip="Videos">
+                <SidebarMenuButton asChild isActive={pathname.startsWith('/videos')} tooltip="Videos">
                   <a href="/videos" onClick={closeMobileNavigation}><Clapperboard /><span>Videos</span></a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === '/files'} tooltip="Files">
+                  <a href="/files" onClick={closeMobileNavigation}><Files /><span>Files</span></a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
