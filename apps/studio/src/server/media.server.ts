@@ -15,6 +15,7 @@ import {
 } from '#/domain/media'
 import type { Draft, ReviewAuthor } from '#/domain/reviews'
 import type { MediaDerivativeState } from '#/domain/derivatives'
+import type { LibraryFile } from '#/domain/file-library'
 import { ensureDraftDerivative } from './compression.server'
 import { ACTIVE_VIDEO_SQL } from './video-sql'
 
@@ -63,6 +64,8 @@ type FileRow = {
 }
 
 type StoredFileRow = FileRow & { object_key: string; object_etag: string }
+type LibraryFileRow = FileRow & { video_title: string; share_token: string | null }
+type SharedFileRow = StoredFileRow & { video_title: string }
 
 type DraftRow = {
   id: string
@@ -493,6 +496,50 @@ export async function getStoredMedia(videoId: string, fileId: string): Promise<S
   const file = await storedFile(fileId, videoId)
   if (!file) throw new MediaError(404, 'File not found.')
   return file
+}
+
+export async function listLibraryFiles(): Promise<LibraryFile[]> {
+  const result = await bindings.DB.prepare(
+    `SELECT f.id, f.video_id, f.display_name, f.byte_size, f.content_type, f.purpose,
+            f.created_at, f.updated_at, v.title AS video_title, s.token AS share_token
+     FROM media_file f JOIN video v ON v.id = f.video_id
+     LEFT JOIN media_file_share s ON s.media_file_id = f.id
+     WHERE v.${ACTIVE_VIDEO_SQL}
+     ORDER BY f.created_at DESC, f.id DESC`,
+  ).all<LibraryFileRow>()
+  return result.results.map((row) => ({ file: publicFile(row), videoTitle: row.video_title, shareToken: row.share_token }))
+}
+
+export async function createFileShare(fileId: string, userId: string): Promise<string> {
+  const random = crypto.getRandomValues(new Uint8Array(32))
+  const token = [...random].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+  await bindings.DB.prepare(
+    `INSERT OR IGNORE INTO media_file_share (media_file_id, token, created_by_user_id, created_at)
+     SELECT f.id, ?, ?, ? FROM media_file f JOIN video v ON v.id = f.video_id
+     WHERE f.id = ? AND v.${ACTIVE_VIDEO_SQL}`,
+  ).bind(token, userId, Date.now(), fileId).run()
+  const share = await bindings.DB.prepare(
+    `SELECT s.token FROM media_file_share s JOIN media_file f ON f.id = s.media_file_id
+     JOIN video v ON v.id = f.video_id WHERE f.id = ? AND v.${ACTIVE_VIDEO_SQL}`,
+  ).bind(fileId).first<{ token: string }>()
+  if (!share) throw new MediaError(404, 'File not found.')
+  return share.token
+}
+
+export async function revokeFileShare(fileId: string): Promise<void> {
+  await bindings.DB.prepare('DELETE FROM media_file_share WHERE media_file_id = ?').bind(fileId).run()
+}
+
+export async function getSharedFile(token: string): Promise<{ file: MediaFile; videoTitle: string; stored: SharedFileRow }> {
+  const row = await bindings.DB.prepare(
+    `SELECT f.id, f.video_id, f.display_name, f.byte_size, f.content_type, f.purpose,
+            f.object_key, f.object_etag, f.created_at, f.updated_at, v.title AS video_title
+     FROM media_file_share s JOIN media_file f ON f.id = s.media_file_id
+     JOIN video v ON v.id = f.video_id
+     WHERE s.token = ? AND v.${ACTIVE_VIDEO_SQL}`,
+  ).bind(token).first<SharedFileRow>()
+  if (!row) throw new MediaError(404, 'File not found.')
+  return { file: publicFile(row), videoTitle: row.video_title, stored: row }
 }
 
 function isNoSuchUpload(error: unknown): boolean {

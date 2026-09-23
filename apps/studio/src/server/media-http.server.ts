@@ -8,6 +8,7 @@ import {
   parsePartNumber,
   parseSingleByteRange,
 } from '#/domain/media'
+import { parseShareToken } from '#/domain/file-library'
 import { parseVideoId } from '#/domain/videos'
 import { PRIVATE_NO_STORE, requireStudioMutationOrigin, requireStudioSession } from './auth.server'
 import {
@@ -16,6 +17,7 @@ import {
   cancelUpload,
   completeUpload,
   getStoredMedia,
+  getSharedFile,
   getUpload,
   listMedia,
   renameMedia,
@@ -139,6 +141,54 @@ function contentDisposition(name: string, attachment: boolean): string {
   return `${attachment ? 'attachment' : 'inline'}; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(name)}`
 }
 
+async function streamOriginalMedia(
+  request: Request,
+  file: { object_key: string; display_name: string; byte_size: number; content_type: string },
+  publicShare = false,
+): Promise<Response> {
+  const url = new URL(request.url)
+  const headers = new Headers({
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': publicShare ? 'no-store, max-age=0' : PRIVATE_NO_STORE,
+    'Content-Type': file.content_type,
+    'Referrer-Policy': 'no-referrer',
+    'X-Content-Type-Options': 'nosniff',
+  })
+  const inline = mediaPreviewKind(file.content_type) !== 'file'
+    && url.searchParams.get('download') !== '1'
+  headers.set('Content-Disposition', contentDisposition(file.display_name, !inline))
+  let range
+  try {
+    range = parseSingleByteRange(request.headers.get('range'), file.byte_size)
+  } catch {
+    headers.set('Content-Range', `bytes */${file.byte_size}`)
+    return new Response(null, { status: 416, headers })
+  }
+  if (request.method === 'HEAD') {
+    const object = await bindings.MEDIA.head(file.object_key)
+    if (!object) throw new MediaError(404, 'File not found.')
+    headers.set('ETag', object.httpEtag)
+    headers.set('Content-Length', String(range?.length ?? file.byte_size))
+    if (range) headers.set('Content-Range', `bytes ${range.offset}-${range.offset + range.length - 1}/${file.byte_size}`)
+    return new Response(null, { status: range ? 206 : 200, headers })
+  }
+  const object = await bindings.MEDIA.get(file.object_key, range ? { range } : undefined)
+  if (!object) throw new MediaError(404, 'File not found.')
+  headers.set('ETag', object.httpEtag)
+  headers.set('Content-Length', String(range?.length ?? file.byte_size))
+  if (range) headers.set('Content-Range', `bytes ${range.offset}-${range.offset + range.length - 1}/${file.byte_size}`)
+  return new Response(object.body, { status: range ? 206 : 200, headers })
+}
+
+export function handleSharedMediaRead(request: Request, tokenValue: string): Promise<Response> {
+  return run(async () => {
+    let token: string
+    try { token = parseShareToken(tokenValue) } catch { throw new MediaError(404, 'File not found.') }
+    const { stored } = await getSharedFile(token)
+    return streamOriginalMedia(request, stored, true)
+  })
+}
+
 export function handleMediaRead(
   request: Request,
   videoIdValue: string,
@@ -185,35 +235,6 @@ export function handleMediaRead(
       headers.set('ETag', object.httpEtag)
       return new Response(object.body, { status: range ? 206 : 200, headers })
     }
-    const headers = new Headers({
-      'Accept-Ranges': 'bytes',
-      'Cache-Control': PRIVATE_NO_STORE,
-      'Content-Type': file.content_type,
-      'X-Content-Type-Options': 'nosniff',
-    })
-    const inline = mediaPreviewKind(file.content_type) !== 'file'
-      && url.searchParams.get('download') !== '1'
-    headers.set('Content-Disposition', contentDisposition(file.display_name, !inline))
-    let range
-    try {
-      range = parseSingleByteRange(request.headers.get('range'), file.byte_size)
-    } catch {
-      headers.set('Content-Range', `bytes */${file.byte_size}`)
-      return new Response(null, { status: 416, headers })
-    }
-    if (request.method === 'HEAD') {
-      const object = await bindings.MEDIA.head(file.object_key)
-      if (!object) throw new MediaError(404, 'File not found.')
-      headers.set('ETag', object.httpEtag)
-      headers.set('Content-Length', String(range?.length ?? file.byte_size))
-      if (range) headers.set('Content-Range', `bytes ${range.offset}-${range.offset + range.length - 1}/${file.byte_size}`)
-      return new Response(null, { status: range ? 206 : 200, headers })
-    }
-    const object = await bindings.MEDIA.get(file.object_key, range ? { range } : undefined)
-    if (!object) throw new MediaError(404, 'File not found.')
-    headers.set('ETag', object.httpEtag)
-    headers.set('Content-Length', String(range?.length ?? file.byte_size))
-    if (range) headers.set('Content-Range', `bytes ${range.offset}-${range.offset + range.length - 1}/${file.byte_size}`)
-    return new Response(object.body, { status: range ? 206 : 200, headers })
+    return streamOriginalMedia(request, file)
   })
 }

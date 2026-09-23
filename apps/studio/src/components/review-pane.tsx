@@ -208,7 +208,7 @@ function CommentCard({ comment, onSeek, onChanged }: { comment: ReviewComment; o
     <header><div><strong>{comment.author.name}</strong><small>{comment.author.email}</small></div><Button variant="outline" size="sm" onClick={() => onSeek(anchorStartMs(comment.anchor))}>{label}</Button></header>
     {editing
       ? <form onSubmit={(event) => void save(event)}><RichEditor ariaLabel="Edit review comment" value={body} onChange={setBody} /><footer><Button type="submit">Save comment</Button><Button type="button" variant="outline" onClick={() => { setBody(comment.body); setEditing(false) }}>Cancel</Button></footer></form>
-      : <RichDocumentView value={comment.body} />}
+      : <RichDocumentView value={comment.body} linkSharedFiles />}
     {comment.attachments.length > 0 && <div className="comment-attachments">{comment.attachments.map((attachment) => <MediaPreview
       key={attachment.id}
       contentType={attachment.contentType}

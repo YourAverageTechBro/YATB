@@ -1,4 +1,4 @@
-import { Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { Outlet, createFileRoute, redirect, useLocation, useNavigate } from '@tanstack/react-router'
 import { SidebarProvider, SidebarTrigger } from '@yatb/ui/sidebar'
 import { AppSidebar } from '#/components/app-sidebar'
 import { authClient } from '#/lib/auth-client'
@@ -16,6 +16,7 @@ export const Route = createFileRoute('/_app')({
 function AppLayout() {
   const { session } = Route.useRouteContext()
   const navigate = useNavigate()
+  const pathname = useLocation({ select: (location) => location.pathname })
 
   async function signOut() {
     await authClient.signOut()
@@ -24,7 +25,7 @@ function AppLayout() {
 
   return (
     <SidebarProvider defaultOpen>
-      <AppSidebar user={session.user} onSignOut={() => void signOut()} />
+      <AppSidebar user={session.user} onSignOut={() => void signOut()} pathname={pathname} />
       <div className="studio-content">
         <header className="studio-mobile-header"><SidebarTrigger aria-label="Open Studio navigation" /><a className="wordmark" href="/videos"><span>YATB</span> Studio</a></header>
         <Outlet />
