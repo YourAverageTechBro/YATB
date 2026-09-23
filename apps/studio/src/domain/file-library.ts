@@ -9,6 +9,14 @@ export type LibraryFile = Readonly<{
 export type FileGroup = Readonly<{ key: string; label: string; files: readonly LibraryFile[] }>
 export type FileGrouping = 'date' | 'content'
 
+export function formatUploadedDate(timestamp: number): string {
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeZone: 'UTC' }).format(timestamp)
+}
+
+export function formatUploadedTimestamp(timestamp: number): string {
+  return `${new Intl.DateTimeFormat('en-US', { dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC' }).format(timestamp)} UTC`
+}
+
 export function parseFileGrouping(value: unknown): FileGrouping {
   return value === 'content' ? 'content' : 'date'
 }
@@ -24,10 +32,10 @@ export function groupLibraryFiles(files: readonly LibraryFile[], grouping: FileG
     const uploaded = new Date(entry.file.createdAt)
     const key = grouping === 'content'
       ? entry.file.videoId
-      : `${uploaded.getFullYear()}-${String(uploaded.getMonth() + 1).padStart(2, '0')}-${String(uploaded.getDate()).padStart(2, '0')}`
+      : `${uploaded.getUTCFullYear()}-${String(uploaded.getUTCMonth() + 1).padStart(2, '0')}-${String(uploaded.getUTCDate()).padStart(2, '0')}`
     const label = grouping === 'content'
       ? entry.videoTitle
-      : new Intl.DateTimeFormat('en-US', { dateStyle: 'long' }).format(uploaded)
+      : formatUploadedDate(entry.file.createdAt)
     const group = groups.get(key) ?? { label, files: [] }
     group.files.push(entry)
     groups.set(key, group)

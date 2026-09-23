@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterLibraryFiles, groupLibraryFiles, type LibraryFile } from '../src/domain/file-library'
+import { filterLibraryFiles, formatUploadedDate, formatUploadedTimestamp, groupLibraryFiles, type LibraryFile } from '../src/domain/file-library'
 import { isSharedFileUrl, sharedFileTextParts } from '../src/domain/shared-file-links'
 
 const one: LibraryFile = { file: { id: 'one', videoId: 'a', purpose: 'footage', displayName: 'Hero frame.png', byteSize: 100, contentType: 'image/png', createdAt: new Date(2026, 8, 23, 12).valueOf(), updatedAt: 1 }, videoTitle: 'First video', shareToken: null }
@@ -19,6 +19,12 @@ describe('file library grouping and search', () => {
     expect(groupLibraryFiles([one, two, three], 'content').map((group) => [group.label, group.files.map((entry) => entry.file.id)])).toEqual([
       ['First video', ['one', 'two']], ['Second video', ['three']],
     ])
+  })
+
+  it('formats upload dates consistently across server and browser time zones', () => {
+    const timestamp = Date.UTC(2026, 8, 23, 0, 30)
+    expect(formatUploadedDate(timestamp)).toBe('September 23, 2026')
+    expect(formatUploadedTimestamp(timestamp)).toContain('UTC')
   })
 })
 

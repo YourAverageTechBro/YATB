@@ -6,7 +6,7 @@ import { Label } from '@yatb/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { Copy, ExternalLink, File, FileAudio, FileImage, FileVideo, Link2Off } from 'lucide-react'
 import { useState } from 'react'
-import { filterLibraryFiles, groupLibraryFiles, type FileGrouping, type LibraryFile } from '#/domain/file-library'
+import { filterLibraryFiles, formatUploadedTimestamp, groupLibraryFiles, type FileGrouping, type LibraryFile } from '#/domain/file-library'
 import { mediaPreviewKind } from '#/domain/media'
 import { createSharedFileLink, loadLibraryFiles, revokeSharedFileLink } from '#/server/file-library.functions'
 
@@ -51,7 +51,7 @@ function FileCard({ entry }: { entry: LibraryFile }) {
     <span className="library-file-icon" aria-hidden="true">{kind === 'image' ? <FileImage /> : kind === 'video' ? <FileVideo /> : kind === 'audio' ? <FileAudio /> : <File />}</span>
     <div className="library-file-details">
       <strong title={entry.file.displayName}>{entry.file.displayName}</strong>
-      <small><a href={`/videos/${entry.file.videoId}`}>{entry.videoTitle}</a> · {entry.file.purpose === 'draft' ? 'Draft' : 'Footage'} · {new Date(entry.file.createdAt).toLocaleString()}</small>
+      <small><a href={`/videos/${entry.file.videoId}`}>{entry.videoTitle}</a> · {entry.file.purpose === 'draft' ? 'Draft' : 'Footage'} · {formatUploadedTimestamp(entry.file.createdAt)}</small>
       {message && <span className="library-file-message" role="status">{message}</span>}
     </div>
     <div className="library-file-actions">
