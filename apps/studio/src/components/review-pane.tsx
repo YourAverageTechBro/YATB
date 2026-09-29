@@ -64,7 +64,7 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
       try {
         const response = await fetch(`${draftMediaUrl}?download=compressed`, { method: 'HEAD' })
         if (cancelled) return
-        if (response.ok) { setCompactState('ready'); terminal = true }
+        if (response.status === 200) { setCompactState('ready'); terminal = true }
         else if (response.status === 409) { setCompactState('not_beneficial'); terminal = true }
         else if (response.status === 422) { setCompactState('unsupported'); terminal = true }
         else if (response.status === 503) setCompactState('failed')
