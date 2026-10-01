@@ -12,6 +12,7 @@ calendar intentionally fixes grouping to none and sorting to publish date.
 - `view-filter-sort` combines a status multiselect, format filter, and fixed sort choice.
 - `view-saved-owner` restores a view only for its owner.
 - `view-saved-delete` removes a saved configuration only for its owner.
+- `view-saved-default` selects one private saved view as the user's login destination.
 - `view-board-move` advances a card through the five statuses with optimistic conflict handling.
 
 ## How to get to it (user POV)
@@ -58,6 +59,16 @@ Preconditions:
   the trigger, then reopen it and apply one view. With no saved views, confirm
   the empty item is disabled.
 - **Delete.** Delete the saved view and confirm its name disappears after reload without changing the active URL controls.
+- **Set a default.** Activate the star labeled `Set <name> as default`. Confirm
+  `Default` appears beside that view and the star is pressed. Change filters,
+  sign out, then sign in and confirm the saved layout, statuses, format,
+  grouping, and sort are restored. Visit `/` with an existing session and
+  confirm the same destination. Direct `/videos/<id>` links and explicit
+  `/videos` query controls must remain usable without a forced redirect.
+- **Switch, clear, and delete a default.** Star another saved view and confirm
+  only the new view is marked default. Activate `Clear default <name>` and
+  confirm the next login uses the standard unfiltered list. Set a default
+  again, delete that view, and confirm the next login also falls back safely.
 - **Check ownership.** Sign in as the second user. The first user's saved view must not appear.
 - **Proof.** Capture list, board, restored controls, and both users' saved-view menus. Query each saved view owner in D1.
 
@@ -68,3 +79,5 @@ Preconditions:
   without a publish date, and never paginates the selected month.
 - Saved views retain layout, filters, grouping, and sort. Status selections are
   stored as JSON arrays. They do not retain a page number.
+- Defaults belong to the user, persist across devices, and apply at login or
+  `/`. They do not override navigation to specific videos or explicit filters.

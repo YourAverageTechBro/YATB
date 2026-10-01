@@ -8,7 +8,7 @@ import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clapperboard, LayoutGrid, List, Plus, Trash2 } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clapperboard, LayoutGrid, List, Plus, Star, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import {
   DEFAULT_LIST_CONFIG,
@@ -31,7 +31,7 @@ import {
 } from '#/domain/videos'
 import { buildCalendarMonth, calendarMonthLabel, currentCalendarMonth, shiftCalendarMonth } from '#/domain/calendar'
 import { emptyRichDocument } from '#/server/rich-document'
-import { createSavedView, createVideo, loadPlanning, moveVideoStatus, removeSavedView } from '#/server/videos.functions'
+import { createSavedView, createVideo, loadPlanning, moveVideoStatus, removeSavedView, setDefaultSavedView } from '#/server/videos.functions'
 
 const VIDEO_STATUS_CHIP_CLASS = {
   'not-started': 'video-status-chip--not-started',
@@ -191,6 +191,8 @@ function Videos() {
   const [createError, setCreateError] = useState<string | null>(null)
   const [savingView, setSavingView] = useState(false)
   const [viewName, setViewName] = useState('')
+  const [viewBusy, setViewBusy] = useState(false)
+  const [viewError, setViewError] = useState<string | null>(null)
 
   function updateFilters(next: { status?: VideoListConfig['status']; format?: VideoListConfig['format'] }) {
     void navigate({ search: planningSearch(parseListConfig({ ...config, ...next }), 1, month) })
@@ -240,6 +242,19 @@ function Videos() {
     await router.invalidate()
   }
 
+  async function changeDefaultView(id: string | null) {
+    setViewBusy(true)
+    setViewError(null)
+    try {
+      await setDefaultSavedView({ data: id })
+      await router.invalidate()
+    } catch {
+      setViewError('Unable to update your default view. Please try again.')
+    } finally {
+      setViewBusy(false)
+    }
+  }
+
   const groups = groupVideos(videos, config)
   const hasActiveFilters = config.status.length !== VIDEO_STATUSES.length || config.format !== 'all'
   return <main className="workspace">
@@ -261,8 +276,9 @@ function Videos() {
       <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" type="button">Saved views <ChevronDown /></Button></DropdownMenuTrigger><DropdownMenuContent align="start">{savedViews.length === 0 ? <DropdownMenuItem disabled>No saved views</DropdownMenuItem> : savedViews.map((view) => <DropdownMenuItem key={view.id} onSelect={() => void navigate({ search: planningSearch(view.config, 1, month) })}>{view.name}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
     </section>
     {savedViews.length > 0 && <div className="saved-views">
-      {savedViews.map((view) => <Badge variant="outline" key={view.id}>{view.name}<Button variant="ghost" size="icon-xs" aria-label={`Delete ${view.name}`} type="button" onClick={() => void deleteView(view.id)}><Trash2 /></Button></Badge>)}
+      {savedViews.map((view) => <Badge variant="outline" key={view.id}>{view.name}{view.isDefault && <span> · Default</span>}<Button variant="ghost" size="icon-xs" aria-label={view.isDefault ? `Clear default ${view.name}` : `Set ${view.name} as default`} aria-pressed={view.isDefault} disabled={viewBusy} type="button" onClick={() => void changeDefaultView(view.isDefault ? null : view.id)}><Star fill={view.isDefault ? 'currentColor' : 'none'} /></Button><Button variant="ghost" size="icon-xs" aria-label={`Delete ${view.name}`} disabled={viewBusy} type="button" onClick={() => void deleteView(view.id)}><Trash2 /></Button></Badge>)}
     </div>}
+    {viewError && <Alert role="alert"><AlertDescription>{viewError}</AlertDescription></Alert>}
     {config.layout === 'calendar' && <section className="calendar-shell">
       <header className="calendar-header"><h2>{calendarMonthLabel(month)}</h2><div><Button variant="outline" size="icon" aria-label="Previous month" onClick={() => void navigate({ search: planningSearch(config, 1, shiftCalendarMonth(month, -1)) })}><ChevronLeft /></Button><Button variant="outline" onClick={() => void navigate({ search: planningSearch(config, 1, currentCalendarMonth()) })}>Today</Button><Button variant="outline" size="icon" aria-label="Next month" onClick={() => void navigate({ search: planningSearch(config, 1, shiftCalendarMonth(month, 1)) })}><ChevronRight /></Button></div></header>
       {videos.length === 0 ? <section className="empty-state calendar-empty"><div className="empty-icon"><CalendarDays size={25} /></div><h2>{config.status.length === 0 ? 'No statuses selected' : 'No scheduled videos'}</h2><p>{config.status.length === 0 ? 'Select at least one status to see videos.' : `No matching videos have a publish date in ${calendarMonthLabel(month)}.`}</p></section> : <VideoCalendar month={month} videos={videos} />}

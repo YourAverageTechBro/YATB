@@ -95,6 +95,7 @@ export type OrganicVideoOption = Readonly<{
 export type SavedView = Readonly<{
   id: SavedViewId
   name: string
+  isDefault: boolean
   config: VideoListConfig
   createdAt: number
   updatedAt: number
