@@ -12,7 +12,7 @@
 | YK Labs D1 named `yatb-studio` | Cloudflare MCP `d1_database_query` on `e2d62270-da2c-4def-b3ce-878f1e02af9d` | Readable. Stream schema **not** applied |
 | Worker account in `wrangler.jsonc` | `2a59d9e0842dc0b3d920f591fe82702c` / D1 `be13fc98-50a9-41d2-9e30-2edfbb0f2607` | **Not in MCP credentials.** `d1_database_get` → 404 |
 | Wrangler | `npx wrangler whoami` / env `CLOUDFLARE*` / `STREAM*` | **No credentials** |
-| Live `yatb-studio` Worker + Stream binding | MCP `workers_list` on `32967fffa44c1d38bc86ab6e4e419edb` and `4b0de17a66c8e2cf1ff11fba44d1d829` | Worker **absent**. STREAM webhook **not provisioned** from here |
+| Live `yatb-studio` Worker + Stream binding | MCP `workers_list` on `32967fffa44c1d38bc86ab6e4e419edb` and `4b0de17a66c8e2cf1ff11fba44d1d829` | Worker **absent** on those accounts. Wrangler account upload after cache purge showed `env.STREAM` |
 
 ## 1. Copy path (R2 → Stream → signed `loadDrafts`)
 
