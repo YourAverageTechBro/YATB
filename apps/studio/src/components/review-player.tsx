@@ -50,6 +50,17 @@ export function usesNativeVideoSrc(src: string): boolean {
   return document.createElement('video').canPlayType('application/vnd.apple.mpegurl') !== ''
 }
 
+export function attachAdaptivePlayback(media: HTMLVideoElement, src: string, onError: () => void): () => void {
+  if (!src.includes('.m3u8') || media.canPlayType('application/vnd.apple.mpegurl') || !Hls.isSupported()) {
+    return () => undefined
+  }
+  const hls = new Hls()
+  hls.loadSource(src)
+  hls.attachMedia(media)
+  hls.on(Hls.Events.ERROR, onError)
+  return () => hls.destroy()
+}
+
 export function clampPlayheadMs(milliseconds: number, durationMs: number): number {
   if (!Number.isFinite(milliseconds) || !Number.isFinite(durationMs) || durationMs <= 0) return 0
   return Math.max(0, Math.min(durationMs, Math.round(milliseconds)))
@@ -120,14 +131,8 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
 
   useEffect(() => {
     const media = video.current
-    if (!media || !src.includes('.m3u8')) return
-    if (media.canPlayType('application/vnd.apple.mpegurl')) return
-    if (!Hls.isSupported()) return
-    const hls = new Hls()
-    hls.loadSource(src)
-    hls.attachMedia(media)
-    hls.on(Hls.Events.ERROR, () => synchronize())
-    return () => hls.destroy()
+    if (!media) return
+    return attachAdaptivePlayback(media, src, synchronize)
   }, [src])
 
   function seekTo(milliseconds: number) {

@@ -9,7 +9,7 @@ import { Label } from '@yatb/ui/label'
 import { ScrollArea } from '@yatb/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { uploadFile } from '#/client/upload'
-import { anchorStartMs, formatTimestamp, type Draft, type ReviewAnchor, type ReviewComment } from '#/domain/reviews'
+import { commentSeekMs, formatTimestamp, reviewPlaybackSrc, type Draft, type ReviewAnchor, type ReviewComment } from '#/domain/reviews'
 import {
   compressedDisplayName,
   compressedDownloadStateFromHttpStatus,
@@ -46,7 +46,7 @@ function milliseconds(value: string): number {
 
 export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootageChanged?: () => void }) {
   const draftMediaUrl = `/api/videos/${draft.videoId}/media/${draft.file.id}`
-  const playerSrc = draft.stream.playbackUrl ?? draftMediaUrl
+  const playerSrc = reviewPlaybackSrc(draft)
   const player = useRef<ReviewPlayerHandle>(null)
   const [comments, setComments] = useState<ReviewComment[]>([])
   const [currentMs, setCurrentMs] = useState(0)
@@ -94,8 +94,8 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
     ? { kind: 'point', atMs: currentMs }
     : { kind: 'range', startMs: milliseconds(start), endMs: milliseconds(end) }, [kind, currentMs, start, end])
 
-  function seek(milliseconds: number) {
-    player.current?.seekTo(milliseconds)
+  function seek(anchor: ReviewAnchor) {
+    player.current?.seekTo(commentSeekMs(anchor, draft.durationMs))
   }
 
   async function downloadCompact(event: React.MouseEvent<HTMLAnchorElement>) {
@@ -195,14 +195,14 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
       <ScrollArea className="review-comments" viewportProps={{ 'aria-label': `Comments for version ${draft.version}`, tabIndex: 0 }}>
         <section className="review-comments-content">
           <h3>Comments <Badge variant="secondary">{comments.length}</Badge></h3>
-          {comments.length === 0 ? <p className="footage-empty">No review notes yet.</p> : comments.map((comment) => <CommentCard key={comment.id} comment={comment} onSeek={seek} onChanged={refresh} />)}
+          {comments.length === 0 ? <p className="footage-empty">No review notes yet.</p> : comments.map((comment) => <CommentCard key={comment.id} comment={comment} onSeek={() => seek(comment.anchor)} onChanged={refresh} />)}
         </section>
       </ScrollArea>
     </aside>
   </div>
 }
 
-function CommentCard({ comment, onSeek, onChanged }: { comment: ReviewComment; onSeek: (milliseconds: number) => void; onChanged: () => Promise<void> }) {
+function CommentCard({ comment, onSeek, onChanged }: { comment: ReviewComment; onSeek: () => void; onChanged: () => Promise<void> }) {
   const [editing, setEditing] = useState(false)
   const [body, setBody] = useState(comment.body)
   const [error, setError] = useState('')
@@ -228,7 +228,7 @@ function CommentCard({ comment, onSeek, onChanged }: { comment: ReviewComment; o
   }
 
   return <Card className="review-comment">
-    <header><div><strong>{comment.author.name}</strong><small>{comment.author.email}</small></div><Button variant="outline" size="sm" onClick={() => onSeek(anchorStartMs(comment.anchor))}>{label}</Button></header>
+    <header><div><strong>{comment.author.name}</strong><small>{comment.author.email}</small></div><Button variant="outline" size="sm" onClick={onSeek}>{label}</Button></header>
     {editing
       ? <form onSubmit={(event) => void save(event)}><RichEditor ariaLabel="Edit review comment" value={body} onChange={setBody} /><footer><Button type="submit">Save comment</Button><Button type="button" variant="outline" onClick={() => { setBody(comment.body); setEditing(false) }}>Cancel</Button></footer></form>
       : <RichDocumentView value={comment.body} linkSharedFiles />}

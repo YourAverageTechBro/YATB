@@ -147,8 +147,21 @@ export function parseReviewAnchor(value: unknown, durationMs: number): ReviewAnc
   return invalid('Comment anchor is invalid.')
 }
 
+export function reviewPlaybackSrc(draft: Draft): string {
+  return draft.stream.playbackUrl ?? `/api/videos/${draft.videoId}/media/${draft.file.id}`
+}
+
 export function anchorStartMs(anchor: ReviewAnchor): number {
   return anchor.kind === 'point' ? anchor.atMs : anchor.startMs
+}
+
+export function commentSeekMs(anchor: ReviewAnchor, durationMs: number): number {
+  return clampPlayheadForComment(anchorStartMs(anchor), durationMs)
+}
+
+function clampPlayheadForComment(milliseconds: number, durationMs: number): number {
+  if (!Number.isFinite(milliseconds) || !Number.isFinite(durationMs) || durationMs <= 0) return 0
+  return Math.max(0, Math.min(durationMs, Math.round(milliseconds)))
 }
 
 export function formatTimestamp(milliseconds: number): string {

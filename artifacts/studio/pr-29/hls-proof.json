@@ -1,0 +1,47 @@
+{
+  "ok": true,
+  "networkOk": true,
+  "ffmpegOk": true,
+  "browserOk": true,
+  "hlsSrc": "https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/manifest/video.m3u8",
+  "network": {
+    "masterType": "application/vnd.apple.mpegurl",
+    "masterHasHls": true,
+    "variantHasMedia": true,
+    "segmentCount": 8,
+    "firstSegment": "https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/video/480/seg_1.mp4?p=eyJ0eXBlIjoic2VnbWVudCIsInZpZGVvSUQiOiI2YjllNjhiMDdkZmVlOGNjMmQxMTZlNGM1MWQ2YTk1NyIsIm93bmVySUQiOjc2NzcyMTYsImNyZWF0b3JJRCI6IiIsInNlZ21lbnREdXJhdGlvblNlY3MiOjQuMDA0LCJzdG9yYWdlUHJvdmlkZXIiOjQsInRyYWNrIjoiNmQ4MWI2ODNmMWEzNjBjYjdjMGZkOGJmYmI1MjIzNjciLCJyZW5kaXRpb24iOiI1OTYzODE4NzIiLCJtdXhpbmciOiI2NTAxMTI3ODIifQ&s=ThkDVMOLw6zDicKzY8K1W2t7w5YtwqTCoTdrw7ceScKMFcKJw4jCvS3Co8ODwrTCnA",
+    "playlistBytes": 4210526,
+    "seekSegmentUrls": [
+      "https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/video/480/seg_7.mp4?p=eyJ0eXBlIjoic2VnbWVudCIsInZpZGVvSUQiOiI2YjllNjhiMDdkZmVlOGNjMmQxMTZlNGM1MWQ2YTk1NyIsIm93bmVySUQiOjc2NzcyMTYsImNyZWF0b3JJRCI6IiIsInNlZ21lbnREdXJhdGlvblNlY3MiOjQuMDA0LCJzdG9yYWdlUHJvdmlkZXIiOjQsInRyYWNrIjoiNmQ4MWI2ODNmMWEzNjBjYjdjMGZkOGJmYmI1MjIzNjciLCJyZW5kaXRpb24iOiI1OTYzODE4NzIiLCJtdXhpbmciOiI2NTAxMTI3ODIifQ&s=ThkDVMOLw6zDicKzY8K1W2t7w5YtwqTCoTdrw7ceScKMFcKJw4jCvS3Co8ODwrTCnA",
+      "https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/video/480/seg_8.mp4?p=eyJ0eXBlIjoic2VnbWVudCIsInZpZGVvSUQiOiI2YjllNjhiMDdkZmVlOGNjMmQxMTZlNGM1MWQ2YTk1NyIsIm93bmVySUQiOjc2NzcyMTYsImNyZWF0b3JJRCI6IiIsInNlZ21lbnREdXJhdGlvblNlY3MiOjQuMDA0LCJzdG9yYWdlUHJvdmlkZXIiOjQsInRyYWNrIjoiNmQ4MWI2ODNmMWEzNjBjYjdjMGZkOGJmYmI1MjIzNjciLCJyZW5kaXRpb24iOiI1OTYzODE4NzIiLCJtdXhpbmciOiI2NTAxMTI3ODIifQ&s=ThkDVMOLw6zDicKzY8K1W2t7w5YtwqTCoTdrw7ceScKMFcKJw4jCvS3Co8ODwrTCnA"
+    ],
+    "seekBytes": 589619,
+    "seekUsesSubset": true
+  },
+  "ffmpeg": {
+    "code": 0,
+    "soughtTo": "00:00:00.95",
+    "openedHls": true,
+    "openedSegments": [
+      "480/seg_1",
+      "480/seg_2",
+      "1080/seg_1",
+      "1080/seg_2",
+      "720/seg_1",
+      "720/seg_2",
+      "360/seg_1",
+      "360/seg_2",
+      "240/seg_1",
+      "240/seg_2",
+      "1080/seg_3",
+      "1080/seg_4"
+    ]
+  },
+  "browser": {
+    "native": true,
+    "hlsJs": true,
+    "currentTime": 2,
+    "duration": 29.99799999999999
+  },
+  "note": "Chromium sought a Stream HLS manifest via hls.js. ffmpeg also decoded at +8s from later segments, not a progressive original."
+}

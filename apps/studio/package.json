@@ -9,6 +9,7 @@
     "cf-typecheck": "wrangler types --env-interface CloudflareEnv --check",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --config vitest.config.ts",
+    "prove-hls": "node scripts/prove-hls-player.mjs",
     "check": "npm run cf-typecheck && npm run typecheck && npm test",
     "build": "node scripts/build.mjs",
     "preview": "vite preview --port 3001",
