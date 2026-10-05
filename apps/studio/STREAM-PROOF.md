@@ -56,6 +56,8 @@ Live R2→Stream copy of a Studio draft was **not** run. No STREAM binding and n
 - Therefore this agent could not: apply `0010` to the wrangler prod DB, deploy the `STREAM` binding, attach the webhook, or sign a real Studio draft.
 - Do not treat prod review as Stream until migrate + deploy + webhook secret land on the wrangler account, then re-check `SELECT id, version, stream_state, stream_uid FROM draft`.
 
+Workers Builds `npm clean-install` on this branch succeeded after a cache purge (build `4caee1d4-14d0-4ee5-8622-19156938dcb1`) and uploaded `env.STREAM`. Push-triggered restores of that cache then failed before `npm clean-install` started.
+
 ## How to re-run
 
 ```sh
