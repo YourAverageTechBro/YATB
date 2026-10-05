@@ -47,12 +47,14 @@ describe('draft review pane', () => {
   })
 
   it('keeps the original available while the smaller MP4 is processing', () => {
-    const markup = renderToStaticMarkup(createElement(ReviewPane, {
-      draft: { ...draft, compactMp4: { state: 'queued', byteSize: null } },
-    }))
-    expect(markup).toContain('Preparing smaller MP4…')
-    expect(markup).not.toContain('?download=compressed')
-    expect(markup).toContain('?download=1')
+    for (const state of ['queued', 'processing'] as const) {
+      const markup = renderToStaticMarkup(createElement(ReviewPane, {
+        draft: { ...draft, compactMp4: { state, byteSize: null } },
+      }))
+      expect(markup).toContain('Preparing smaller MP4…')
+      expect(markup).not.toContain('?download=compressed')
+      expect(markup).toContain('?download=1')
+    }
   })
 
   it('makes each version comment region reachable by keyboard after the composer', () => {

@@ -46,6 +46,8 @@ describe('compact MP4 domain', () => {
     expect(isTerminalCompressedDownloadState(compressedDownloadStateFromHttpStatus(202))).toBe(false)
     expect(isTerminalCompressedDownloadState(compressedDownloadStateFromHttpStatus(200))).toBe(true)
     expect(isTerminalCompressedDownloadState(compressedDownloadStateFromHttpStatus(409))).toBe(true)
+    expect(new Response(JSON.stringify({ state: 'processing' }), { status: 202 }).ok).toBe(true)
+    expect(compressedDownloadStateFromHttpStatus(202) === 'ready').toBe(false)
   })
 
   it('bounds container work without restricting original uploads', () => {

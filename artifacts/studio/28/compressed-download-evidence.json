@@ -1,0 +1,168 @@
+{
+  "localUrl": "http://localhost:3001/api/videos/6088e84d-1efa-437f-8846-aff5e8ac5f45/media/869b4cb2-e2ad-4d47-84c3-07242314d013?download=compressed",
+  "videoId": "6088e84d-1efa-437f-8846-aff5e8ac5f45",
+  "fileId": "869b4cb2-e2ad-4d47-84c3-07242314d013",
+  "processing": {
+    "observedStateAfterUpload": "queued",
+    "derivativeState": "processing",
+    "head": {
+      "status": 202,
+      "ok": true,
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "connection": "close",
+        "content-type": "application/json",
+        "date": "Mon, 05 Oct 2026 17:32:05 GMT",
+        "vary": "Origin"
+      },
+      "body": "",
+      "byteLength": null
+    },
+    "getJson": {
+      "status": 202,
+      "ok": true,
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "connection": "keep-alive",
+        "content-length": "22",
+        "content-type": "application/json",
+        "date": "Mon, 05 Oct 2026 17:32:05 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": "{\"state\":\"processing\"}",
+      "byteLength": 22
+    },
+    "getHtml": {
+      "status": 202,
+      "ok": true,
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "connection": "keep-alive",
+        "content-length": "242",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Mon, 05 Oct 2026 17:32:05 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Smaller MP4</title></head><body><p>The smaller MP4 is still being prepared.</p><p><a href=\"/videos/6088e84d-1efa-437f-8846-aff5e8ac5f45\">Back to the video</a></p></body></html>",
+      "byteLength": 242
+    },
+    "getBrowserAccept": {
+      "status": 202,
+      "ok": true,
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "connection": "keep-alive",
+        "content-length": "242",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Mon, 05 Oct 2026 17:32:05 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Smaller MP4</title></head><body><p>The smaller MP4 is still being prepared.</p><p><a href=\"/videos/6088e84d-1efa-437f-8846-aff5e8ac5f45\">Back to the video</a></p></body></html>",
+      "byteLength": 242
+    },
+    "signedOut": {
+      "status": 401,
+      "ok": false,
+      "headers": {
+        "cache-control": "private, no-store, max-age=0",
+        "connection": "keep-alive",
+        "content-length": "12",
+        "content-type": "text/plain;charset=UTF-8",
+        "date": "Mon, 05 Oct 2026 17:32:05 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": "Unauthorized",
+      "byteLength": 12
+    },
+    "responseOkWouldTreat202AsSuccess": true
+  },
+  "ready": {
+    "head": {
+      "status": 200,
+      "ok": true,
+      "headers": {
+        "accept-ranges": "bytes",
+        "cache-control": "private, no-store, max-age=0",
+        "connection": "close",
+        "content-disposition": "attachment; filename=\"proof-draft - smaller.mp4\"; filename*=UTF-8''proof-draft%20-%20smaller.mp4",
+        "content-length": "2240",
+        "content-type": "video/mp4",
+        "date": "Mon, 05 Oct 2026 17:32:08 GMT",
+        "etag": "\"67f68a5b33e8634da3fb6d206a4a4b52\"",
+        "vary": "Origin",
+        "x-content-type-options": "nosniff",
+        "x-media-derivative-state": "ready"
+      },
+      "body": null,
+      "byteLength": 2240
+    },
+    "get": {
+      "status": 200,
+      "ok": true,
+      "headers": {
+        "accept-ranges": "bytes",
+        "cache-control": "private, no-store, max-age=0",
+        "connection": "keep-alive",
+        "content-disposition": "attachment; filename=\"proof-draft - smaller.mp4\"; filename*=UTF-8''proof-draft%20-%20smaller.mp4",
+        "content-length": "2240",
+        "content-type": "video/mp4",
+        "date": "Mon, 05 Oct 2026 17:32:08 GMT",
+        "etag": "\"67f68a5b33e8634da3fb6d206a4a4b52\"",
+        "keep-alive": "timeout=5",
+        "vary": "Origin",
+        "x-content-type-options": "nosniff",
+        "x-media-derivative-state": "ready"
+      },
+      "byteLength": 2240,
+      "matchesSource": true
+    }
+  },
+  "prodUnsigned": {
+    "url": "https://studio.youraveragetechbro.com/api/videos/934c3718-427c-40e8-80e8-bb5318ca0e28/media/493975af-5734-408a-b8b3-f7bd61186a57?download=compressed",
+    "head": {
+      "status": 401,
+      "ok": false,
+      "headers": {
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cache-control": "private, no-store, max-age=0",
+        "cf-ray": "a45e29f85ba84fb3-EWR",
+        "connection": "close",
+        "content-type": "text/plain;charset=UTF-8",
+        "date": "Mon, 05 Oct 2026 17:32:08 GMT",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=xqkEgAIw9G14%2FUi81QeWdZAJr57RPQmfHl1S7SCFTYK%2B9vd6VBydeuHGIdSvgdVmoS5nd7sKgKCQyLJ3Lx%2F93yngLdkvHxfzgBeuGAbWmr1XGepqt3ndLONPmRUDqtsvqEmiNldXNGuYpccak2Qv5Q%3D%3D\"}]}",
+        "server": "cloudflare"
+      },
+      "body": "",
+      "byteLength": null
+    },
+    "get": {
+      "status": 401,
+      "ok": false,
+      "headers": {
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cache-control": "private, no-store, max-age=0",
+        "cf-ray": "a45e29fb6a715e66-EWR",
+        "connection": "keep-alive",
+        "content-length": "12",
+        "content-type": "text/plain;charset=UTF-8",
+        "date": "Mon, 05 Oct 2026 17:32:09 GMT",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=y4pWGMcGY%2B59r9kQc%2FfN6RkybvN4SWTlIdZ%2BEhjkQSqwXH%2BJ4DDSv7bdKbdnDcLg8q3uU0hbj6PSs7JuX4qH7hkyIpmg1Oj4NR%2BsH6MvNmMRDblSAlcKPgJ6lRFREMqZGLxKuMLK09iEBx52v7kAdQ%3D%3D\"}]}",
+        "server": "cloudflare",
+        "server-timing": "cfEdge;dur=21,cfOrigin;dur=0,cfWorker;dur=150"
+      },
+      "body": "Unauthorized",
+      "byteLength": 12
+    },
+    "note": "No Studio session cookie in this environment; this is the signed-out prod boundary only."
+  },
+  "wrangler": {
+    "authenticated": false,
+    "attempted": "local D1/R2 only"
+  }
+}
