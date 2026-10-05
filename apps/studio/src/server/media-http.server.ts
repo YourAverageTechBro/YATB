@@ -23,7 +23,7 @@ import {
   renameMedia,
   uploadPart,
 } from './media.server'
-import { compressedDisplayName } from '#/domain/derivatives'
+import { compressedDisplayName, compressedDownloadHttpStatus, type MediaDerivativeState } from '#/domain/derivatives'
 import { getStoredDerivative } from './compression.server'
 
 const bindings = env as Cloudflare.Env & { MEDIA: R2Bucket }
@@ -136,6 +136,41 @@ export function handleMediaMutation(request: Request, videoIdValue: string, file
   })
 }
 
+function prefersHtml(request: Request): boolean {
+  const accept = request.headers.get('Accept') ?? ''
+  return request.method === 'GET' && accept.includes('text/html') && !accept.includes('application/json')
+}
+
+function pendingCompressedResponse(request: Request, videoId: string, state: MediaDerivativeState): Response {
+  const pending: Exclude<MediaDerivativeState, 'ready'> = state === 'ready' ? 'processing' : state
+  const status = compressedDownloadHttpStatus(pending)
+  if (!prefersHtml(request)) return json({ state: pending }, status)
+  let message: string
+  switch (pending) {
+    case 'failed':
+      message = 'The smaller MP4 could not be prepared.'
+      break
+    case 'unsupported':
+      message = 'This video is too large or long for compact download processing.'
+      break
+    case 'not_beneficial':
+      message = 'The original is already as small as the compact MP4.'
+      break
+    case 'queued':
+    case 'processing':
+      message = 'The smaller MP4 is still being prepared.'
+      break
+    default: {
+      const unexpected: never = pending
+      throw new Error(unexpected)
+    }
+  }
+  return new Response(
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Smaller MP4</title></head><body><p>${message}</p><p><a href="/videos/${videoId}">Back to the video</a></p></body></html>`,
+    { status, headers: { 'Cache-Control': PRIVATE_NO_STORE, 'Content-Type': 'text/html; charset=utf-8' } },
+  )
+}
+
 function contentDisposition(name: string, attachment: boolean): string {
   const fallback = name.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_')
   return `${attachment ? 'attachment' : 'inline'}; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(name)}`
@@ -203,9 +238,7 @@ export function handleMediaRead(
       const derivative = await getStoredDerivative(file.video_id, file.id)
       if (!derivative || derivative.state !== 'ready' || derivative.byteSize === null
           || derivative.contentType === null || derivative.objectEtag === null) {
-        const state = derivative?.state ?? 'queued'
-        const status = state === 'failed' ? 503 : state === 'unsupported' ? 422 : state === 'not_beneficial' ? 409 : 202
-        return json({ state }, status)
+        return pendingCompressedResponse(request, file.video_id, derivative?.state ?? 'queued')
       }
       const headers = new Headers({
         'Accept-Ranges': 'bytes',

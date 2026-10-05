@@ -5,6 +5,7 @@
   "compatibility_date": "2026-09-12",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
+  "dev": { "port": 3001, "enable_containers": false },
   "workers_dev": true,
   "preview_urls": true,
   "routes": [

@@ -1,0 +1,6 @@
+GET /api/videos/4f80e404-fd8b-4f1e-8c7b-6fc47050450f/media/2a77b1ce-e947-493b-9a47-7bb95843e132?download=compressed
+HTTP/1.1 200
+content-type: video/mp4
+content-disposition: attachment; filename="proof-draft - smaller.mp4"; filename*=UTF-8''proof-draft%20-%20smaller.mp4
+content-length: 2240
+x-media-derivative-state: ready
