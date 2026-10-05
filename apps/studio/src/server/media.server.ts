@@ -16,7 +16,9 @@ import {
 import type { Draft, ReviewAuthor } from '#/domain/reviews'
 import type { MediaDerivativeState } from '#/domain/derivatives'
 import type { LibraryFile } from '#/domain/file-library'
+import { emptyDraftStream } from '#/domain/stream'
 import { ensureDraftDerivative } from './compression.server'
+import { deleteDraftStreams, draftStreamFromRow, ensureDraftStream } from './stream.server'
 import { ACTIVE_VIDEO_SQL } from './video-sql'
 
 type Bindings = Cloudflare.Env & { DB: D1Database; MEDIA: R2Bucket }
@@ -78,6 +80,8 @@ type DraftRow = {
   user_email: string
   derivative_state?: MediaDerivativeState | null
   derivative_byte_size?: number | null
+  stream_uid?: string | null
+  stream_state?: string | null
 }
 
 function publicFile(row: FileRow): MediaFile {
@@ -141,6 +145,7 @@ async function storedDraft(
 ): Promise<Draft | null> {
   const row = await bindings.DB.prepare(
     `SELECT d.id, d.video_id, d.version, d.duration_ms, d.created_at,
+            d.stream_uid, d.stream_state,
             x.state AS derivative_state, x.byte_size AS derivative_byte_size,
             u.id AS user_id, u.name AS user_name, u.email AS user_email
      FROM draft d JOIN user u ON u.id = d.created_by_user_id
@@ -158,6 +163,7 @@ async function storedDraft(
       state: includeDerivative ? row.derivative_state ?? 'queued' : 'queued',
       byteSize: includeDerivative ? row.derivative_byte_size ?? null : null,
     },
+    stream: includeDerivative ? draftStreamFromRow(row.stream_state, row.stream_uid) : emptyDraftStream(),
     author: publicAuthor(row),
     createdAt: row.created_at,
   }
@@ -387,6 +393,8 @@ async function publish(row: UploadRow, object: R2Object): Promise<UploadSnapshot
       contentType: row.content_type,
       durationMs: row.draft_duration_ms,
     }).catch((error) => console.error('Draft compression could not be enqueued', error))
+    await ensureDraftStream(row.file_id)
+      .catch((error) => console.error('Draft Stream copy could not start', error))
   }
   return snapshot(ready)
 }
@@ -567,6 +575,7 @@ export async function cleanupTombstonedVideos(envBindings: Bindings, now = Date.
           }
         }
       }
+      await deleteDraftStreams(video.id, envBindings)
       const files = await envBindings.DB.prepare(
         'SELECT object_key FROM media_file WHERE video_id = ?',
       ).bind(video.id).all<{ object_key: string }>()

@@ -5,11 +5,13 @@ import { describe, expect, it } from 'vitest'
 import { parseBeginUpload, UPLOAD_PART_SIZE } from '../src/domain/media'
 import {
   anchorStartMs,
+  commentSeekMs,
   formatTimestamp,
   parseComparisonQuery,
   parseReviewAnchor,
   partitionComparison,
   resolveComparison,
+  reviewPlaybackSrc,
   type Draft,
 } from '../src/domain/reviews'
 
@@ -29,6 +31,7 @@ function comparisonDraft(id: string, videoId: string, version: number): Draft {
     version,
     durationMs: 12_000,
     compactMp4: { state: 'ready', byteSize: 80 },
+    stream: { state: 'ready', uid: 'stream-1', playbackUrl: null, thumbnailUrl: null },
     file: {
       id: crypto.randomUUID(),
       videoId,
@@ -101,6 +104,18 @@ describe('review domain', () => {
     expect(() => parseReviewAnchor({ kind: 'range', startMs: 5000, endMs: 4000 }, 6000)).toThrow('after')
     expect(() => parseReviewAnchor({ kind: 'point', atMs: 5001 }, 5000)).toThrow('duration')
     expect(formatTimestamp(3_723_000)).toBe('1:02:03')
+    expect(commentSeekMs({ kind: 'range', startMs: 1_000, endMs: 2_000 }, 5_000)).toBe(1_000)
+    const draft = comparisonDraft(draftA, videoA, 1)
+    expect(reviewPlaybackSrc(draft)).toBe(`/api/videos/${videoA}/media/${draft.file.id}`)
+    expect(reviewPlaybackSrc({
+      ...draft,
+      stream: {
+        state: 'ready',
+        uid: 'abc',
+        playbackUrl: 'https://customer-test.cloudflarestream.com/tok/manifest/video.m3u8',
+        thumbnailUrl: null,
+      },
+    })).toBe('https://customer-test.cloudflarestream.com/tok/manifest/video.m3u8')
   })
 })
 

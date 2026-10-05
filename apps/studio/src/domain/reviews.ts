@@ -2,6 +2,7 @@ import { MAX_DRAFT_DURATION_MS, parseMediaId, type MediaFile } from './media'
 import { parseRevision, parseVideoId, type VideoId } from './videos'
 import { parseRichDocument, type RichDocument } from '../server/rich-document'
 import type { MediaDerivative } from './derivatives'
+import type { DraftStream } from './stream'
 
 export type DraftId = string
 export type ReviewCommentId = string
@@ -29,6 +30,7 @@ export type Draft = Readonly<{
   durationMs: number
   file: MediaFile
   compactMp4: MediaDerivative
+  stream: DraftStream
   author: ReviewAuthor
   createdAt: number
 }>
@@ -145,8 +147,21 @@ export function parseReviewAnchor(value: unknown, durationMs: number): ReviewAnc
   return invalid('Comment anchor is invalid.')
 }
 
+export function reviewPlaybackSrc(draft: Draft): string {
+  return draft.stream.playbackUrl ?? `/api/videos/${draft.videoId}/media/${draft.file.id}`
+}
+
 export function anchorStartMs(anchor: ReviewAnchor): number {
   return anchor.kind === 'point' ? anchor.atMs : anchor.startMs
+}
+
+export function commentSeekMs(anchor: ReviewAnchor, durationMs: number): number {
+  return clampPlayheadForComment(anchorStartMs(anchor), durationMs)
+}
+
+function clampPlayheadForComment(milliseconds: number, durationMs: number): number {
+  if (!Number.isFinite(milliseconds) || !Number.isFinite(durationMs) || durationMs <= 0) return 0
+  return Math.max(0, Math.min(durationMs, Math.round(milliseconds)))
 }
 
 export function formatTimestamp(milliseconds: number): string {

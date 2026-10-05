@@ -9,6 +9,7 @@
     "cf-typecheck": "wrangler types --env-interface CloudflareEnv --check",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --config vitest.config.ts",
+    "prove-hls": "node scripts/prove-hls-player.mjs",
     "check": "npm run cf-typecheck && npm run typecheck && npm test",
     "build": "node scripts/build.mjs",
     "preview": "vite preview --port 3001",
@@ -23,6 +24,7 @@
     "@tanstack/react-start": "1.168.52",
     "@yatb/ui": "*",
     "better-auth": "1.7.4",
+    "hls.js": "^1.7.3",
     "lucide-react": "^0.479.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"

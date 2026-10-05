@@ -44,6 +44,11 @@ Set a random `BETTER_AUTH_SECRET` with at least 32 characters. Open
 `email_outbox` D1 table. Production sends them through the restricted
 `AUTH_EMAIL` Cloudflare Email Sending binding.
 
+Local review playback uses authenticated R2 progressive media. Production
+copies published drafts into Cloudflare Stream (`STREAM` binding) and plays
+signed HLS. Apply `0010_draft_stream.sql` and set `STREAM_WEBHOOK_SECRET`
+after attaching the Stream webhook. See `docs/studio/production-runbook.md`.
+
 ## Check a change
 
 Run the type and Cloudflare binding checks:

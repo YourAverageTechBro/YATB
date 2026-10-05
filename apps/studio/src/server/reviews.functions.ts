@@ -43,7 +43,8 @@ export const loadDrafts = createServerFn({ method: 'GET' })
   .validator(parseVideoId)
   .handler(async ({ data }) => {
     await readSession()
-    return (await import('./reviews.server')).listDrafts(data)
+    const drafts = await (await import('./reviews.server')).listDrafts(data)
+    return (await import('./stream.server')).signDraftPlayback(drafts)
   })
 
 export const loadComments = createServerFn({ method: 'GET' })
@@ -57,7 +58,9 @@ export const loadComparison = createServerFn({ method: 'GET' })
   .validator(comparisonRequest)
   .handler(async ({ data }) => {
     await readSession()
-    const drafts = await (await import('./reviews.server')).listDrafts(data.videoId)
+    const drafts = await (await import('./stream.server')).signDraftPlayback(
+      await (await import('./reviews.server')).listDrafts(data.videoId),
+    )
     return resolveComparison(drafts, data.query)
   })
 
