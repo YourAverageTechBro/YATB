@@ -7,8 +7,11 @@ import {
   MAX_COMPRESSION_BYTES,
   MAX_COMPRESSION_DURATION_MS,
   compressedDisplayName,
+  compressedDownloadHttpStatus,
+  compressedDownloadStateFromHttpStatus,
   derivativeId,
   derivativeObjectKey,
+  isTerminalCompressedDownloadState,
   supportsCompression,
 } from '../src/domain/derivatives'
 
@@ -32,6 +35,17 @@ describe('compact MP4 domain', () => {
       `videos/${videoId}/derivatives/${sourceFileId}/${COMPACT_MP4_PROFILE}.mp4`,
     )
     expect(compressedDisplayName('launch.final.mov')).toBe('launch.final - smaller.mp4')
+  })
+
+  it('treats only HTTP 200 as a ready compact download', () => {
+    expect(compressedDownloadHttpStatus('processing')).toBe(202)
+    expect(compressedDownloadHttpStatus('queued')).toBe(202)
+    expect(compressedDownloadHttpStatus('ready')).toBe(200)
+    expect(compressedDownloadStateFromHttpStatus(202)).toBe('processing')
+    expect(compressedDownloadStateFromHttpStatus(200)).toBe('ready')
+    expect(isTerminalCompressedDownloadState(compressedDownloadStateFromHttpStatus(202))).toBe(false)
+    expect(isTerminalCompressedDownloadState(compressedDownloadStateFromHttpStatus(200))).toBe(true)
+    expect(isTerminalCompressedDownloadState(compressedDownloadStateFromHttpStatus(409))).toBe(true)
   })
 
   it('bounds container work without restricting original uploads', () => {

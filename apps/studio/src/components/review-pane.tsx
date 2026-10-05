@@ -10,7 +10,12 @@ import { ScrollArea } from '@yatb/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { uploadFile } from '#/client/upload'
 import { anchorStartMs, formatTimestamp, type Draft, type ReviewAnchor, type ReviewComment } from '#/domain/reviews'
-import type { MediaDerivativeState } from '#/domain/derivatives'
+import {
+  compressedDisplayName,
+  compressedDownloadStateFromHttpStatus,
+  isTerminalCompressedDownloadState,
+  type MediaDerivativeState,
+} from '#/domain/derivatives'
 import { addComment, loadComments, removeComment, saveComment } from '#/server/reviews.functions'
 import { emptyRichDocument, type RichDocument } from '#/server/rich-document'
 import { RichDocumentView } from './rich-document-view'
@@ -55,8 +60,7 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
 
   useEffect(() => {
     setCompactState(draft.compactMp4.state)
-    if (draft.compactMp4.state === 'ready' || draft.compactMp4.state === 'not_beneficial'
-        || draft.compactMp4.state === 'unsupported') return
+    if (isTerminalCompressedDownloadState(draft.compactMp4.state)) return
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined
     const poll = async () => {
@@ -64,11 +68,9 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
       try {
         const response = await fetch(`${draftMediaUrl}?download=compressed`, { method: 'HEAD' })
         if (cancelled) return
-        if (response.ok) { setCompactState('ready'); terminal = true }
-        else if (response.status === 409) { setCompactState('not_beneficial'); terminal = true }
-        else if (response.status === 422) { setCompactState('unsupported'); terminal = true }
-        else if (response.status === 503) setCompactState('failed')
-        else setCompactState('processing')
+        const next = compressedDownloadStateFromHttpStatus(response.status)
+        setCompactState(next)
+        terminal = isTerminalCompressedDownloadState(next)
       } catch {
         if (!cancelled) setCompactState('failed')
       }
@@ -92,6 +94,24 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
 
   function seek(milliseconds: number) {
     player.current?.seekTo(milliseconds)
+  }
+
+  async function downloadCompact(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault()
+    try {
+      const response = await fetch(`${draftMediaUrl}?download=compressed`, { method: 'HEAD' })
+      const next = compressedDownloadStateFromHttpStatus(response.status)
+      setCompactState(next)
+      if (next !== 'ready') return
+      const frame = document.createElement('iframe')
+      frame.setAttribute('aria-hidden', 'true')
+      frame.src = `${draftMediaUrl}?download=compressed`
+      frame.style.display = 'none'
+      document.body.appendChild(frame)
+      window.setTimeout(() => frame.remove(), 60_000)
+    } catch {
+      setCompactState('failed')
+    }
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -135,7 +155,7 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
       <div className="player-state">
         <div className="draft-downloads">
           {compactState === 'ready'
-            ? <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=compressed`} aria-label={`Download smaller MP4 for version ${draft.version}: ${draft.file.displayName}`}><Download /> Download smaller MP4</a></Button>
+            ? <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=compressed`} download={compressedDisplayName(draft.file.displayName)} onClick={(event) => void downloadCompact(event)} aria-label={`Download smaller MP4 for version ${draft.version}: ${draft.file.displayName}`}><Download /> Download smaller MP4</a></Button>
             : <Button variant="outline" size="sm" disabled title={compactState === 'not_beneficial'
               ? 'The original is already as small as the compact MP4.'
               : compactState === 'unsupported'

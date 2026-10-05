@@ -34,6 +34,7 @@ describe('draft review pane', () => {
 
     expect(first).toContain('src="/api/videos/video-1/media/file-1"')
     expect(first).toContain('href="/api/videos/video-1/media/file-1?download=compressed"')
+    expect(first).toContain('download="first edit - smaller.mp4"')
     expect(first).toContain('aria-label="Download smaller MP4 for version 1: first edit.mp4"')
     expect(first).toContain('href="/api/videos/video-1/media/file-1?download=1"')
     expect(first).toContain('aria-label="Download original version 1: first edit.mp4"')

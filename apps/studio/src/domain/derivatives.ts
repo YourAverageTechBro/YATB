@@ -43,3 +43,44 @@ export function supportsCompression(input: Readonly<{
     && input.durationMs <= MAX_COMPRESSION_DURATION_MS
     && new Set(['video/mp4', 'video/quicktime', 'video/webm', 'video/ogg']).has(input.contentType)
 }
+
+export function compressedDownloadHttpStatus(state: MediaDerivativeState): number {
+  switch (state) {
+    case 'ready': return 200
+    case 'not_beneficial': return 409
+    case 'unsupported': return 422
+    case 'failed': return 503
+    case 'queued':
+    case 'processing': return 202
+    default: {
+      const unexpected: never = state
+      return unexpected
+    }
+  }
+}
+
+export function compressedDownloadStateFromHttpStatus(status: number): MediaDerivativeState {
+  switch (status) {
+    case 200: return 'ready'
+    case 409: return 'not_beneficial'
+    case 422: return 'unsupported'
+    case 503: return 'failed'
+    case 202: return 'processing'
+    default: return 'failed'
+  }
+}
+
+export function isTerminalCompressedDownloadState(state: MediaDerivativeState): boolean {
+  switch (state) {
+    case 'ready':
+    case 'not_beneficial':
+    case 'unsupported': return true
+    case 'queued':
+    case 'processing':
+    case 'failed': return false
+    default: {
+      const unexpected: never = state
+      return unexpected
+    }
+  }
+}
