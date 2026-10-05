@@ -72,6 +72,12 @@ export function ReviewWorkspace({ videoId, onFootageChanged }: { videoId: string
 
   useEffect(() => { void refresh().catch((reason) => setError(reason instanceof Error ? reason.message : 'Drafts could not be loaded.')) }, [videoId])
 
+  useEffect(() => {
+    if (!drafts.some((draft) => draft.stream.state === 'queued' || draft.stream.state === 'copying')) return
+    const timer = setInterval(() => { void refresh().catch(() => undefined) }, 5_000)
+    return () => clearInterval(timer)
+  }, [videoId, drafts])
+
   async function chooseDrafts(event: React.ChangeEvent<HTMLInputElement>) {
     const files = [...(event.target.files ?? [])].filter((file) => file.size > 0)
     event.target.value = ''

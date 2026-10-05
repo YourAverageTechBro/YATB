@@ -16,6 +16,7 @@ import {
   isTerminalCompressedDownloadState,
   type MediaDerivativeState,
 } from '#/domain/derivatives'
+import { streamStatusLabel } from '#/domain/stream'
 import { addComment, loadComments, removeComment, saveComment } from '#/server/reviews.functions'
 import { emptyRichDocument, type RichDocument } from '#/server/rich-document'
 import { RichDocumentView } from './rich-document-view'
@@ -45,6 +46,7 @@ function milliseconds(value: string): number {
 
 export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootageChanged?: () => void }) {
   const draftMediaUrl = `/api/videos/${draft.videoId}/media/${draft.file.id}`
+  const playerSrc = draft.stream.playbackUrl ?? draftMediaUrl
   const player = useRef<ReviewPlayerHandle>(null)
   const [comments, setComments] = useState<ReviewComment[]>([])
   const [currentMs, setCurrentMs] = useState(0)
@@ -151,8 +153,9 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
 
   return <div className="review-pane">
     <div className="review-player">
-      <ReviewPlayer ref={player} src={draftMediaUrl} durationMs={draft.durationMs} label={`Version ${draft.version}: ${draft.file.displayName}`} markers={markers} onPlayheadChange={setCurrentMs} />
+      <ReviewPlayer ref={player} src={playerSrc} durationMs={draft.durationMs} label={`Version ${draft.version}: ${draft.file.displayName}`} markers={markers} onPlayheadChange={setCurrentMs} />
       <div className="player-state">
+        <p role="status" className="stream-status">{streamStatusLabel(draft.stream.state)}</p>
         <div className="draft-downloads">
           {compactState === 'ready'
             ? <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=compressed`} download={compressedDisplayName(draft.file.displayName)} onClick={(event) => void downloadCompact(event)} aria-label={`Download smaller MP4 for version ${draft.version}: ${draft.file.displayName}`}><Download /> Download smaller MP4</a></Button>

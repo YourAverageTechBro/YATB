@@ -59,6 +59,7 @@
     ]
   },
   "secrets": { "required": ["BETTER_AUTH_SECRET"] },
+  "stream": { "binding": "STREAM" },
   "vars": {
     "APP_ORIGIN": "https://studio.youraveragetechbro.com",
     "EMAIL_MODE": "cloudflare",

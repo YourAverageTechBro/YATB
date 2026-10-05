@@ -7,7 +7,7 @@ An authenticated user uploads immutable edit versions, reviews them with custom 
 - `draft-version` assigns unique increasing task-local versions only after R2 and D1 publication complete.
 - `draft-retry` returns the same draft identity and version after completion retries.
 - `draft-failure` retries transient failures automatically, then exposes an exhausted upload for dismissal without publishing a draft.
-- `draft-playback` supports authenticated media delivery, play and pause, timeline scrubbing, elapsed time, volume, mute, playback speed, and fullscreen.
+- `draft-playback` supports authenticated Stream HLS when the draft is ready, with progressive R2 only as a temporary fallback. Play and pause, timeline scrubbing, elapsed time, volume, mute, playback speed, and fullscreen stay on the custom player.
 - `comment-markers` paints yellow point ticks and range spans on the saved draft timeline. Coincident points share one thicker tick.
 - `draft-download` downloads the selected version through the authenticated media route with its exact filename and bytes.
 - `review-layout` places the player beside a fixed composer and independently
@@ -60,5 +60,5 @@ Preconditions:
 - Duration is captured from browser-native metadata before upload and stored as integer milliseconds.
 - Marker positions use that persisted duration. A browser metadata event must not move saved markers.
 - `--review-comment-marker: #facc15` is the only permitted chromatic declaration in Studio CSS. Both color audits still reject other chromatic literals.
-- R2 does not transcode. A required production export that fails native playback stops the program for a Cloudflare Stream decision.
+- Review playback is Stream HLS after `draft.stream_state = 'ready'`. The original R2 object remains the download and ingest source. Files larger than 30 GB never copy to Stream.
 - Comment attachments are intentionally retained as task footage after the comment is deleted.

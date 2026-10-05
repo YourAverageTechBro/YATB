@@ -13,6 +13,7 @@ import {
 } from '#/domain/reviews'
 import type { RichDocument } from './rich-document'
 import { parseRichDocument } from './rich-document'
+import { draftStreamFromRow } from './stream.server'
 import { ACTIVE_VIDEO_SQL } from './video-sql'
 
 const bindings = env as Cloudflare.Env & { DB: D1Database }
@@ -40,6 +41,8 @@ type DraftRow = {
   user_email: string
   derivative_state: MediaDerivativeState | null
   derivative_byte_size: number | null
+  stream_uid: string | null
+  stream_state: string | null
 }
 
 type CommentRow = {
@@ -98,6 +101,7 @@ function draft(row: DraftRow): Draft {
       state: row.derivative_state ?? 'queued',
       byteSize: row.derivative_byte_size,
     },
+    stream: draftStreamFromRow(row.stream_state, row.stream_uid),
     author: author(row),
     createdAt: row.created_at,
   }
@@ -147,6 +151,7 @@ export async function listDrafts(videoId: string): Promise<Draft[]> {
   if (!(await activeVideo(videoId))) throw new ReviewError(404, 'Video not found.')
   const result = await bindings.DB.prepare(
     `SELECT d.id, d.video_id, d.version, d.duration_ms, d.created_at,
+            d.stream_uid, d.stream_state,
             f.id AS file_id, f.display_name, f.byte_size, f.content_type,
             f.created_at AS file_created_at, f.updated_at AS file_updated_at,
             x.state AS derivative_state, x.byte_size AS derivative_byte_size,

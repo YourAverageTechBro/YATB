@@ -14,6 +14,9 @@ truth for the Worker, its custom domain, bindings, schedule, and observability.
   a one-time operation (`npx wrangler queues create yatb-video-compression
   --cwd apps/studio`); routine deploys must not recreate it.
 - The account has Workers Paid enabled for the `video-transcoder` Container.
+- Cloudflare Stream is enabled on the same account. The Worker binds it as
+  `STREAM` in `wrangler.jsonc`. No API token is required for copy or signed
+  playback tokens. Files larger than 30 GB are not copied and stay on R2.
 - `studio-mail.youraveragetechbro.com` is an active Cloudflare Email Sending
   domain. Its approved sender is `studio@studio-mail.youraveragetechbro.com`.
 - The `AUTH_EMAIL` binding restricts delivery to
@@ -61,8 +64,8 @@ cutover authority to the root for STUDIO-07.
 
 Apply every pending migration before deploying code that expects it. Wrangler
 records applied migrations and creates a D1 backup before each application.
-The media-derivative migration must therefore land before the Worker begins
-serving draft lists or consuming compression jobs.
+The media-derivative and draft-stream migrations must land before the Worker
+begins serving draft lists, compact downloads, or Stream copies.
 
 ```sh
 npm run migrate:studio:production
@@ -76,6 +79,27 @@ build is intentionally redundant and keeps the same command safe for people
 and automation. The custom-domain entry in `wrangler.jsonc` attaches
 `studio.youraveragetechbro.com` and lets Cloudflare own its DNS record and
 certificate.
+
+## Stream webhook and backfill
+
+After the first deploy that includes the Stream binding:
+
+1. Apply migration `0010_draft_stream.sql` with the production migrate command.
+2. In Stream settings, subscribe the webhook to
+   `https://studio.youraveragetechbro.com/api/stream-webhook`.
+3. Store the webhook signing secret as `STREAM_WEBHOOK_SECRET` on `yatb-studio`.
+   Until that secret exists, the webhook route returns `503` and the 15-minute
+   cron polls Stream `details()` instead.
+4. Existing drafts copy on the next cron pass (`stream_state` in
+   `queued` / `failed` / `unavailable`, or `copying` without a UID). No extra
+   backfill job is required. Confirm with
+   `SELECT id, version, stream_state, stream_uid FROM draft`.
+5. Local Vite has no Stream binding. Drafts stay `unavailable` or `queued` and
+   the review player uses authenticated R2 progressive src.
+
+The HMAC ingest route `/api/stream-source/:fileId` is only for Stream’s
+upload-via-link fetch. It is authorized by `BETTER_AUTH_SECRET`, not a session
+cookie. Do not expose a public R2 URL.
 
 ## Verify
 

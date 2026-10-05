@@ -211,33 +211,36 @@ are never presented as one transaction.
 
 ## Playback and review boundary
 
-An authenticated same-origin media route streams R2 content. It implements GET,
-HEAD, valid byte ranges, `206`, `Content-Range`, `Content-Length`,
-`Accept-Ranges`, and invalid-range `416` responses. Unsafe inline types download
-as attachments with `nosniff`.
+R2 remains the private ingest and archive for originals. An authenticated
+same-origin media route streams those objects for download, footage preview,
+and temporary progressive review. It implements GET, HEAD, valid byte ranges,
+`206`, `Content-Range`, `Content-Length`, `Accept-Ranges`, and invalid-range
+`416` responses. Unsafe inline types download as attachments with `nosniff`.
+`?download=1` always returns the original. `?download=compressed` remains the
+separate compact-MP4 derivative path.
 
-Native browser playback supplies scrubbing and speed control for compatible
-MP4 and WebM drafts. Draft originals are immutable and receive increasing
-task-local version numbers. Comments always reference one draft identity.
+Draft review playback uses Cloudflare Stream ABR (HLS) once the copy is ready.
+After a draft publishes, the Worker issues `env.STREAM.upload` against a
+time-limited HMAC ingest URL that streams the private R2 object. Stream videos
+are created with `requireSignedURLs`. The Worker binding mints playback tokens
+without a separate signing key. Safari plays the signed `video.m3u8` natively;
+Chromium uses `hls.js` against the same custom player, so comments still key
+off `currentTime`. Files larger than Stream’s 30 GB upload limit stay on R2
+progressive playback and are marked `oversized`.
+
+A Stream webhook and the existing 15-minute cron both advance `draft.stream_*`
+state. Task cleanup deletes Stream copies before R2 objects and D1 rows.
 
 Clicking a point or range comment seeks its player to the anchor start. The
 comparison route renders the same review component twice in a desktop
 `1fr 1fr` grid. Each pane owns its player, rate, comments, and composer. The
 parent owns only the selected draft ids.
 
-Cloudflare Stream is not part of the initial architecture. R2 does not
-transcode. A Queue consumer streams eligible draft originals from private R2
+A Queue consumer still streams eligible draft originals from private R2
 through one Worker-owned FFmpeg Container, then stores a versioned compact MP4
-as a separate R2 object. D1 owns the retryable derivative state; the original
-upload, draft, and `?download=1` route remain unchanged. The compact object is
-published only when it is smaller than the source. Jobs are bounded to 3 GiB
-and 12 minutes, retried at most four times, reconciled by the existing cron,
-and deleted with their task. The authenticated media route gives ready
-derivatives the same GET, HEAD, and single-range behavior as originals.
-
-Cloudflare Stream remains outside this architecture. Browser-incompatible
-playback formats may still justify Stream later, while these disposable
-download derivatives continue to preserve R2 originals.
+as a separate R2 object. That path is only for smaller downloads. D1 owns the
+retryable derivative state; the original upload, draft, and `?download=1`
+route remain unchanged.
 
 ## Verification contract
 
@@ -259,8 +262,8 @@ for Stream when real formats require transcoding. Candidate 3 contributes the
 separate Worker boundary and restraint around unused Cloudflare products.
 
 The selected shape uses Worker-mediated R2 multipart upload instead of a whole
-file request or browser-visible S3 signer. It defers Stream until fixtures prove
-the need. It keeps saved views because the product explicitly asks users to
+file request or browser-visible S3 signer. Draft review now uses Stream ABR
+after an explicit product decision. It keeps saved views because the product explicitly asks users to
 modify views, but it makes them per-user and single-workspace.
 
 ## Alternatives rejected

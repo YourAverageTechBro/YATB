@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppFilesRouteImport } from './routes/_app.files'
 import { Route as AppVideosRouteImport } from './routes/_app.videos'
+import { Route as ApiStreamWebhookRouteImport } from './routes/api.stream-webhook'
 import { Route as SharedFilesTokenRouteImport } from './routes/shared-files.$token'
 import { Route as AppVideosVideoIdRouteImport } from './routes/_app.videos_.$videoId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
 import { Route as ApiSharedFilesTokenRouteImport } from './routes/api.shared-files.$token'
+import { Route as ApiStreamSourceFileIdRouteImport } from './routes/api.stream-source.$fileId'
 import { Route as AppVideosVideoIdCompareRouteImport } from './routes/_app.videos_.$videoId_.compare'
 import { Route as ApiVideosVideoIdMediaRouteImport } from './routes/api.videos.$videoId.media'
 import { Route as ApiVideosVideoIdUploadsRouteImport } from './routes/api.videos.$videoId.uploads'
@@ -44,6 +46,11 @@ const AppVideosRoute = AppVideosRouteImport.update({
   path: '/videos',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiStreamWebhookRoute = ApiStreamWebhookRouteImport.update({
+  id: '/api/stream-webhook',
+  path: '/api/stream-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SharedFilesTokenRoute = SharedFilesTokenRouteImport.update({
   id: '/shared-files/$token',
   path: '/shared-files/$token',
@@ -62,6 +69,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 const ApiSharedFilesTokenRoute = ApiSharedFilesTokenRouteImport.update({
   id: '/api/shared-files/$token',
   path: '/api/shared-files/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStreamSourceFileIdRoute = ApiStreamSourceFileIdRouteImport.update({
+  id: '/api/stream-source/$fileId',
+  path: '/api/stream-source/$fileId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppVideosVideoIdCompareRoute = AppVideosVideoIdCompareRouteImport.update({
@@ -108,10 +120,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/files': typeof AppFilesRoute
   '/videos': typeof AppVideosRoute
+  '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
   '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shared-files/$token': typeof ApiSharedFilesTokenRoute
+  '/api/stream-source/$fileId': typeof ApiStreamSourceFileIdRoute
   '/videos/$videoId/compare': typeof AppVideosVideoIdCompareRoute
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
@@ -124,10 +138,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/files': typeof AppFilesRoute
   '/videos': typeof AppVideosRoute
+  '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
   '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shared-files/$token': typeof ApiSharedFilesTokenRoute
+  '/api/stream-source/$fileId': typeof ApiStreamSourceFileIdRoute
   '/videos/$videoId/compare': typeof AppVideosVideoIdCompareRoute
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
@@ -142,10 +158,12 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_app/files': typeof AppFilesRoute
   '/_app/videos': typeof AppVideosRoute
+  '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
   '/_app/videos_/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shared-files/$token': typeof ApiSharedFilesTokenRoute
+  '/api/stream-source/$fileId': typeof ApiStreamSourceFileIdRoute
   '/_app/videos_/$videoId_/compare': typeof AppVideosVideoIdCompareRoute
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
@@ -160,10 +178,12 @@ export interface FileRouteTypes {
     | '/'
     | '/files'
     | '/videos'
+    | '/api/stream-webhook'
     | '/shared-files/$token'
     | '/videos/$videoId'
     | '/api/auth/$'
     | '/api/shared-files/$token'
+    | '/api/stream-source/$fileId'
     | '/videos/$videoId/compare'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
@@ -176,10 +196,12 @@ export interface FileRouteTypes {
     | '/'
     | '/files'
     | '/videos'
+    | '/api/stream-webhook'
     | '/shared-files/$token'
     | '/videos/$videoId'
     | '/api/auth/$'
     | '/api/shared-files/$token'
+    | '/api/stream-source/$fileId'
     | '/videos/$videoId/compare'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
@@ -193,10 +215,12 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_app/files'
     | '/_app/videos'
+    | '/api/stream-webhook'
     | '/shared-files/$token'
     | '/_app/videos_/$videoId'
     | '/api/auth/$'
     | '/api/shared-files/$token'
+    | '/api/stream-source/$fileId'
     | '/_app/videos_/$videoId_/compare'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
@@ -209,9 +233,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  ApiStreamWebhookRoute: typeof ApiStreamWebhookRoute
   SharedFilesTokenRoute: typeof SharedFilesTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiSharedFilesTokenRoute: typeof ApiSharedFilesTokenRoute
+  ApiStreamSourceFileIdRoute: typeof ApiStreamSourceFileIdRoute
   ApiVideosVideoIdMediaRoute: typeof ApiVideosVideoIdMediaRouteWithChildren
   ApiVideosVideoIdUploadsRoute: typeof ApiVideosVideoIdUploadsRouteWithChildren
 }
@@ -246,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVideosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/stream-webhook': {
+      id: '/api/stream-webhook'
+      path: '/api/stream-webhook'
+      fullPath: '/api/stream-webhook'
+      preLoaderRoute: typeof ApiStreamWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shared-files/$token': {
       id: '/shared-files/$token'
       path: '/shared-files/$token'
@@ -272,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/api/shared-files/$token'
       fullPath: '/api/shared-files/$token'
       preLoaderRoute: typeof ApiSharedFilesTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stream-source/$fileId': {
+      id: '/api/stream-source/$fileId'
+      path: '/api/stream-source/$fileId'
+      fullPath: '/api/stream-source/$fileId'
+      preLoaderRoute: typeof ApiStreamSourceFileIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/videos_/$videoId_/compare': {
@@ -391,21 +431,14 @@ const ApiVideosVideoIdUploadsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  ApiStreamWebhookRoute: ApiStreamWebhookRoute,
   SharedFilesTokenRoute: SharedFilesTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiSharedFilesTokenRoute: ApiSharedFilesTokenRoute,
+  ApiStreamSourceFileIdRoute: ApiStreamSourceFileIdRoute,
   ApiVideosVideoIdMediaRoute: ApiVideosVideoIdMediaRouteWithChildren,
   ApiVideosVideoIdUploadsRoute: ApiVideosVideoIdUploadsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

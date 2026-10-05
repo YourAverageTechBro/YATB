@@ -1,3 +1,4 @@
+import Hls from 'hls.js'
 import { Maximize, Minimize, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react'
 import { forwardRef, useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import { Button } from '@yatb/ui/button'
@@ -41,6 +42,12 @@ export function intrinsicVideoGeometry(width: number, height: number): VideoGeom
   const aspectRatio = intrinsicAspectRatio(width, height)
   if (aspectRatio === undefined) return undefined
   return { aspectRatio, orientation: aspectRatio < 1 ? 'portrait' : 'landscape' }
+}
+
+export function usesNativeVideoSrc(src: string): boolean {
+  if (!src.includes('.m3u8')) return true
+  if (typeof document === 'undefined') return false
+  return document.createElement('video').canPlayType('application/vnd.apple.mpegurl') !== ''
 }
 
 export function clampPlayheadMs(milliseconds: number, durationMs: number): number {
@@ -111,6 +118,18 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
 
   useEffect(() => setGeometry(undefined), [src])
 
+  useEffect(() => {
+    const media = video.current
+    if (!media || !src.includes('.m3u8')) return
+    if (media.canPlayType('application/vnd.apple.mpegurl')) return
+    if (!Hls.isSupported()) return
+    const hls = new Hls()
+    hls.loadSource(src)
+    hls.attachMedia(media)
+    hls.on(Hls.Events.ERROR, () => synchronize())
+    return () => hls.destroy()
+  }, [src])
+
   function seekTo(milliseconds: number) {
     const media = video.current
     if (!media || media.readyState < 1 || media.error || duration === 0) return
@@ -165,7 +184,7 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
   const playerStyle: PlayerStyle = geometry === undefined ? {} : { '--review-video-aspect-ratio': geometry.aspectRatio }
 
   return <section className="custom-player" data-video-orientation={geometry?.orientation ?? 'landscape'} ref={container} style={playerStyle} aria-label={label} tabIndex={0} onKeyDown={shortcut}>
-    <video ref={video} src={src} preload="metadata" playsInline tabIndex={-1} aria-label={label}
+    <video ref={video} data-playback-src={src} src={usesNativeVideoSrc(src) ? src : undefined} preload="metadata" playsInline tabIndex={-1} aria-label={label}
       onClick={() => void togglePlayback()} onLoadedMetadata={(event) => { setGeometry(intrinsicVideoGeometry(event.currentTarget.videoWidth, event.currentTarget.videoHeight)); synchronize() }} onDurationChange={synchronize}
       onPlay={synchronize} onPause={synchronize} onEnded={synchronize} onTimeUpdate={synchronize}
       onVolumeChange={synchronize} onRateChange={synchronize} onError={synchronize} onEmptied={synchronize} />

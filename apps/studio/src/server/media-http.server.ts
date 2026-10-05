@@ -25,6 +25,7 @@ import {
 } from './media.server'
 import { compressedDisplayName, compressedDownloadHttpStatus, type MediaDerivativeState } from '#/domain/derivatives'
 import { getStoredDerivative } from './compression.server'
+import { handleStreamWebhook, readStreamSource } from './stream.server'
 
 const bindings = env as Cloudflare.Env & { MEDIA: R2Bucket }
 
@@ -222,6 +223,17 @@ export function handleSharedMediaRead(request: Request, tokenValue: string): Pro
     const { stored } = await getSharedFile(token)
     return streamOriginalMedia(request, stored, true)
   })
+}
+
+export function handleStreamSource(request: Request, fileIdValue: string): Promise<Response> {
+  return run(async () => {
+    const url = new URL(request.url)
+    return readStreamSource(fileIdValue, url.searchParams.get('exp'), url.searchParams.get('mac'), request)
+  })
+}
+
+export function handleStreamWebhookRequest(request: Request): Promise<Response> {
+  return run(async () => handleStreamWebhook(request))
 }
 
 export function handleMediaRead(

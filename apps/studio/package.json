@@ -23,6 +23,7 @@
     "@tanstack/react-start": "1.168.52",
     "@yatb/ui": "*",
     "better-auth": "1.7.4",
+    "hls.js": "^1.7.3",
     "lucide-react": "^0.479.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
