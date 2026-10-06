@@ -126,3 +126,16 @@ export const removeSavedView = createServerFn({ method: 'POST' })
     const session = await mutationSession()
     return (await import('./videos.server')).deleteSavedView(session.user.id, data)
   })
+
+export const loadDefaultVideoView = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    const session = await readSession()
+    return (await import('./videos.server')).defaultVideoView(session.user.id)
+  })
+
+export const setDefaultSavedView = createServerFn({ method: 'POST' })
+  .validator((id: string | null) => id === null ? null : parseSavedViewId(id))
+  .handler(async ({ data }) => {
+    const session = await mutationSession()
+    await (await import('./videos.server')).setDefaultSavedView(session.user.id, data)
+  })

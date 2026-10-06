@@ -1,6 +1,7 @@
 import '@tanstack/react-start/server-only'
 import { env } from 'cloudflare:workers'
 import {
+  DEFAULT_LIST_CONFIG,
   failedSave,
   parseListConfig,
   parseProduction,
@@ -29,6 +30,7 @@ import {
   ACTIVE_VIDEO_SQL,
   CREATE_VIDEO_SQL,
   UPDATE_VIDEO_SQL,
+  SET_DEFAULT_SAVED_VIEW_SQL,
   calendarVideosSql,
   organicVideoOptionsSql,
   statusFilterSql,
@@ -123,6 +125,7 @@ function parseSavedViewRow(value: unknown): SavedView {
   return {
     id: parseSavedViewId(row.id),
     name: parseSavedViewName(row.name),
+    isDefault: number(row.is_default, 'default saved view') === 1,
     config: parseListConfig({
       layout: row.layout,
       groupBy: row.group_by,
@@ -314,8 +317,10 @@ export async function deleteVideo(
 
 export async function listSavedViews(ownerUserId: string): Promise<SavedView[]> {
   const result = await bindings.DB.prepare(
-    `SELECT id, name, layout, group_by, status_filter, format_filter, sort, created_at, updated_at
-     FROM saved_view WHERE owner_user_id = ? ORDER BY updated_at DESC, id ASC`,
+    `SELECT saved_view.*, (preference.default_saved_view_id = saved_view.id) IS TRUE AS is_default
+     FROM saved_view LEFT JOIN user_video_preference AS preference
+       ON preference.owner_user_id = saved_view.owner_user_id
+     WHERE saved_view.owner_user_id = ? ORDER BY updated_at DESC, id ASC`,
   ).bind(ownerUserId).all<unknown>()
   return result.results.map(parseSavedViewRow)
 }
@@ -333,7 +338,7 @@ export async function createSavedView(
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(id, ownerUserId, name, config.layout, config.groupBy, JSON.stringify(config.status), config.format, config.sort, now, now).run()
   const row = await bindings.DB.prepare(
-    `SELECT id, name, layout, group_by, status_filter, format_filter, sort, created_at, updated_at
+    `SELECT id, name, layout, group_by, status_filter, format_filter, sort, created_at, updated_at, 0 AS is_default
      FROM saved_view WHERE id = ? AND owner_user_id = ?`,
   ).bind(id, ownerUserId).first<unknown>()
   if (row === null) throw new Error('Saved view could not be loaded.')
@@ -345,6 +350,28 @@ export async function deleteSavedView(ownerUserId: string, id: SavedViewId): Pro
     'DELETE FROM saved_view WHERE id = ? AND owner_user_id = ?',
   ).bind(id, ownerUserId).run()
   return result.meta.changes === 1
+}
+
+export async function defaultVideoView(ownerUserId: string): Promise<VideoListConfig> {
+  const row = await bindings.DB.prepare(
+    `SELECT saved_view.*, 1 AS is_default FROM saved_view
+     JOIN user_video_preference AS preference
+       ON preference.owner_user_id = saved_view.owner_user_id
+       AND preference.default_saved_view_id = saved_view.id
+     WHERE preference.owner_user_id = ?`,
+  ).bind(ownerUserId).first<unknown>()
+  return row === null ? DEFAULT_LIST_CONFIG : parseSavedViewRow(row).config
+}
+
+export async function setDefaultSavedView(ownerUserId: string, id: SavedViewId | null): Promise<void> {
+  if (id === null) {
+    await bindings.DB.prepare('DELETE FROM user_video_preference WHERE owner_user_id = ?').bind(ownerUserId).run()
+    return
+  }
+  const result = await bindings.DB.prepare(
+    SET_DEFAULT_SAVED_VIEW_SQL,
+  ).bind(ownerUserId, id).run()
+  if (result.meta.changes !== 1) throw new Error('Saved view was not found.')
 }
 
 export function parseCreateVideoInput(value: unknown): CreateVideoInput {

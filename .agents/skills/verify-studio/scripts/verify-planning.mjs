@@ -266,11 +266,45 @@ assert(
   savedView?.status_filter === '["filming","ready-to-review"]',
   'Saved view did not persist the status selection as a JSON array',
 )
+const previousDefault = db.prepare('SELECT default_saved_view_id FROM user_video_preference WHERE owner_user_id = ?').get(savedView.owner_user_id)
+
+async function assertLoginDestination(sessionCookie, expected) {
+  const response = await fetch(`${baseUrl}/`, { headers: { Cookie: sessionCookie }, redirect: 'manual' })
+  assert(response.status === 307, `Authenticated login page returned ${response.status}`)
+  const location = new URL(response.headers.get('location'), baseUrl)
+  assert(location.pathname === '/videos', 'Login did not redirect to videos')
+  const selected = JSON.parse(location.searchParams.get('status'))
+  assert(JSON.stringify(selected) === JSON.stringify(expected.status), `Login restored the wrong statuses: ${JSON.stringify(selected)}`)
+  for (const field of ['layout', 'groupBy', 'format', 'sort']) {
+    assert(location.searchParams.get(field) === expected[field], `Login restored the wrong ${field}`)
+  }
+}
+
+const standardView = { layout: 'list', groupBy: 'none', status: ['not-started', 'filming', 'ready-to-edit', 'ready-to-review', 'published'], format: 'all', sort: 'updated-desc' }
+const defaultBoard = { layout: 'board', groupBy: 'status', status: ['filming', 'ready-to-review'], format: 'long', sort: 'publish-date-asc' }
+await callServerFunction(ids, cookie, 'setDefaultSavedView', savedView.id)
+assert(db.prepare('SELECT default_saved_view_id FROM user_video_preference WHERE owner_user_id = ?').get(savedView.owner_user_id)?.default_saved_view_id === savedView.id, 'Default view did not persist')
+await assertLoginDestination(await signIn(email, password), defaultBoard)
+const defaultPage = await fetch(`${baseUrl}/videos`, { headers: { Cookie: cookie } })
+assert((await defaultPage.text()).includes(`Clear default ${viewName}`), 'Default saved view was not marked in the UI')
 const secondCookie = await signIn(secondEmail, secondPassword)
 const secondPage = await fetch(`${baseUrl}/videos`, { headers: { Cookie: secondCookie } })
 const secondHtml = await secondPage.text()
 assert(secondPage.ok, `Second user's planning page returned ${secondPage.status}`)
 assert(!secondHtml.includes(viewName), 'Saved view leaked into another user session')
+await callServerFunction(ids, secondCookie, 'setDefaultSavedView', savedView.id, 'Saved view was not found')
+assert(db.prepare('SELECT default_saved_view_id FROM user_video_preference WHERE owner_user_id = ?').get(savedView.owner_user_id)?.default_saved_view_id === savedView.id, 'Foreign mutation changed the owner default')
+
+await callServerFunction(ids, cookie, 'createSavedView', { name: `${run} alternate default`, config: { ...standardView, status: ['published'], sort: 'title-asc' } })
+const alternate = db.prepare('SELECT id FROM saved_view WHERE owner_user_id = ? AND name = ?').get(savedView.owner_user_id, `${run} alternate default`)
+await callServerFunction(ids, cookie, 'setDefaultSavedView', alternate.id)
+await assertLoginDestination(cookie, { ...standardView, status: ['published'], sort: 'title-asc' })
+await callServerFunction(ids, cookie, 'setDefaultSavedView', null)
+await assertLoginDestination(cookie, standardView)
+await callServerFunction(ids, cookie, 'setDefaultSavedView', alternate.id)
+await callServerFunction(ids, cookie, 'removeSavedView', alternate.id)
+await assertLoginDestination(cookie, standardView)
+if (previousDefault) await callServerFunction(ids, cookie, 'setDefaultSavedView', previousDefault.default_saved_view_id)
 
 const boardUrl = new URL('/videos', baseUrl)
 boardUrl.search = new URLSearchParams({
@@ -308,6 +342,7 @@ console.log('optimistic_conflict=true final_revision=7')
 console.log('all_statuses_persisted=true')
 console.log('saved_view_owner_scoped=true second_user_does_not_inherit=true')
 console.log('status_multiselect_saved=true filtered_board_union_rendered=true')
+console.log('default_view_persisted=true login_restored=true default_switched=true default_cleared=true deleted_default_fallback=true foreign_default_rejected=true')
 console.log('tombstone_written=true deleted_direct_status=404')
 
 db.close()

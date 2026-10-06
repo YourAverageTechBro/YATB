@@ -1,6 +1,9 @@
 import { VIDEO_STATUSES, type VideoStatusFilter } from '#/domain/videos'
 
 export const ACTIVE_VIDEO_SQL = 'deleted_at IS NULL'
+export const SET_DEFAULT_SAVED_VIEW_SQL = `INSERT INTO user_video_preference (owner_user_id, default_saved_view_id)
+SELECT owner_user_id, id FROM saved_view WHERE owner_user_id = ? AND id = ?
+ON CONFLICT(owner_user_id) DO UPDATE SET default_saved_view_id = excluded.default_saved_view_id`
 export const ORGANIC_LONG_VIDEO_SQL = `${ACTIVE_VIDEO_SQL} AND format = 'long' AND promotion = 'organic'`
 
 export function organicVideoOptionsSql(excludeCurrent: boolean): string {

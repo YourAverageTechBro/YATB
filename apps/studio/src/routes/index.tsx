@@ -18,7 +18,7 @@ import {
   parseAuthSearch,
   shouldShowEmailVerifiedConfirmation,
 } from '#/domain/auth'
-import { DEFAULT_LIST_CONFIG } from '#/domain/videos'
+import { loadDefaultVideoView } from '#/server/videos.functions'
 
 type Mode = 'sign-in' | 'sign-up' | 'forgot' | 'reset'
 
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/')({
   validateSearch: (search: Record<string, unknown> & SearchSchemaInput) =>
     parseAuthSearch(search),
   beforeLoad: async () => {
-    if (await loadSession()) throw redirect({ to: '/videos', search: DEFAULT_LIST_CONFIG })
+    if (await loadSession()) throw redirect({ to: '/videos', search: await loadDefaultVideoView() })
   },
   component: Login,
 })
@@ -76,14 +76,14 @@ function Login() {
 
     const result = mode === 'sign-up'
       ? await authClient.signUp.email({ email, password, name, callbackURL: '/?verified=1' })
-      : await authClient.signIn.email({ email, password, callbackURL: '/videos' })
+      : await authClient.signIn.email({ email, password, callbackURL: '/' })
 
     if (result.error) {
       setMessage(result.error.message ?? 'Unable to continue.')
     } else if (mode === 'sign-up') {
       setMessage('Check your email to verify your account.')
     } else {
-      await navigate({ to: '/videos', search: DEFAULT_LIST_CONFIG })
+      await navigate({ to: '/videos', search: await loadDefaultVideoView() })
     }
     setBusy(false)
   }
