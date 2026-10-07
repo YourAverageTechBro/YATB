@@ -39,13 +39,17 @@ describe('Chromium HLS attach', () => {
     expect(destroy).toHaveBeenCalledOnce()
   })
 
-  it('does not attach hls.js for progressive R2 or native HLS', () => {
+  it('does not attach hls.js for progressive R2', () => {
     const r2 = { canPlayType: () => '' } as unknown as HTMLVideoElement
     attachAdaptivePlayback(r2, '/api/videos/video-1/media/file-1', () => undefined)
-    const safari = { canPlayType: (type: string) => type.includes('mpegurl') ? 'probably' : '' } as unknown as HTMLVideoElement
-    attachAdaptivePlayback(safari, 'https://customer-test.cloudflarestream.com/tok/manifest/video.m3u8', () => undefined)
     expect(loadSource).not.toHaveBeenCalled()
     expect(usesNativeVideoSrc('/api/videos/video-1/media/file-1')).toBe(true)
+  })
+
+  it('attaches hls.js even when canPlayType claims native HLS', () => {
+    const safari = { canPlayType: (type: string) => type.includes('mpegurl') ? 'probably' : '' } as unknown as HTMLVideoElement
+    attachAdaptivePlayback(safari, 'https://customer-test.cloudflarestream.com/tok/manifest/video.m3u8', () => undefined)
+    expect(loadSource).toHaveBeenCalledOnce()
   })
 
   it('ignores non-fatal hls.js errors and fails closed without a fallback', () => {

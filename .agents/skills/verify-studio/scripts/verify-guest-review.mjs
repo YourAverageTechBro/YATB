@@ -131,6 +131,13 @@ assert(page.headers.get('referrer-policy') === 'strict-origin', `Guest page Refe
 assert(pageText.includes('Draft version') && pageText.includes('Version 1: guest-v1.mp4'), 'Guest page did not name version 1')
 assert(!pageText.includes('guest-v2.mp4'), 'Guest page showed a later draft')
 assert(pageText.includes(`data-fallback-src="/api/shared-reviews/${share.token}"`), 'Guest page omitted progressive media fallback')
+  if (pageText.includes('data-playback-src=') && pageText.includes('.m3u8')) {
+    assert(
+      /<video[^>]*\ssrc="\/api\/shared-reviews\/[^"]+"/.test(pageText)
+      || pageText.includes(`src="/api/shared-reviews/${share.token}"`),
+      'Stream-ready guest page rendered HLS without a progressive video src',
+    )
+  }
 assert(!/Download (original|smaller|file|version)/.test(pageText), 'Guest page exposed a download control')
 
 const mediaUrl = `${base}/api/shared-reviews/${share.token}`

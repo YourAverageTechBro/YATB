@@ -66,9 +66,9 @@ describe('draft review pane', () => {
     }))
     expect(markup).toContain('data-playback-src="https://customer-test.cloudflarestream.com/token/manifest/video.m3u8"')
     expect(markup).toContain('data-fallback-src="/api/videos/video-1/media/file-1"')
+    expect(markup).toMatch(/<video[^>]*\ssrc="\/api\/videos\/video-1\/media\/file-1"/)
     expect(markup).toContain('Adaptive stream is ready.')
     expect(markup).toContain('href="/api/videos/video-1/media/file-1?download=1"')
-    expect(markup).not.toMatch(/<video[^>]*\ssrc="\/api\/videos\/video-1\/media\/file-1"/)
   })
 
   it('keeps the original available while the smaller MP4 is processing', () => {
