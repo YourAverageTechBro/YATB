@@ -238,7 +238,6 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .review-comment form { display: grid; gap: 10px; }
 .review-comment header .badge { margin-left: 8px; }
 .guest-reply { margin-left: 12px; padding-left: 12px; border-left: 2px solid var(--border); }
-.guest-comment-input { min-height: 110px; width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--background); color: var(--foreground); }
 .guest-review-page .review-pane { margin-top: 22px; }
 .guest-review-page .draft-downloads { display: none; }
 .rich-document-view { line-height: 1.55; overflow-wrap: anywhere; }

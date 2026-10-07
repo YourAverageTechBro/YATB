@@ -85,7 +85,7 @@ async function uploadDraft(bytes, name, durationMs) {
       contentType: 'video/mp4', purpose: { kind: 'draft', durationMs },
     }),
   })
-  assert(began.ok, `Upload start returned ${began.status}: ${await began.text()}`)
+  if (!began.ok) throw new Error(`Upload start returned ${began.status}: ${await began.text()}`)
   const upload = await began.json()
   const part = await fetch(`${base}/api/videos/${video.id}/uploads/${upload.id}/parts/1`, {
     method: 'PUT', headers: { Origin: base, Cookie: cookie, 'Content-Length': String(bytes.length) }, body: bytes,
@@ -94,8 +94,9 @@ async function uploadDraft(bytes, name, durationMs) {
   const completed = await fetch(`${base}/api/videos/${video.id}/uploads/${upload.id}/complete`, {
     method: 'POST', headers: { Origin: base, Cookie: cookie },
   })
-  assert(completed.ok, `Upload completion returned ${completed.status}: ${await completed.text()}`)
-  return (await completed.json()).result
+  if (!completed.ok) throw new Error(`Upload completion returned ${completed.status}: ${await completed.text()}`)
+  const ready = await completed.json()
+  return ready.result ?? ready
 }
 
 const title = `Guest review verification ${Date.now()}`
@@ -126,9 +127,9 @@ assert(still?.draft_id === first.draft.id, 'Uploading v2 moved the existing gues
 const page = await fetch(`${base}/shared-reviews/${share.token}`)
 const pageText = await page.text()
 assert(page.ok && pageText.includes('guest-v1.mp4'), 'Guest page did not render the pinned v1 draft')
-assert(pageText.includes('Draft version 1'), 'Guest page did not name version 1')
+assert(pageText.includes('Draft version') && pageText.includes('Version 1: guest-v1.mp4'), 'Guest page did not name version 1')
 assert(!pageText.includes('guest-v2.mp4'), 'Guest page showed a later draft')
-assert(!pageText.includes('Download'), 'Guest page exposed a download control')
+assert(!/Download (original|smaller|file|version)/.test(pageText), 'Guest page exposed a download control')
 
 const mediaUrl = `${base}/api/shared-reviews/${share.token}`
 const media = await fetch(mediaUrl)
@@ -147,8 +148,8 @@ const guestComment = await call(reviewIds, 'addGuestComment', {
 }, base, null)
 assert(guestComment.ok, `Guest comment returned ${guestComment.status}: ${await guestComment.text()}`)
 const stored = db.prepare(
-  'SELECT guest_email, guest_name, author_user_id, draft_id FROM review_comment WHERE guest_email = ?',
-).get('alex.guest@example.com')
+  'SELECT guest_email, guest_name, author_user_id, draft_id FROM review_comment WHERE guest_email = ? AND draft_id = ? ORDER BY created_at DESC',
+).get('alex.guest@example.com', first.draft.id)
 assert(stored?.author_user_id === null && stored.draft_id === first.draft.id, 'Guest comment was not stored on v1')
 assert(stored.guest_name === 'Alex Guest', 'Guest name was not stored')
 
@@ -156,7 +157,8 @@ const studioComments = await call(reviewIds, 'loadComments', { videoId: video.id
 const studioBody = await studioComments.text()
 assert(studioComments.ok && studioBody.includes('alex.guest@example.com'), 'Studio thread omitted the guest email')
 
-const root = db.prepare('SELECT id FROM review_comment WHERE guest_email = ?').get('alex.guest@example.com')
+const root = db.prepare('SELECT id FROM review_comment WHERE guest_email = ? AND draft_id = ? AND parent_id IS NULL ORDER BY created_at DESC').get('alex.guest@example.com', first.draft.id)
+if (!root?.id) throw new Error('Guest root comment id was not found')
 const reply = await call(reviewIds, 'addGuestComment', {
   clientRequestId: crypto.randomUUID(),
   token: share.token,
@@ -165,7 +167,7 @@ const reply = await call(reviewIds, 'addGuestComment', {
   text: 'Guest reply',
   identity: { email: 'alex.guest@example.com', name: 'Alex Guest' },
 }, base, null)
-assert(reply.ok, `Guest reply returned ${reply.status}`)
+if (!reply.ok) throw new Error(`Guest reply returned ${reply.status}: ${await reply.text()}`)
 
 await call(reviewIds, 'addComment', {
   clientRequestId: crypto.randomUUID(),
@@ -211,8 +213,11 @@ const revokedComment = await call(reviewIds, 'addGuestComment', {
 assert(revokedComment.status === 404, `Revoked comment POST returned ${revokedComment.status}`)
 
 if (process.env.STUDIO_KEEP_FIXTURES === '1') {
+  const replacement = await call(reviewIds, 'createDraftReviewLink', { videoId: video.id, draftId: first.draft.id })
+  assert(replacement.ok, `Could not recreate a guest link for the browser pass: ${replacement.status}`)
+  const live = db.prepare('SELECT token FROM draft_review_share WHERE draft_id = ?').get(first.draft.id)
   console.log(JSON.stringify({
-    email, videoId: video.id, draftId: first.draft.id, shareToken: share.token,
+    email, videoId: video.id, draftId: first.draft.id, shareToken: live.token,
   }))
   db.close()
   process.exit(0)

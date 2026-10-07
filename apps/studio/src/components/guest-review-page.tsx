@@ -5,6 +5,7 @@ import { Button } from '@yatb/ui/button'
 import { Card } from '@yatb/ui/card'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
+import { Textarea } from '@yatb/ui/textarea'
 import { ScrollArea } from '@yatb/ui/scroll-area'
 import { ThemeControl } from '#/components/theme-control'
 import { ReviewPlayer, type ReviewPlayerHandle } from '#/components/review-player'
@@ -171,7 +172,7 @@ function GuestReviewWorkspace({
               : <form onSubmit={(event) => { event.preventDefault(); void submit(null, text) }}>
                 <p className="shared-file-context">Commenting as {identity.name ? `${identity.name} · ` : ''}{identity.email}</p>
                 <Label>Timestamp<Input value={(currentMs / 1000).toFixed(3)} readOnly /></Label>
-                <Label>Review comment<textarea className="guest-comment-input" value={text} onChange={(event) => setText(event.target.value)} required maxLength={4000} /></Label>
+                <Label>Review comment<Textarea value={text} onChange={(event) => setText(event.target.value)} required maxLength={4000} /></Label>
                 {error && <p role="alert" className="dialog-error">{error}</p>}
                 <Button type="submit" disabled={saving}><MessageSquare /> {saving ? 'Saving…' : 'Add comment'}</Button>
               </form>}
@@ -230,7 +231,7 @@ function GuestThread({
     {replies.map((reply) => <div key={reply.id} className="guest-reply"><GuestCommentBody comment={reply} onSeek={() => onSeek(reply.anchor)} /></div>)}
     {canReply && (replyOpen
       ? <form onSubmit={(event) => { event.preventDefault(); onReply() }}>
-        <Label>Reply<textarea className="guest-comment-input" value={replyText} onChange={(event) => onReplyText(event.target.value)} required maxLength={4000} /></Label>
+        <Label>Reply<Textarea value={replyText} onChange={(event) => onReplyText(event.target.value)} required maxLength={4000} /></Label>
         <Button type="submit" disabled={saving}>Add reply</Button>
       </form>
       : <Button variant="ghost" size="sm" onClick={onReplyOpen}>Reply</Button>)}

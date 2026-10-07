@@ -21,6 +21,7 @@
     "./sheet": "./src/components/sheet.tsx",
     "./sidebar": "./src/components/sidebar.tsx",
     "./slider": "./src/components/slider.tsx",
+    "./textarea": "./src/components/textarea.tsx",
     "./skeleton": "./src/components/skeleton.tsx",
     "./tooltip": "./src/components/tooltip.tsx",
     "./styles.css": "./src/styles.css"
