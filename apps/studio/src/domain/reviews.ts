@@ -3,6 +3,8 @@ import { parseRevision, parseVideoId, type VideoId } from './videos'
 import { parseRichDocument, type RichDocument } from '../server/rich-document'
 import type { MediaDerivative } from './derivatives'
 import type { DraftStream } from './stream'
+import { normalizeEmail } from './auth'
+import { parseShareToken } from './file-library'
 
 export type DraftId = string
 export type ReviewCommentId = string
@@ -21,6 +23,7 @@ export type ReviewAuthor = Readonly<{
   id: string
   name: string
   email: string
+  guest?: boolean
 }>
 
 export type Draft = Readonly<{
@@ -33,6 +36,7 @@ export type Draft = Readonly<{
   stream: DraftStream
   author: ReviewAuthor
   createdAt: number
+  shareToken: string | null
 }>
 
 export type ComparisonModel = Readonly<{
@@ -48,6 +52,8 @@ export type ReviewComment = Readonly<{
   id: ReviewCommentId
   videoId: VideoId
   draftId: DraftId
+  parentId: ReviewCommentId | null
+  resolvedAt: number | null
   anchor: ReviewAnchor
   body: RichDocument
   revision: number
@@ -57,13 +63,39 @@ export type ReviewComment = Readonly<{
   updatedAt: number
 }>
 
+export type ReviewThread = Readonly<{
+  root: ReviewComment
+  replies: readonly ReviewComment[]
+}>
+
 export type CreateReviewComment = Readonly<{
   clientRequestId: ReviewCommentId
   videoId: VideoId
   draftId: DraftId
+  parentId: ReviewCommentId | null
   anchor: ReviewAnchor
   body: RichDocument
   attachmentIds: readonly string[]
+}>
+
+export type GuestIdentity = Readonly<{
+  email: string
+  name: string | null
+}>
+
+export type CreateGuestReviewComment = Readonly<{
+  clientRequestId: ReviewCommentId
+  token: string
+  parentId: ReviewCommentId | null
+  anchor: ReviewAnchor
+  text: string
+  identity: GuestIdentity
+}>
+
+export type ResolveReviewComment = Readonly<{
+  videoId: VideoId
+  id: ReviewCommentId
+  expectedRevision: number
 }>
 
 export type EditReviewComment = Readonly<{
@@ -151,6 +183,21 @@ export function reviewPlaybackSrc(draft: Draft): string {
   return draft.stream.playbackUrl ?? `/api/videos/${draft.videoId}/media/${draft.file.id}`
 }
 
+export function guestReviewPlaybackSrc(token: string, draft: Draft): string {
+  return draft.stream.playbackUrl ?? `/api/shared-reviews/${token}`
+}
+
+export function commentThreads(comments: readonly ReviewComment[]): ReviewThread[] {
+  const replies = new Map<string, ReviewComment[]>()
+  for (const comment of comments) {
+    if (!comment.parentId) continue
+    replies.set(comment.parentId, [...(replies.get(comment.parentId) ?? []), comment])
+  }
+  return comments
+    .filter((comment) => !comment.parentId)
+    .map((root) => ({ root, replies: replies.get(root.id) ?? [] }))
+}
+
 export function anchorStartMs(anchor: ReviewAnchor): number {
   return anchor.kind === 'point' ? anchor.atMs : anchor.startMs
 }
@@ -174,6 +221,30 @@ export function formatTimestamp(milliseconds: number): string {
     : `${minutes}:${String(seconds).padStart(2, '0')}`
 }
 
+function optionalParentId(value: unknown): ReviewCommentId | null {
+  return value === undefined || value === null ? null : parseMediaId(value)
+}
+
+export function parseGuestIdentity(value: unknown): GuestIdentity {
+  const input = record(value)
+  if (typeof input.email !== 'string') return invalid('Email is required.')
+  const email = normalizeEmail(input.email)
+  if (email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return invalid('Email is invalid.')
+  const rawName = input.name === undefined || input.name === null ? '' : input.name
+  if (typeof rawName !== 'string') return invalid('Name is invalid.')
+  const name = rawName.trim().replace(/[\u0000-\u001f\u007f]/g, '')
+  if (name.length > 80) return invalid('Name is too long.')
+  return { email, name: name || null }
+}
+
+export function parseGuestCommentText(value: unknown): string {
+  if (typeof value !== 'string') return invalid('Comment text is required.')
+  const text = value.trim().replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+  if (!text) return invalid('Comment text is required.')
+  if (text.length > 4000) return invalid('Comment text must be at most 4000 characters.')
+  return text
+}
+
 export function parseCreateReviewComment(value: unknown): CreateReviewComment {
   const input = record(value)
   if (!Array.isArray(input.attachmentIds) || input.attachmentIds.length > 12) {
@@ -181,14 +252,43 @@ export function parseCreateReviewComment(value: unknown): CreateReviewComment {
   }
   const attachmentIds = [...new Set(input.attachmentIds.map(parseMediaId))]
   if (attachmentIds.length !== input.attachmentIds.length) return invalid('Comment attachments must be unique.')
+  const parentId = optionalParentId(input.parentId)
+  if (parentId && attachmentIds.length > 0) return invalid('Replies cannot include attachments.')
   return {
     clientRequestId: parseMediaId(input.clientRequestId),
     videoId: parseVideoId(input.videoId),
     draftId: parseMediaId(input.draftId),
+    parentId,
     anchor: parseReviewAnchor(input.anchor, MAX_DRAFT_DURATION_MS),
     body: parseRichDocument(input.body),
     attachmentIds,
   }
+}
+
+export function parseCreateGuestReviewComment(value: unknown): CreateGuestReviewComment {
+  const input = record(value)
+  return {
+    clientRequestId: parseMediaId(input.clientRequestId),
+    token: parseShareToken(input.token),
+    parentId: optionalParentId(input.parentId),
+    anchor: parseReviewAnchor(input.anchor, MAX_DRAFT_DURATION_MS),
+    text: parseGuestCommentText(input.text),
+    identity: parseGuestIdentity(input.identity),
+  }
+}
+
+export function parseResolveReviewComment(value: unknown): ResolveReviewComment {
+  const input = record(value)
+  return {
+    videoId: parseVideoId(input.videoId),
+    id: parseMediaId(input.id),
+    expectedRevision: parseRevision(input.expectedRevision),
+  }
+}
+
+export function parseDraftShareRequest(value: unknown): Readonly<{ videoId: VideoId; draftId: DraftId }> {
+  const input = record(value)
+  return { videoId: parseVideoId(input.videoId), draftId: parseMediaId(input.draftId) }
 }
 
 export function parseEditReviewComment(value: unknown): EditReviewComment {

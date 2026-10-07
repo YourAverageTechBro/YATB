@@ -166,6 +166,7 @@ async function storedDraft(
     stream: includeDerivative ? draftStreamFromRow(row.stream_state, row.stream_uid) : emptyDraftStream(),
     author: publicAuthor(row),
     createdAt: row.created_at,
+    shareToken: null,
   }
 }
 

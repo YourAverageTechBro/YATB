@@ -98,6 +98,13 @@ export function emptyRichDocument(): RichDocument {
   return { type: 'doc', content: [{ type: 'paragraph' }] }
 }
 
+export function plainTextDocument(text: string): RichDocument {
+  return parseRichDocument({
+    type: 'doc',
+    content: [{ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] }],
+  })
+}
+
 export function parseRichDocument(value: unknown): RichDocument {
   let serialized: string
   try { serialized = JSON.stringify(value) } catch { invalid('Rich text is invalid.') }

@@ -60,6 +60,8 @@ accessibility tree before each action. Use these stable accessible names:
 - `Video drafts`, `Upload draft`, `Draft version`, `Playback speed`, `Current playback time`, `Comment timing`, `Review comment`, and `Add comment` identify versioned review.
 - `Play video`, `Pause video`, `Replay video`, `Seek video`, `Mute video`, `Unmute video`, and `Volume` identify custom player controls. `Enter full screen` and `Exit full screen` toggle fullscreen when supported.
 - `Download version <number>: <filename>` identifies the selected draft download. `Comments for version <number>` identifies its focusable comments viewport.
+- `Create guest review link`, `Copy guest review link`, and `Revoke guest review link` manage a pinned public review link for the selected draft version.
+- Guest review pages use `Continue as guest`, `Add reply`, and `Resolve comment`. The revoked page heading is `Link no longer available`.
 - `Compare versions`, `Compare drafts`, `Left draft`, and `Right draft` identify the two-version comparison.
 - `Start seconds`, `End seconds`, and `Use playhead` create timestamp ranges; comment timestamp buttons seek the active player.
 - `Edit comment`, `Save comment`, and `Delete comment` identify review mutations.
@@ -141,6 +143,14 @@ Set `STUDIO_KEEP_FIXTURES=1` only when the browser pass needs the generated
 drafts and comments. The script prints the fixture video IDs. Delete both
 videos through the application boundary and run the local scheduled handler
 before ending verification.
+
+Exercise pinned guest review links, guest identity, unresolved comments, revoke,
+and media isolation:
+
+```sh
+STUDIO_TEST_EMAIL=<email> STUDIO_TEST_PASSWORD=<password> \
+node .agents/skills/verify-studio/scripts/verify-guest-review.mjs
+```
 
 The review script checks media delivery and stored review data. Drive the
 custom player in the browser to verify actual playback, sound, fullscreen,
