@@ -127,13 +127,16 @@ assert(still?.draft_id === first.draft.id, 'Uploading v2 moved the existing gues
 const page = await fetch(`${base}/shared-reviews/${share.token}`)
 const pageText = await page.text()
 assert(page.ok && pageText.includes('guest-v1.mp4'), 'Guest page did not render the pinned v1 draft')
+assert(page.headers.get('referrer-policy') === 'strict-origin', `Guest page Referrer-Policy was ${page.headers.get('referrer-policy')}`)
 assert(pageText.includes('Draft version') && pageText.includes('Version 1: guest-v1.mp4'), 'Guest page did not name version 1')
 assert(!pageText.includes('guest-v2.mp4'), 'Guest page showed a later draft')
+assert(pageText.includes(`data-fallback-src="/api/shared-reviews/${share.token}"`), 'Guest page omitted progressive media fallback')
 assert(!/Download (original|smaller|file|version)/.test(pageText), 'Guest page exposed a download control')
 
 const mediaUrl = `${base}/api/shared-reviews/${share.token}`
 const media = await fetch(mediaUrl)
 assert(media.status === 200, `Guest media returned ${media.status}`)
+assert(media.headers.get('referrer-policy') === 'no-referrer', `Guest media Referrer-Policy was ${media.headers.get('referrer-policy')}`)
 assert((await media.arrayBuffer()).byteLength === bytes.length, 'Guest media bytes changed')
 const download = await fetch(`${mediaUrl}?download=1`)
 assert(download.status === 403, `Guest download query returned ${download.status}`)
@@ -243,9 +246,12 @@ writeFileSync(resolve(out, 'verify-guest-review.txt'), [
   'origin=403',
   'viewer=200',
   'download=403',
+  'referrer_policy=strict-origin',
+  'media_referrer_policy=no-referrer',
+  'progressive_fallback=ok',
   'guest_comment=ok',
   'resolve_hides=ok',
   'revoke=404',
 ].join('\n') + '\n')
-console.log('guest_review=ok pin=v1 origin=403 viewer=200 download=403 comment=ok resolve_hides=ok revoke=404')
+console.log('guest_review=ok pin=v1 origin=403 viewer=200 download=403 referrer=strict-origin media_referrer=no-referrer fallback=ok comment=ok resolve_hides=ok revoke=404')
 db.close()

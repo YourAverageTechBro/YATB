@@ -117,7 +117,7 @@ export const loadSharedReview = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const { PRIVATE_NO_STORE } = await import('./auth.server')
     setResponseHeader('Cache-Control', PRIVATE_NO_STORE)
-    setResponseHeader('Referrer-Policy', 'no-referrer')
+    setResponseHeader('Referrer-Policy', 'strict-origin')
     const shared = await (await import('./reviews.server')).getSharedDraft(data)
     if (!shared) return { available: false as const }
     const [draft] = await (await import('./stream.server')).signDraftPlayback([shared.draft])

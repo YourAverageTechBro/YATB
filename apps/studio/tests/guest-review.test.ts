@@ -116,10 +116,39 @@ describe('guest review page', () => {
       data: { available: true, videoTitle: 'Guest cut', draft, comments: [] },
     }))
     expect(live).toContain(`data-playback-src="/api/shared-reviews/${token}"`)
+    expect(live).toContain(`data-fallback-src="/api/shared-reviews/${token}"`)
     expect(live).toContain('Email')
     expect(live).toContain('Continue as guest')
     expect(live).not.toContain('Download')
     expect(live).not.toContain('?download')
     expect(guestReviewPlaybackSrc(token, draft)).toBe(`/api/shared-reviews/${token}`)
+  })
+
+  it('keeps progressive fallback when the guest page plays a Stream-ready draft', () => {
+    const token = 'a'.repeat(64)
+    const playbackUrl = 'https://customer-test.cloudflarestream.com/tok/manifest/video.m3u8'
+    const live = renderToStaticMarkup(createElement(GuestReviewPage, {
+      token,
+      data: {
+        available: true,
+        videoTitle: 'Guest cut',
+        draft: {
+          ...draft,
+          stream: { state: 'ready', uid: 'stream-1', playbackUrl, thumbnailUrl: null },
+        },
+        comments: [],
+      },
+    }))
+    expect(live).toContain(`data-playback-src="${playbackUrl}"`)
+    expect(live).toContain(`data-fallback-src="/api/shared-reviews/${token}"`)
+    expect(guestReviewPlaybackSrc(token, { ...draft, stream: { state: 'ready', uid: 'stream-1', playbackUrl, thumbnailUrl: null } })).toBe(playbackUrl)
+  })
+
+  it('sends only the origin from the guest page and keeps no-referrer on shared media', () => {
+    const reviews = readFileSync(resolve(process.cwd(), 'src/server/reviews.functions.ts'), 'utf8')
+    const media = readFileSync(resolve(process.cwd(), 'src/server/media-http.server.ts'), 'utf8')
+    expect(reviews).toContain("setResponseHeader('Referrer-Policy', 'strict-origin')")
+    expect(reviews).not.toMatch(/loadSharedReview[\s\S]*?setResponseHeader\('Referrer-Policy', 'no-referrer'\)/)
+    expect(media).toContain("'Referrer-Policy': 'no-referrer'")
   })
 })

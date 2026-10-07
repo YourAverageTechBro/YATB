@@ -188,7 +188,7 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
 
   return <div className="review-pane">
     <div className="review-player">
-      <ReviewPlayer ref={player} src={playerSrc} durationMs={draft.durationMs} label={`Version ${draft.version}: ${draft.file.displayName}`} markers={markers} onPlayheadChange={setCurrentMs} />
+      <ReviewPlayer ref={player} src={playerSrc} fallbackSrc={draftMediaUrl} durationMs={draft.durationMs} label={`Version ${draft.version}: ${draft.file.displayName}`} markers={markers} onPlayheadChange={setCurrentMs} />
       <div className="player-state">
         <p role="status" className="stream-status">{streamStatusLabel(draft.stream.state)}</p>
         <div className="draft-downloads">
