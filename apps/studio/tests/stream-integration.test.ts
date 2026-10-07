@@ -148,6 +148,7 @@ function sampleDraft(stream: Draft['stream']): Draft {
     },
     author: { id: userId, name: 'Studio User', email: 'studio@example.com' },
     createdAt: 1,
+    shareToken: null,
   }
 }
 

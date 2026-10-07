@@ -1,4 +1,4 @@
-import { Download, MessageSquare, X } from 'lucide-react'
+import { Copy, Download, Link2Off, MessageSquare, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@yatb/ui/alert-dialog'
 import { Badge } from '@yatb/ui/badge'
@@ -9,7 +9,7 @@ import { Label } from '@yatb/ui/label'
 import { ScrollArea } from '@yatb/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { uploadFile } from '#/client/upload'
-import { commentSeekMs, formatTimestamp, reviewPlaybackSrc, type Draft, type ReviewAnchor, type ReviewComment } from '#/domain/reviews'
+import { commentSeekMs, commentThreads, formatTimestamp, reviewPlaybackSrc, type Draft, type ReviewAnchor, type ReviewComment } from '#/domain/reviews'
 import {
   compressedDisplayName,
   compressedDownloadStateFromHttpStatus,
@@ -17,7 +17,7 @@ import {
   type MediaDerivativeState,
 } from '#/domain/derivatives'
 import { streamStatusLabel } from '#/domain/stream'
-import { addComment, loadComments, removeComment, saveComment } from '#/server/reviews.functions'
+import { addComment, createDraftReviewLink, loadComments, removeComment, resolveComment, revokeDraftReviewLink, saveComment } from '#/server/reviews.functions'
 import { emptyRichDocument, type RichDocument } from '#/server/rich-document'
 import { RichDocumentView } from './rich-document-view'
 import { RichEditor } from './rich-editor'
@@ -59,6 +59,9 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
   const [error, setError] = useState('')
   const [commentRequestId, setCommentRequestId] = useState(() => crypto.randomUUID())
   const [compactState, setCompactState] = useState<MediaDerivativeState>(draft.compactMp4.state)
+  const [shareToken, setShareToken] = useState(draft.shareToken)
+  const [shareMessage, setShareMessage] = useState('')
+  const [shareBusy, setShareBusy] = useState(false)
 
   useEffect(() => {
     setCompactState(draft.compactMp4.state)
@@ -135,6 +138,7 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
         clientRequestId: commentRequestId,
         videoId: draft.videoId,
         draftId: draft.id,
+        parentId: null,
         anchor,
         body,
         attachmentIds: files.map((file) => file.id),
@@ -150,6 +154,37 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
       setSaving(false)
     }
   }
+
+  async function copyGuestLink() {
+    setShareBusy(true)
+    setShareMessage('')
+    try {
+      const token = shareToken ?? await createDraftReviewLink({ data: { videoId: draft.videoId, draftId: draft.id } })
+      setShareToken(token)
+      await navigator.clipboard.writeText(`${window.location.origin}/shared-reviews/${token}`)
+      setShareMessage('Guest link copied')
+    } catch {
+      setShareMessage('Could not copy the guest link.')
+    } finally {
+      setShareBusy(false)
+    }
+  }
+
+  async function revokeGuestLink() {
+    setShareBusy(true)
+    setShareMessage('')
+    try {
+      await revokeDraftReviewLink({ data: { videoId: draft.videoId, draftId: draft.id } })
+      setShareToken(null)
+      setShareMessage('Guest link revoked')
+    } catch {
+      setShareMessage('Could not revoke the guest link.')
+    } finally {
+      setShareBusy(false)
+    }
+  }
+
+  const threads = commentThreads(comments)
 
   return <div className="review-pane">
     <div className="review-player">
@@ -173,7 +208,10 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
                     ? 'Smaller MP4 unavailable'
                     : 'Preparing smaller MP4…'}</Button>}
           <Button asChild variant="outline" size="sm"><a href={`${draftMediaUrl}?download=1`} aria-label={`Download original version ${draft.version}: ${draft.file.displayName}`}><Download /> Download original</a></Button>
+          <Button variant="outline" size="sm" disabled={shareBusy} onClick={() => void copyGuestLink()}><Copy /> {shareToken ? 'Copy guest review link' : 'Create guest review link'}</Button>
+          {shareToken && <Button variant="ghost" size="sm" disabled={shareBusy} onClick={() => void revokeGuestLink()}><Link2Off /> Revoke guest review link</Button>}
         </div>
+        {shareMessage && <p role="status">{shareMessage}</p>}
       </div>
     </div>
     <aside className="review-rail" aria-label={`Review version ${draft.version}`}>
@@ -195,16 +233,28 @@ export function ReviewPane({ draft, onFootageChanged }: { draft: Draft; onFootag
       <ScrollArea className="review-comments" viewportProps={{ 'aria-label': `Comments for version ${draft.version}`, tabIndex: 0 }}>
         <section className="review-comments-content">
           <h3>Comments <Badge variant="secondary">{comments.length}</Badge></h3>
-          {comments.length === 0 ? <p className="footage-empty">No review notes yet.</p> : comments.map((comment) => <CommentCard key={comment.id} comment={comment} onSeek={() => seek(comment.anchor)} onChanged={refresh} />)}
+          {threads.length === 0 ? <p className="footage-empty">No review notes yet.</p> : threads.map(({ root, replies }) => <CommentCard key={root.id} comment={root} replies={replies} onSeek={(anchor) => seek(anchor)} onChanged={refresh} />)}
         </section>
       </ScrollArea>
     </aside>
   </div>
 }
 
-function CommentCard({ comment, onSeek, onChanged }: { comment: ReviewComment; onSeek: () => void; onChanged: () => Promise<void> }) {
+function CommentCard({
+  comment,
+  replies = [],
+  onSeek,
+  onChanged,
+}: {
+  comment: ReviewComment
+  replies?: readonly ReviewComment[]
+  onSeek: (anchor: ReviewAnchor) => void
+  onChanged: () => Promise<void>
+}) {
   const [editing, setEditing] = useState(false)
+  const [replying, setReplying] = useState(false)
   const [body, setBody] = useState(comment.body)
+  const [replyBody, setReplyBody] = useState(emptyRichDocument())
   const [error, setError] = useState('')
   const label = comment.anchor.kind === 'point'
     ? formatTimestamp(comment.anchor.atMs)
@@ -227,8 +277,41 @@ function CommentCard({ comment, onSeek, onChanged }: { comment: ReviewComment; o
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Comment could not be deleted.') }
   }
 
+  async function resolve() {
+    try {
+      await resolveComment({ data: { videoId: comment.videoId, id: comment.id, expectedRevision: comment.revision } })
+      await onChanged()
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Comment could not be resolved.') }
+  }
+
+  async function reply(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    try {
+      await addComment({ data: {
+        clientRequestId: crypto.randomUUID(),
+        videoId: comment.videoId,
+        draftId: comment.draftId,
+        parentId: comment.id,
+        anchor: comment.anchor,
+        body: replyBody,
+        attachmentIds: [],
+      } })
+      setReplyBody(emptyRichDocument())
+      setReplying(false)
+      await onChanged()
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Reply could not be saved.') }
+  }
+
   return <Card className="review-comment">
-    <header><div><strong>{comment.author.name}</strong><small>{comment.author.email}</small></div><Button variant="outline" size="sm" onClick={onSeek}>{label}</Button></header>
+    <header>
+      <div>
+        <strong>{comment.author.name}</strong>
+        {comment.author.guest && <Badge variant="secondary">Guest</Badge>}
+        {comment.resolvedAt && <Badge variant="outline">Resolved</Badge>}
+        <small>{comment.author.email}</small>
+      </div>
+      <Button variant="outline" size="sm" onClick={() => onSeek(comment.anchor)}>{label}</Button>
+    </header>
     {editing
       ? <form onSubmit={(event) => void save(event)}><RichEditor ariaLabel="Edit review comment" value={body} onChange={setBody} /><footer><Button type="submit">Save comment</Button><Button type="button" variant="outline" onClick={() => { setBody(comment.body); setEditing(false) }}>Cancel</Button></footer></form>
       : <RichDocumentView value={comment.body} linkSharedFiles />}
@@ -238,7 +321,16 @@ function CommentCard({ comment, onSeek, onChanged }: { comment: ReviewComment; o
       name={attachment.displayName}
       src={`/api/videos/${comment.videoId}/media/${attachment.id}`}
     />)}</div>}
+    {replies.map((entry) => <div key={entry.id} className="guest-reply">
+      <CommentCard comment={entry} onSeek={onSeek} onChanged={onChanged} />
+    </div>)}
     {error && <p role="alert" className="dialog-error">{error}</p>}
-    {!editing && <footer><Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Edit comment</Button><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm">Delete comment</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete this comment?</AlertDialogTitle><AlertDialogDescription>The uploaded attachment files remain available in task footage.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => void erase()}>Delete comment</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></footer>}
+    {!editing && <footer>
+      {!comment.parentId && <Button variant="ghost" size="sm" onClick={() => setReplying(true)}>Reply</Button>}
+      {!comment.parentId && !comment.resolvedAt && <Button variant="ghost" size="sm" onClick={() => void resolve()}>Resolve comment</Button>}
+      <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Edit comment</Button>
+      <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm">Delete comment</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete this comment?</AlertDialogTitle><AlertDialogDescription>The uploaded attachment files remain available in task footage.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => void erase()}>Delete comment</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    </footer>}
+    {replying && <form onSubmit={(event) => void reply(event)}><RichEditor ariaLabel="Reply" value={replyBody} onChange={setReplyBody} /><footer><Button type="submit">Add reply</Button><Button type="button" variant="outline" onClick={() => setReplying(false)}>Cancel</Button></footer></form>}
   </Card>
 }

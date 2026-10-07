@@ -1,10 +1,14 @@
 import { createServerFn } from '@tanstack/react-start'
-import { setResponseHeader } from '@tanstack/react-start/server'
+import { getRequestHeaders, setResponseHeader } from '@tanstack/react-start/server'
+import { parseShareToken } from '#/domain/file-library'
 import {
   parseComparisonQuery,
+  parseCreateGuestReviewComment,
   parseCreateReviewComment,
   parseDeleteReviewComment,
+  parseDraftShareRequest,
   parseEditReviewComment,
+  parseResolveReviewComment,
   resolveComparison,
   type ComparisonQuery,
 } from '#/domain/reviews'
@@ -84,4 +88,63 @@ export const removeComment = createServerFn({ method: 'POST' })
     await mutationSession()
     await (await import('./reviews.server')).deleteComment(data.videoId, data.id, data.expectedRevision)
     return { deleted: true as const }
+  })
+
+export const resolveComment = createServerFn({ method: 'POST' })
+  .validator(parseResolveReviewComment)
+  .handler(async ({ data }) => {
+    await mutationSession()
+    return (await import('./reviews.server')).resolveComment(data.videoId, data.id, data.expectedRevision)
+  })
+
+export const createDraftReviewLink = createServerFn({ method: 'POST' })
+  .validator(parseDraftShareRequest)
+  .handler(async ({ data }) => {
+    const session = await mutationSession()
+    return (await import('./reviews.server')).createDraftShare(data.videoId, data.draftId, session.user.id)
+  })
+
+export const revokeDraftReviewLink = createServerFn({ method: 'POST' })
+  .validator(parseDraftShareRequest)
+  .handler(async ({ data }) => {
+    await mutationSession()
+    await (await import('./reviews.server')).revokeDraftShare(data.videoId, data.draftId)
+    return { revoked: true as const }
+  })
+
+export const loadSharedReview = createServerFn({ method: 'GET' })
+  .validator(parseShareToken)
+  .handler(async ({ data }) => {
+    const { PRIVATE_NO_STORE } = await import('./auth.server')
+    setResponseHeader('Cache-Control', PRIVATE_NO_STORE)
+    setResponseHeader('Referrer-Policy', 'no-referrer')
+    const shared = await (await import('./reviews.server')).getSharedDraft(data)
+    if (!shared) return { available: false as const }
+    const [draft] = await (await import('./stream.server')).signDraftPlayback([shared.draft])
+    const comments = await (await import('./reviews.server')).listComments(
+      shared.draft.videoId, shared.draft.id, true,
+    )
+    return {
+      available: true as const,
+      videoTitle: shared.videoTitle,
+      draft: draft ?? shared.draft,
+      comments,
+    }
+  })
+
+export const addGuestComment = createServerFn({ method: 'POST' })
+  .validator(parseCreateGuestReviewComment)
+  .handler(async ({ data }) => {
+    const { PRIVATE_NO_STORE, requireStudioMutationOrigin } = await import('./auth.server')
+    requireStudioMutationOrigin()
+    const ip = getRequestHeaders().get('cf-connecting-ip') ?? 'local'
+    try {
+      return await (await import('./reviews.server')).createGuestComment(data, ip)
+    } catch (error) {
+      const { ReviewError } = await import('./reviews.server')
+      if (error instanceof ReviewError) {
+        throw new Response(error.message, { status: error.status, headers: { 'Cache-Control': PRIVATE_NO_STORE } })
+      }
+      throw error
+    }
   })

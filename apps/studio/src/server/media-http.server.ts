@@ -23,6 +23,7 @@ import {
   renameMedia,
   uploadPart,
 } from './media.server'
+import { getSharedDraft } from './reviews.server'
 import { compressedDisplayName, compressedDownloadHttpStatus, type MediaDerivativeState } from '#/domain/derivatives'
 import { getStoredDerivative } from './compression.server'
 import { handleStreamWebhook, readStreamSource } from './stream.server'
@@ -222,6 +223,24 @@ export function handleSharedMediaRead(request: Request, tokenValue: string): Pro
     try { token = parseShareToken(tokenValue) } catch { throw new MediaError(404, 'File not found.') }
     const { stored } = await getSharedFile(token)
     return streamOriginalMedia(request, stored, true)
+  })
+}
+
+export function handleSharedDraftRead(request: Request, tokenValue: string): Promise<Response> {
+  return run(async () => {
+    if (new URL(request.url).searchParams.has('download')) {
+      throw new MediaError(403, 'Download is not available.')
+    }
+    let token: string
+    try { token = parseShareToken(tokenValue) } catch { throw new MediaError(404, 'This review link is no longer available.') }
+    const shared = await getSharedDraft(token)
+    if (!shared) throw new MediaError(404, 'This review link is no longer available.')
+    return streamOriginalMedia(request, {
+      object_key: shared.stored.object_key,
+      display_name: shared.stored.display_name,
+      byte_size: shared.stored.byte_size,
+      content_type: shared.stored.content_type,
+    }, true)
   })
 }
 

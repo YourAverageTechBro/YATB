@@ -43,6 +43,7 @@ Each feature file describes its browser entry, exact drive, proof, and traps.
 - [Revision and deletion](./revision-delete.md)
 - [Footage delivery](./footage-delivery.md)
 - [Draft review](./draft-review.md)
+- [Guest draft review](./guest-draft-review.md)
 - [Draft comparison](./draft-comparison.md)
 - [Shared UI system](./shared-ui-system.md)
 - [Production launch](./production-launch.md)

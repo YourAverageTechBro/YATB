@@ -6,13 +6,17 @@ import { parseBeginUpload, UPLOAD_PART_SIZE } from '../src/domain/media'
 import {
   anchorStartMs,
   commentSeekMs,
+  commentThreads,
   formatTimestamp,
-  parseComparisonQuery,
+  parseCreateGuestReviewComment,
+  parseGuestIdentity,
   parseReviewAnchor,
+  parseComparisonQuery,
   partitionComparison,
   resolveComparison,
   reviewPlaybackSrc,
   type Draft,
+  type ReviewComment,
 } from '../src/domain/reviews'
 
 const videoA = '1b0e913b-645c-4306-a71d-78115390b46d'
@@ -44,6 +48,7 @@ function comparisonDraft(id: string, videoId: string, version: number): Draft {
     },
     author: { id: 'user-1', name: 'Studio User', email: 'studio@example.com' },
     createdAt: version,
+    shareToken: null,
   }
 }
 
@@ -116,6 +121,38 @@ describe('review domain', () => {
         thumbnailUrl: null,
       },
     })).toBe('https://customer-test.cloudflarestream.com/tok/manifest/video.m3u8')
+  })
+
+  it('validates guest identity and comment text', () => {
+    expect(parseGuestIdentity({ email: 'Alex@Example.com', name: ' Alex ' })).toEqual({
+      email: 'alex@example.com', name: 'Alex',
+    })
+    expect(parseGuestIdentity({ email: 'alex@example.com' })).toEqual({
+      email: 'alex@example.com', name: null,
+    })
+    expect(() => parseGuestIdentity({ email: 'not-an-email' })).toThrow('invalid')
+    const token = 'a'.repeat(64)
+    const parsed = parseCreateGuestReviewComment({
+      clientRequestId: draftA,
+      token,
+      parentId: null,
+      anchor: { kind: 'point', atMs: 1000 },
+      text: '  Cut this beat  ',
+      identity: { email: 'guest@example.com', name: '' },
+    })
+    expect(parsed.text).toBe('Cut this beat')
+    expect(parsed.identity.email).toBe('guest@example.com')
+  })
+
+  it('nests replies under unresolved roots', () => {
+    const root: ReviewComment = {
+      id: draftA, videoId: videoA, draftId: draftA, parentId: null, resolvedAt: null,
+      anchor: { kind: 'point', atMs: 1 }, body: { type: 'doc', content: [] }, revision: 1,
+      author: { id: 'user-1', name: 'Studio User', email: 'studio@example.com' },
+      attachments: [], createdAt: 1, updatedAt: 1,
+    }
+    const reply: ReviewComment = { ...root, id: draftB, parentId: draftA, author: { id: '', name: 'Alex', email: 'alex@example.com', guest: true } }
+    expect(commentThreads([root, reply])).toEqual([{ root, replies: [reply] }])
   })
 })
 

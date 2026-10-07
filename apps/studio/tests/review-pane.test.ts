@@ -6,8 +6,11 @@ import type { Draft } from '../src/domain/reviews'
 
 vi.mock('../src/server/reviews.functions', () => ({
   addComment: vi.fn(),
+  createDraftReviewLink: vi.fn(),
   loadComments: vi.fn(),
   removeComment: vi.fn(),
+  resolveComment: vi.fn(),
+  revokeDraftReviewLink: vi.fn(),
   saveComment: vi.fn(),
 }))
 
@@ -24,6 +27,7 @@ const draft: Draft = {
   },
   author: { id: 'user-1', name: 'Studio User', email: 'studio@example.com' },
   createdAt: 1,
+  shareToken: null,
 }
 
 describe('draft review pane', () => {
@@ -83,5 +87,11 @@ describe('draft review pane', () => {
     expect(markup).toContain('aria-label="Comments for version 1" tabindex="0"')
     expect(markup.indexOf('aria-label="Review comment"')).toBeLessThan(markup.indexOf('aria-label="Comments for version 1"'))
     expect(markup).toContain('No review notes yet.')
+  })
+
+  it('offers a guest review link without exposing it as a download', () => {
+    const markup = renderToStaticMarkup(createElement(ReviewPane, { draft }))
+    expect(markup).toContain('Create guest review link')
+    expect(markup).not.toContain('Revoke guest review link')
   })
 })
