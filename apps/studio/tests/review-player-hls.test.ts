@@ -39,12 +39,51 @@ describe('Chromium HLS attach', () => {
     expect(destroy).toHaveBeenCalledOnce()
   })
 
-  it('does not attach hls.js for progressive R2 or native HLS', () => {
+  it('does not attach hls.js for progressive R2', () => {
     const r2 = { canPlayType: () => '' } as unknown as HTMLVideoElement
     attachAdaptivePlayback(r2, '/api/videos/video-1/media/file-1', () => undefined)
-    const safari = { canPlayType: (type: string) => type.includes('mpegurl') ? 'probably' : '' } as unknown as HTMLVideoElement
-    attachAdaptivePlayback(safari, 'https://customer-test.cloudflarestream.com/tok/manifest/video.m3u8', () => undefined)
     expect(loadSource).not.toHaveBeenCalled()
     expect(usesNativeVideoSrc('/api/videos/video-1/media/file-1')).toBe(true)
+  })
+
+  it('attaches hls.js even when canPlayType claims native HLS', () => {
+    const safari = { canPlayType: (type: string) => type.includes('mpegurl') ? 'probably' : '' } as unknown as HTMLVideoElement
+    attachAdaptivePlayback(safari, 'https://customer-test.cloudflarestream.com/tok/manifest/video.m3u8', () => undefined)
+    expect(loadSource).toHaveBeenCalledOnce()
+  })
+
+  it('ignores non-fatal hls.js errors and fails closed without a fallback', () => {
+    const media = { canPlayType: () => '', src: '' } as unknown as HTMLVideoElement
+    const onError = vi.fn()
+    attachAdaptivePlayback(media, 'https://customer-test.cloudflarestream.com/signed-token/manifest/video.m3u8', onError)
+    const handler = on.mock.calls[0]?.[1] as (event: string, data: { fatal: boolean }) => void
+    handler('hlsError', { fatal: false })
+    expect(onError).not.toHaveBeenCalled()
+    expect(destroy).not.toHaveBeenCalled()
+    handler('hlsError', { fatal: true })
+    expect(onError).toHaveBeenCalledOnce()
+    expect(destroy).toHaveBeenCalledOnce()
+    expect(media.src).toBe('')
+  })
+
+  it('switches to progressive fallback after a fatal hls.js error', () => {
+    const media = { canPlayType: () => '', src: '' } as unknown as HTMLVideoElement
+    const onError = vi.fn()
+    const fallback = '/api/shared-reviews/' + 'a'.repeat(64)
+    attachAdaptivePlayback(
+      media,
+      'https://customer-test.cloudflarestream.com/signed-token/manifest/video.m3u8',
+      onError,
+      fallback,
+    )
+    const handler = on.mock.calls[0]?.[1] as (event: string, data: { fatal: boolean }) => void
+    handler('hlsError', { fatal: false })
+    expect(media.src).toBe('')
+    expect(onError).not.toHaveBeenCalled()
+    handler('hlsError', { fatal: true })
+    expect(media.src).toBe(fallback)
+    expect(onError).not.toHaveBeenCalled()
+    handler('hlsError', { fatal: true })
+    expect(onError).not.toHaveBeenCalled()
   })
 })

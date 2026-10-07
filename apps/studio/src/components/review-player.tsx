@@ -10,6 +10,7 @@ export type ReviewTimelineMarker = Readonly<{ commentId: string; anchor: ReviewA
 export type ReviewPlayerHandle = Readonly<{ seekTo: (milliseconds: number) => void }>
 type Props = Readonly<{
   src: string
+  fallbackSrc?: string
   durationMs: number
   label: string
   markers: readonly ReviewTimelineMarker[]
@@ -47,17 +48,35 @@ export function intrinsicVideoGeometry(width: number, height: number): VideoGeom
 export function usesNativeVideoSrc(src: string): boolean {
   if (!src.includes('.m3u8')) return true
   if (typeof document === 'undefined') return false
+  if (Hls.isSupported()) return false
   return document.createElement('video').canPlayType('application/vnd.apple.mpegurl') !== ''
 }
 
-export function attachAdaptivePlayback(media: HTMLVideoElement, src: string, onError: () => void): () => void {
-  if (!src.includes('.m3u8') || media.canPlayType('application/vnd.apple.mpegurl') || !Hls.isSupported()) {
+export function attachAdaptivePlayback(
+  media: HTMLVideoElement,
+  src: string,
+  onError: () => void,
+  fallbackSrc?: string,
+): () => void {
+  if (!src.includes('.m3u8')) return () => undefined
+  if (!Hls.isSupported()) {
+    if (fallbackSrc && media.canPlayType('application/vnd.apple.mpegurl') === '') media.src = fallbackSrc
     return () => undefined
   }
   const hls = new Hls()
+  let settled = false
   hls.loadSource(src)
   hls.attachMedia(media)
-  hls.on(Hls.Events.ERROR, onError)
+  hls.on(Hls.Events.ERROR, (_event, data) => {
+    if (!data.fatal || settled) return
+    settled = true
+    hls.destroy()
+    if (fallbackSrc) {
+      media.src = fallbackSrc
+      return
+    }
+    onError()
+  })
   return () => hls.destroy()
 }
 
@@ -89,7 +108,7 @@ export function buildTimelinePaint(markers: readonly ReviewTimelineMarker[], dur
   }))]
 }
 
-export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function ReviewPlayer({ src, durationMs, label, markers, onPlayheadChange }, ref) {
+export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function ReviewPlayer({ src, fallbackSrc, durationMs, label, markers, onPlayheadChange }, ref) {
   const video = useRef<HTMLVideoElement>(null)
   const container = useRef<HTMLElement>(null)
   const lastVolume = useRef(1)
@@ -132,8 +151,10 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
   useEffect(() => {
     const media = video.current
     if (!media) return
-    return attachAdaptivePlayback(media, src, synchronize)
-  }, [src])
+    return attachAdaptivePlayback(media, src, () => {
+      setSnapshot((current) => ({ ...current, phase: 'failed' }))
+    }, fallbackSrc)
+  }, [src, fallbackSrc])
 
   function seekTo(milliseconds: number) {
     const media = video.current
@@ -189,7 +210,7 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
   const playerStyle: PlayerStyle = geometry === undefined ? {} : { '--review-video-aspect-ratio': geometry.aspectRatio }
 
   return <section className="custom-player" data-video-orientation={geometry?.orientation ?? 'landscape'} ref={container} style={playerStyle} aria-label={label} tabIndex={0} onKeyDown={shortcut}>
-    <video ref={video} data-playback-src={src} src={usesNativeVideoSrc(src) ? src : undefined} preload="metadata" playsInline tabIndex={-1} aria-label={label}
+    <video ref={video} data-playback-src={src} data-fallback-src={fallbackSrc} src={usesNativeVideoSrc(src) ? src : undefined} preload="metadata" playsInline tabIndex={-1} aria-label={label}
       onClick={() => void togglePlayback()} onLoadedMetadata={(event) => { setGeometry(intrinsicVideoGeometry(event.currentTarget.videoWidth, event.currentTarget.videoHeight)); synchronize() }} onDurationChange={synchronize}
       onPlay={synchronize} onPause={synchronize} onEnded={synchronize} onTimeUpdate={synchronize}
       onVolumeChange={synchronize} onRateChange={synchronize} onError={synchronize} onEmptied={synchronize} />

@@ -152,6 +152,7 @@ function GuestReviewWorkspace({
           <ReviewPlayer
             ref={player}
             src={playerSrc}
+            fallbackSrc={`/api/shared-reviews/${token}`}
             durationMs={draft.durationMs}
             label={`Version ${draft.version}: ${draft.file.displayName}`}
             markers={markers}

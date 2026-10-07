@@ -7,9 +7,7 @@ import { buildTimelinePaint, clampPlayheadMs, intrinsicAspectRatio, intrinsicVid
 describe('review playback source', () => {
   it('keeps progressive files on the native element and treats HLS as adaptive', () => {
     expect(usesNativeVideoSrc('/api/videos/video-1/media/file-1')).toBe(true)
-    expect(usesNativeVideoSrc('https://customer-x.cloudflarestream.com/tok/manifest/video.m3u8')).toBe(
-      typeof document !== 'undefined' && document.createElement('video').canPlayType('application/vnd.apple.mpegurl') !== '',
-    )
+    expect(usesNativeVideoSrc('https://customer-x.cloudflarestream.com/tok/manifest/video.m3u8')).toBe(false)
   })
 })
 
