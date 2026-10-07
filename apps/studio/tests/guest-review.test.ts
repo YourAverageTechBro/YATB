@@ -141,7 +141,7 @@ describe('guest review page', () => {
     }))
     expect(live).toContain(`data-playback-src="${playbackUrl}"`)
     expect(live).toContain(`data-fallback-src="/api/shared-reviews/${token}"`)
-    expect(live).toContain(`src="/api/shared-reviews/${token}"`)
+    expect(live).not.toMatch(/<video[^>]*\ssrc="\/api\/shared-reviews\//)
     expect(guestReviewPlaybackSrc(token, { ...draft, stream: { state: 'ready', uid: 'stream-1', playbackUrl, thumbnailUrl: null } })).toBe(playbackUrl)
   })
 

@@ -58,7 +58,9 @@ export function attachAdaptivePlayback(
   onError: () => void,
   fallbackSrc?: string,
 ): () => void {
-  if (!src.includes('.m3u8') || !Hls.isSupported()) {
+  if (!src.includes('.m3u8')) return () => undefined
+  if (!Hls.isSupported()) {
+    if (fallbackSrc && media.canPlayType('application/vnd.apple.mpegurl') === '') media.src = fallbackSrc
     return () => undefined
   }
   const hls = new Hls()
@@ -208,7 +210,7 @@ export const ReviewPlayer = forwardRef<ReviewPlayerHandle, Props>(function Revie
   const playerStyle: PlayerStyle = geometry === undefined ? {} : { '--review-video-aspect-ratio': geometry.aspectRatio }
 
   return <section className="custom-player" data-video-orientation={geometry?.orientation ?? 'landscape'} ref={container} style={playerStyle} aria-label={label} tabIndex={0} onKeyDown={shortcut}>
-    <video ref={video} data-playback-src={src} data-fallback-src={fallbackSrc} src={usesNativeVideoSrc(src) ? src : fallbackSrc} preload="metadata" playsInline tabIndex={-1} aria-label={label}
+    <video ref={video} data-playback-src={src} data-fallback-src={fallbackSrc} src={usesNativeVideoSrc(src) ? src : undefined} preload="metadata" playsInline tabIndex={-1} aria-label={label}
       onClick={() => void togglePlayback()} onLoadedMetadata={(event) => { setGeometry(intrinsicVideoGeometry(event.currentTarget.videoWidth, event.currentTarget.videoHeight)); synchronize() }} onDurationChange={synchronize}
       onPlay={synchronize} onPause={synchronize} onEnded={synchronize} onTimeUpdate={synchronize}
       onVolumeChange={synchronize} onRateChange={synchronize} onError={synchronize} onEmptied={synchronize} />

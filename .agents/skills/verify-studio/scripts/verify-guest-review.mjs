@@ -132,11 +132,8 @@ assert(pageText.includes('Draft version') && pageText.includes('Version 1: guest
 assert(!pageText.includes('guest-v2.mp4'), 'Guest page showed a later draft')
 assert(pageText.includes(`data-fallback-src="/api/shared-reviews/${share.token}"`), 'Guest page omitted progressive media fallback')
   if (pageText.includes('data-playback-src=') && pageText.includes('.m3u8')) {
-    assert(
-      /<video[^>]*\ssrc="\/api\/shared-reviews\/[^"]+"/.test(pageText)
-      || pageText.includes(`src="/api/shared-reviews/${share.token}"`),
-      'Stream-ready guest page rendered HLS without a progressive video src',
-    )
+    assert(pageText.includes(`data-fallback-src="/api/shared-reviews/${share.token}"`), 'Stream-ready guest page omitted progressive fallback')
+    assert(!/<video[^>]*\ssrc="\/api\/shared-reviews\//.test(pageText), 'Stream-ready guest SSR started the progressive original')
   }
 assert(!/Download (original|smaller|file|version)/.test(pageText), 'Guest page exposed a download control')
 
