@@ -103,7 +103,7 @@ describe('guest draft review migration', () => {
 })
 
 describe('guest review page', () => {
-  it('shows a revoked message and never offers download', () => {
+  it('shows a revoked message and offers original download only on a live link', () => {
     const revoked = renderToStaticMarkup(createElement(GuestReviewPage, {
       token: 'a'.repeat(64),
       data: { available: false },
@@ -119,8 +119,10 @@ describe('guest review page', () => {
     expect(live).toContain(`data-fallback-src="/api/shared-reviews/${token}"`)
     expect(live).toContain('Email')
     expect(live).toContain('Continue as guest')
-    expect(live).not.toContain('Download')
-    expect(live).not.toContain('?download')
+    expect(live).toContain('Download original')
+    expect(live).toContain(`href="/api/shared-reviews/${token}?download=1"`)
+    expect(live).toContain('aria-label="Download original version 1: v1.mp4"')
+    expect(live).not.toContain('download=compressed')
     expect(guestReviewPlaybackSrc(token, draft)).toBe(`/api/shared-reviews/${token}`)
   })
 
@@ -151,5 +153,12 @@ describe('guest review page', () => {
     expect(reviews).toContain("setResponseHeader('Referrer-Policy', 'strict-origin')")
     expect(reviews).not.toMatch(/loadSharedReview[\s\S]*?setResponseHeader\('Referrer-Policy', 'no-referrer'\)/)
     expect(media).toContain("'Referrer-Policy': 'no-referrer'")
+    const handler = media.slice(
+      media.indexOf('export function handleSharedDraftRead'),
+      media.indexOf('export function handleStreamSource'),
+    )
+    expect(handler).toContain('streamOriginalMedia')
+    expect(handler).not.toContain('Download is not available.')
+    expect(handler).not.toContain('getStoredDerivative')
   })
 })
