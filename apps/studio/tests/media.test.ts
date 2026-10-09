@@ -74,6 +74,26 @@ describe('footage domain', () => {
     expect(isRetryableStatus(400)).toBe(false)
     expect(isRetryableStatus(403)).toBe(false)
   })
+
+  it('serves a guest original attachment through the shared draft handler', () => {
+    const media = readFileSync(resolve(process.cwd(), 'src/server/media-http.server.ts'), 'utf8')
+    const sharedDraft = media.slice(
+      media.indexOf('export function handleSharedDraftRead'),
+      media.indexOf('export function handleStreamSource'),
+    )
+    expect(sharedDraft).toContain('streamOriginalMedia')
+    expect(sharedDraft).not.toContain('Download is not available.')
+    expect(sharedDraft).not.toContain('getStoredDerivative')
+    expect(sharedDraft).not.toContain("searchParams.has('download')")
+    const original = media.slice(
+      media.indexOf('async function streamOriginalMedia'),
+      media.indexOf('export function handleSharedMediaRead'),
+    )
+    expect(original).toContain("url.searchParams.get('download') !== '1'")
+    expect(original).toContain("'Referrer-Policy': 'no-referrer'")
+    expect(original).toContain('parseSingleByteRange')
+    expect(original).toContain("publicShare ? 'no-store, max-age=0'")
+  })
 })
 
 describe('footage migration', () => {

@@ -228,9 +228,6 @@ export function handleSharedMediaRead(request: Request, tokenValue: string): Pro
 
 export function handleSharedDraftRead(request: Request, tokenValue: string): Promise<Response> {
   return run(async () => {
-    if (new URL(request.url).searchParams.has('download')) {
-      throw new MediaError(403, 'Download is not available.')
-    }
     let token: string
     try { token = parseShareToken(tokenValue) } catch { throw new MediaError(404, 'This review link is no longer available.') }
     const shared = await getSharedDraft(token)

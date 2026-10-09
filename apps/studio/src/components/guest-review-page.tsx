@@ -1,4 +1,4 @@
-import { MessageSquare } from 'lucide-react'
+import { Download, MessageSquare } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge } from '@yatb/ui/badge'
 import { Button } from '@yatb/ui/button'
@@ -159,6 +159,11 @@ function GuestReviewWorkspace({
             onPlayheadChange={setCurrentMs}
           />
           <p role="status" className="stream-status">{streamStatusLabel(draft.stream.state)}</p>
+          <Button asChild variant="outline" size="sm">
+            <a href={`/api/shared-reviews/${token}?download=1`} aria-label={`Download original version ${draft.version}: ${draft.file.displayName}`}>
+              <Download /> Download original
+            </a>
+          </Button>
         </div>
         <aside className="review-rail" aria-label={`Guest review version ${draft.version}`}>
           <Card className="comment-composer">

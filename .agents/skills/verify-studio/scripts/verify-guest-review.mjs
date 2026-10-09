@@ -135,7 +135,9 @@ assert(pageText.includes(`data-fallback-src="/api/shared-reviews/${share.token}"
     assert(pageText.includes(`data-fallback-src="/api/shared-reviews/${share.token}"`), 'Stream-ready guest page omitted progressive fallback')
     assert(!/<video[^>]*\ssrc="\/api\/shared-reviews\//.test(pageText), 'Stream-ready guest SSR started the progressive original')
   }
-assert(!/Download (original|smaller|file|version)/.test(pageText), 'Guest page exposed a download control')
+assert(/Download original/.test(pageText), 'Guest page omitted Download original')
+assert(pageText.includes(`href="/api/shared-reviews/${share.token}?download=1"`), 'Guest page omitted the original download link')
+assert(!/download=compressed/.test(pageText), 'Guest page exposed a compressed download')
 
 const mediaUrl = `${base}/api/shared-reviews/${share.token}`
 const media = await fetch(mediaUrl)
@@ -143,7 +145,17 @@ assert(media.status === 200, `Guest media returned ${media.status}`)
 assert(media.headers.get('referrer-policy') === 'no-referrer', `Guest media Referrer-Policy was ${media.headers.get('referrer-policy')}`)
 assert((await media.arrayBuffer()).byteLength === bytes.length, 'Guest media bytes changed')
 const download = await fetch(`${mediaUrl}?download=1`)
-assert(download.status === 403, `Guest download query returned ${download.status}`)
+assert(download.status === 200, `Guest download query returned ${download.status}`)
+assert((download.headers.get('content-disposition') ?? '').includes('attachment'), `Guest download Content-Disposition was ${download.headers.get('content-disposition')}`)
+assert((download.headers.get('content-disposition') ?? '').includes('guest-v1.mp4'), `Guest download filename was ${download.headers.get('content-disposition')}`)
+assert(download.headers.get('cache-control')?.includes('no-store'), `Guest download Cache-Control was ${download.headers.get('cache-control')}`)
+assert(download.headers.get('referrer-policy') === 'no-referrer', `Guest download Referrer-Policy was ${download.headers.get('referrer-policy')}`)
+const downloadBytes = Buffer.from(await download.arrayBuffer())
+assert(downloadBytes.equals(bytes), 'Guest download bytes were not the original')
+const compressed = await fetch(`${mediaUrl}?download=compressed`)
+assert(compressed.status === 200, `Guest compressed query returned ${compressed.status}`)
+assert(!(compressed.headers.get('content-disposition') ?? '').includes('attachment'), `Guest compressed query attached (${compressed.headers.get('content-disposition')})`)
+assert((await compressed.arrayBuffer()).byteLength === bytes.length, 'Guest compressed query did not return the original')
 
 const guestComment = await call(reviewIds, 'addGuestComment', {
   clientRequestId: crypto.randomUUID(),
@@ -209,6 +221,8 @@ const revokedPage = await fetch(`${base}/shared-reviews/${share.token}`)
 assert((await revokedPage.text()).includes('Link no longer available'), 'Revoked page did not explain unavailability')
 const revokedMedia = await fetch(mediaUrl)
 assert(revokedMedia.status === 404, `Revoked media returned ${revokedMedia.status}`)
+const revokedDownload = await fetch(`${mediaUrl}?download=1`)
+assert(revokedDownload.status === 404, `Revoked download returned ${revokedDownload.status}`)
 const revokedComment = await call(reviewIds, 'addGuestComment', {
   clientRequestId: crypto.randomUUID(),
   token: share.token,
@@ -249,7 +263,7 @@ writeFileSync(resolve(out, 'verify-guest-review.txt'), [
   'pin=v1',
   'origin=403',
   'viewer=200',
-  'download=403',
+  'download=200',
   'referrer_policy=strict-origin',
   'media_referrer_policy=no-referrer',
   'progressive_fallback=ok',
@@ -257,5 +271,5 @@ writeFileSync(resolve(out, 'verify-guest-review.txt'), [
   'resolve_hides=ok',
   'revoke=404',
 ].join('\n') + '\n')
-console.log('guest_review=ok pin=v1 origin=403 viewer=200 download=403 referrer=strict-origin media_referrer=no-referrer fallback=ok comment=ok resolve_hides=ok revoke=404')
+console.log('guest_review=ok pin=v1 origin=403 viewer=200 download=200 referrer=strict-origin media_referrer=no-referrer fallback=ok comment=ok resolve_hides=ok revoke=404')
 db.close()

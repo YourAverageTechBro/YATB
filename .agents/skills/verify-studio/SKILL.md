@@ -61,7 +61,7 @@ accessibility tree before each action. Use these stable accessible names:
 - `Play video`, `Pause video`, `Replay video`, `Seek video`, `Mute video`, `Unmute video`, and `Volume` identify custom player controls. `Enter full screen` and `Exit full screen` toggle fullscreen when supported.
 - `Download version <number>: <filename>` identifies the selected draft download. `Comments for version <number>` identifies its focusable comments viewport.
 - `Create guest review link`, `Copy guest review link`, and `Revoke guest review link` manage a pinned public review link for the selected draft version.
-- Guest review pages use `Continue as guest`, `Add reply`, and `Resolve comment`. The revoked page heading is `Link no longer available`.
+- Guest review pages use `Continue as guest`, `Add reply`, `Resolve comment`, and `Download original version <number>: <filename>`. The revoked page heading is `Link no longer available`.
 - `Compare versions`, `Compare drafts`, `Left draft`, and `Right draft` identify the two-version comparison.
 - `Start seconds`, `End seconds`, and `Use playhead` create timestamp ranges; comment timestamp buttons seek the active player.
 - `Edit comment`, `Save comment`, and `Delete comment` identify review mutations.
