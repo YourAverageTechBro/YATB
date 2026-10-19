@@ -87,6 +87,10 @@ export function d1(db: DatabaseSync): D1Database {
   }
   return {
     prepare,
+    async exec(sql: string) {
+      db.exec(sql)
+      return { count: 0, duration: 0 }
+    },
     async batch(statements: readonly BoundStatement[]) {
       db.exec('BEGIN')
       try {

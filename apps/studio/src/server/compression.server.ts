@@ -8,6 +8,7 @@ import {
   type CompressionJob,
   type MediaDerivativeState,
 } from '#/domain/derivatives'
+import { CONTAINER_INSTANCES } from './container-instances'
 
 type CompressionBindings = Cloudflare.Env & {
   DB: D1Database
@@ -157,7 +158,7 @@ export async function processCompressionJob(
   try {
     const source = await envBindings.MEDIA.get(row.source_object_key)
     if (!source) throw new Error('The original video object is missing.')
-    const transcoder = envBindings.VIDEO_TRANSCODER.getByName('compact-mp4')
+    const transcoder = envBindings.VIDEO_TRANSCODER.getByName(CONTAINER_INSTANCES.compactMp4)
     const fixedLength = new FixedLengthStream(row.source_byte_size)
     const sourceTransfer = source.body.pipeTo(fixedLength.writable)
     const responsePromise = transcoder.fetch(new Request('http://container/transcode', {

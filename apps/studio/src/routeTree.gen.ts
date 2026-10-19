@@ -26,6 +26,7 @@ import { Route as ApiVideosVideoIdMediaRouteImport } from './routes/api.videos.$
 import { Route as ApiVideosVideoIdUploadsRouteImport } from './routes/api.videos.$videoId.uploads'
 import { Route as ApiVideosVideoIdMediaFileIdRouteImport } from './routes/api.videos.$videoId.media.$fileId'
 import { Route as ApiVideosVideoIdUploadsUploadIdRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId'
+import { Route as ApiVideosVideoIdDraftsDraftIdTranscriptRouteImport } from './routes/api.videos.$videoId.drafts.$draftId.transcript'
 import { Route as ApiVideosVideoIdUploadsUploadIdCompleteRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId.complete'
 import { Route as ApiVideosVideoIdUploadsUploadIdPartsPartNumberRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId.parts.$partNumber'
 
@@ -115,6 +116,12 @@ const ApiVideosVideoIdUploadsUploadIdRoute =
     path: '/$uploadId',
     getParentRoute: () => ApiVideosVideoIdUploadsRoute,
   } as any)
+const ApiVideosVideoIdDraftsDraftIdTranscriptRoute =
+  ApiVideosVideoIdDraftsDraftIdTranscriptRouteImport.update({
+    id: '/api/videos/$videoId/drafts/$draftId/transcript',
+    path: '/api/videos/$videoId/drafts/$draftId/transcript',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiVideosVideoIdUploadsUploadIdCompleteRoute =
   ApiVideosVideoIdUploadsUploadIdCompleteRouteImport.update({
     id: '/complete',
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
   '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/videos/$videoId/drafts/$draftId/transcript': typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
   '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
   '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
@@ -165,6 +173,7 @@ export interface FileRoutesByTo {
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
   '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/videos/$videoId/drafts/$draftId/transcript': typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
   '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
   '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
@@ -187,6 +196,7 @@ export interface FileRoutesById {
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
   '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/videos/$videoId/drafts/$draftId/transcript': typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
   '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
   '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/api/videos/$videoId/uploads'
     | '/api/videos/$videoId/media/$fileId'
     | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/videos/$videoId/drafts/$draftId/transcript'
     | '/api/videos/$videoId/uploads/$uploadId/complete'
     | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   fileRoutesByTo: FileRoutesByTo
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/api/videos/$videoId/uploads'
     | '/api/videos/$videoId/media/$fileId'
     | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/videos/$videoId/drafts/$draftId/transcript'
     | '/api/videos/$videoId/uploads/$uploadId/complete'
     | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   id:
@@ -250,6 +262,7 @@ export interface FileRouteTypes {
     | '/api/videos/$videoId/uploads'
     | '/api/videos/$videoId/media/$fileId'
     | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/videos/$videoId/drafts/$draftId/transcript'
     | '/api/videos/$videoId/uploads/$uploadId/complete'
     | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   fileRoutesById: FileRoutesById
@@ -266,6 +279,7 @@ export interface RootRouteChildren {
   ApiStreamSourceFileIdRoute: typeof ApiStreamSourceFileIdRoute
   ApiVideosVideoIdMediaRoute: typeof ApiVideosVideoIdMediaRouteWithChildren
   ApiVideosVideoIdUploadsRoute: typeof ApiVideosVideoIdUploadsRouteWithChildren
+  ApiVideosVideoIdDraftsDraftIdTranscriptRoute: typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -389,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiVideosVideoIdUploadsUploadIdRouteImport
       parentRoute: typeof ApiVideosVideoIdUploadsRoute
     }
+    '/api/videos/$videoId/drafts/$draftId/transcript': {
+      id: '/api/videos/$videoId/drafts/$draftId/transcript'
+      path: '/api/videos/$videoId/drafts/$draftId/transcript'
+      fullPath: '/api/videos/$videoId/drafts/$draftId/transcript'
+      preLoaderRoute: typeof ApiVideosVideoIdDraftsDraftIdTranscriptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/videos/$videoId/uploads/$uploadId/complete': {
       id: '/api/videos/$videoId/uploads/$uploadId/complete'
       path: '/complete'
@@ -480,6 +501,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStreamSourceFileIdRoute: ApiStreamSourceFileIdRoute,
   ApiVideosVideoIdMediaRoute: ApiVideosVideoIdMediaRouteWithChildren,
   ApiVideosVideoIdUploadsRoute: ApiVideosVideoIdUploadsRouteWithChildren,
+  ApiVideosVideoIdDraftsDraftIdTranscriptRoute:
+    ApiVideosVideoIdDraftsDraftIdTranscriptRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

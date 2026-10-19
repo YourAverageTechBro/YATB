@@ -19,7 +19,7 @@ export const AI_PRICE_ESTIMATES = {
   writerTranscriptTokensPerMinute: 250,
 } as const
 
-export type ChargeCall = 'transcribe' | 'write-1' | 'write-2'
+export type ChargeCall = 'transcribe' | `write-${number}`
 export type WriterUsage = Readonly<{ inputTokens: number; outputTokens: number }>
 
 export function spendMonth(now: number): SpendMonth {

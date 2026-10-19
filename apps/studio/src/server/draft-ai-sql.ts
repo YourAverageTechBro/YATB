@@ -101,6 +101,28 @@ WHERE j.draft_id = ?1 AND j.kind = ?2 AND j.lease_id = ?3
 ON CONFLICT (draft_id, field) DO UPDATE SET seq = excluded.seq, text = excluded.text,
   provider = excluded.provider, model = excluded.model, created_at = excluded.created_at`
 
+/** The draft a member is looking at, only while its video is live. ?1 draft_id ?2 video_id */
+export const PANEL_DRAFT_SQL = `
+SELECT d.id, d.video_id, d.version, d.duration_ms, f.byte_size, f.object_key, f.content_type, v.format, v.title
+FROM draft d
+JOIN video v ON v.id = d.video_id AND v.deleted_at IS NULL
+JOIN media_file f ON f.id = d.media_file_id AND f.video_id = d.video_id
+WHERE d.id = ?1 AND d.video_id = ?2`
+
+/** ?1 draft_id */
+export const PANEL_JOBS_SQL = `
+SELECT kind, state, request_seq, failure_code, failure_detail FROM draft_ai_job WHERE draft_id = ?1`
+
+/** ?1 draft_id */
+export const PANEL_TRANSCRIPT_SQL = `
+SELECT transcript_etag, segment_count, span_end_ms, provider FROM draft_transcript WHERE draft_id = ?1`
+
+/** ?1 draft_id */
+export const PANEL_GENERATIONS_SQL = `SELECT field, seq, text, provider FROM draft_generation WHERE draft_id = ?1`
+
+/** ?1 draft_id */
+export const PANEL_EDITS_SQL = `SELECT field, text, base_seq, revision FROM draft_text_edit WHERE draft_id = ?1`
+
 /** ?1 month */
 export const MONTH_SPEND_SQL = `SELECT COALESCE(SUM(microusd), 0) AS spent FROM ai_spend WHERE month = ?1`
 
