@@ -251,7 +251,7 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .writeup-transcript { display: grid; gap: 8px; justify-items: start; }
 .writeup-transcript [data-slot='accordion'] { width: 100%; }
 .writeup-transcript [data-slot='accordion-trigger'] small { margin-left: auto; color: var(--muted-foreground); font-weight: 400; }
-.transcript-scroll { height: min(20rem, 50dvh); }
+.transcript-scroll [data-slot='scroll-area-viewport'] { max-height: min(20rem, 50dvh); }
 .transcript-lines { list-style: none; margin: 0; padding: 0 12px 0 0; display: grid; gap: 6px; }
 .transcript-lines time { margin-right: 8px; color: var(--muted-foreground); font: 500 11px 'Geist Mono Variable', monospace; }
 .guest-review-page .review-pane { margin-top: 22px; }
