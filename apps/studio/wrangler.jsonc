@@ -39,13 +39,14 @@
       "name": "video-transcoder",
       "class_name": "CompressionContainer",
       "image": "./container/Dockerfile",
-      "max_instances": 1,
+      "max_instances": 2,
       "instance_type": "standard-1"
     }
   ],
   "queues": {
     "producers": [
-      { "binding": "VIDEO_COMPRESSION_QUEUE", "queue": "yatb-video-compression" }
+      { "binding": "VIDEO_COMPRESSION_QUEUE", "queue": "yatb-video-compression" },
+      { "binding": "DRAFT_AI_QUEUE", "queue": "yatb-draft-ai" }
     ],
     "consumers": [
       {
@@ -55,15 +56,25 @@
         "max_retries": 4,
         "retry_delay": 60,
         "max_concurrency": 1
+      },
+      {
+        "queue": "yatb-draft-ai",
+        "max_batch_size": 1,
+        "max_batch_timeout": 1,
+        "max_retries": 5,
+        "retry_delay": 30,
+        "max_concurrency": 1
       }
     ]
   },
   "secrets": { "required": ["BETTER_AUTH_SECRET"] },
   "stream": { "binding": "STREAM" },
+  "ai": { "binding": "AI" },
   "vars": {
     "APP_ORIGIN": "https://studio.youraveragetechbro.com",
     "EMAIL_MODE": "cloudflare",
-    "EMAIL_FROM": "studio@studio-mail.youraveragetechbro.com"
+    "EMAIL_FROM": "studio@studio-mail.youraveragetechbro.com",
+    "DRAFT_AI_MODE": "live"
   },
   "d1_databases": [
     {

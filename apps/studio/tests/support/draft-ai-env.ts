@@ -133,7 +133,10 @@ export function draftAiEnv(
   return { env, objects, sent }
 }
 
-export function messageBatch(bodies: readonly unknown[]): Readonly<{ batch: MessageBatch<unknown>; outcomes: QueueOutcome[] }> {
+export function messageBatch(
+  bodies: readonly unknown[],
+  queue = 'yatb-draft-ai',
+): Readonly<{ batch: MessageBatch<unknown>; outcomes: QueueOutcome[] }> {
   const outcomes: QueueOutcome[] = []
   const messages = bodies.map((body) => ({
     id: crypto.randomUUID(),
@@ -144,7 +147,7 @@ export function messageBatch(bodies: readonly unknown[]): Readonly<{ batch: Mess
     retry: (options?: QueueRetryOptions) => outcomes.push({ body, outcome: { retryDelaySeconds: options?.delaySeconds } }),
   }))
   return {
-    batch: { queue: 'yatb-draft-ai', messages, ackAll: () => {}, retryAll: () => {} } as unknown as MessageBatch<unknown>,
+    batch: { queue, messages, ackAll: () => {}, retryAll: () => {} } as unknown as MessageBatch<unknown>,
     outcomes,
   }
 }
