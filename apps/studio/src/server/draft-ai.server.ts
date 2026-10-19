@@ -190,7 +190,6 @@ export async function loadWriteups(target: WriteupTarget, envBindings = bindings
   return buildWriteupsView(await requireContext(envBindings, target, Date.now()))
 }
 
-/** The transcript is requested before the field, so the orphan sweep never sees the old failed transcript. */
 export async function requestWriteup(
   input: WriteupRequest,
   envBindings = bindings,

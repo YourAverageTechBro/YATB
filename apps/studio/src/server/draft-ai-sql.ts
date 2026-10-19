@@ -30,7 +30,7 @@ WHERE draft_id = ?1 AND kind = ?2 AND attempts < ${JOB_MAX_ATTEMPTS}
     SELECT 1 FROM draft_transcript t WHERE t.draft_id = ?1 AND t.transcript_etag IS NOT NULL))
 RETURNING video_id, request_seq, attempts`
 
-/** processing -> ready. The `draft_ai_job_ready_requires_artifact` trigger rejects it without the artifact. ?1 draft_id ?2 kind ?3 lease_id ?4 now */
+/** ?1 draft_id ?2 kind ?3 lease_id ?4 now */
 export const SUCCEED_JOB_SQL = `
 UPDATE draft_ai_job SET
   state = 'ready', lease_id = NULL, lease_until = NULL, failure_code = NULL, failure_detail = NULL, updated_at = ?4

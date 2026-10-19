@@ -67,7 +67,6 @@ CREATE TABLE "draft_text_edit" (
   FOREIGN KEY ("draft_id", "video_id") REFERENCES "draft" ("id", "video_id") ON DELETE CASCADE
 );
 
--- No foreign keys, so purging a video never refunds spend.
 CREATE TABLE "ai_spend" (
   "id" TEXT PRIMARY KEY NOT NULL,
   "month" TEXT NOT NULL CHECK ("month" GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]'),

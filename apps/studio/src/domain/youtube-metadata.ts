@@ -12,7 +12,6 @@ export const CHAPTER_RULES = {
 
 export const DESCRIPTION_MAX_CHARS = 5_000
 
-/** Placeholder copy. Thomas owns the final footer text. YouTube rejects `<` and `>`, and generated descriptions carry no hashtags. */
 export const DESCRIPTION_FOOTER = [
   'Links',
   'Newsletter: https://youraveragetechbro.com',

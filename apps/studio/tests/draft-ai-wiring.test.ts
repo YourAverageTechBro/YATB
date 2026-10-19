@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { unstable_readConfig } from 'wrangler'
+import { unstable_readConfig, type Unstable_Config } from 'wrangler'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import worker from '../src/server'
 import { JOB_MAX_ATTEMPTS } from '../src/domain/draft-ai'
@@ -26,20 +26,7 @@ vi.mock('../src/server/draft-ai.server', () => ({
   reconcileDraftAiJobs: mocks.reconcileDraftAiJobs,
 }))
 
-/** wrangler types its Config through @cloudflare/workers-utils, which it bundles without installing, so tsc reads it as any. */
-type WranglerConfig = {
-  queues: {
-    producers?: { binding: string; queue: string }[]
-    consumers?: { queue: string; max_retries?: number }[]
-  }
-  triggers: { crons: string[] }
-  containers?: { class_name: string; max_instances?: number }[]
-  ai?: { binding: string }
-  vars: Record<string, unknown>
-  secrets?: { required?: string[] }
-}
-
-const config: WranglerConfig = unstable_readConfig(
+const config: Unstable_Config = unstable_readConfig(
   { config: fileURLToPath(new URL('../wrangler.jsonc', import.meta.url)) },
   { hideWarnings: true },
 )

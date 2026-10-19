@@ -90,10 +90,6 @@ export type ResolvedText = Readonly<{
   revision: number
 }>
 
-/**
- * The read-time merge of the two writers. An edit counts only when it was typed over the current
- * generation, so a newer generation supersedes it without anyone deleting it.
- */
 export function resolveFieldText(generation: Generation | null, edit: WriteupEdit | null): ResolvedText {
   const baseSeq = generation?.seq ?? 0
   const revision = edit?.revision ?? 0
@@ -153,7 +149,6 @@ export type WriteupFieldView = Readonly<{
   saveToken: WriteupSaveToken
   progress: WriteupProgress
   generate: GenerateAvailability
-  /** YouTube rule problems in hand-edited chapters. The save still lands. */
   problems: readonly string[]
   stub: boolean
 }>

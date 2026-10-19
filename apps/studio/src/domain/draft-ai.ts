@@ -23,7 +23,6 @@ export type JobState = (typeof JOB_STATES)[number]
 export const AI_PROVIDER_MODES = ['live', 'stub'] as const
 export type AiProviderMode = (typeof AI_PROVIDER_MODES)[number]
 
-/** Mirrors the `failure_code` CHECK in migration 0013. */
 export const FAILURE_CODES = [
   'no-speech',
   'budget',
@@ -62,10 +61,6 @@ export type AiAvailability =
   | Readonly<{ kind: 'stub' }>
   | Readonly<{ kind: 'unavailable'; reason: string }>
 
-/**
- * YouTube measures the last chapter against the video length, and every start must land on speech.
- * The lesser of the two keeps both true even when the client-reported duration is wrong.
- */
 export function chapterBoundMs(durationMs: number, spanEndMs: number | null): number {
   return spanEndMs === null ? durationMs : Math.min(durationMs, spanEndMs)
 }
@@ -91,7 +86,6 @@ export function transcriptKey(videoId: VideoId, draftId: DraftId): string {
   return `videos/${videoId}/drafts/${draftId}/transcript-nova3-en-v1.json`
 }
 
-/** Derived from draft ids, not artifact rows, so an object written before its row still gets deleted. */
 export function draftAiObjectKeys(videoId: VideoId, draftIds: readonly DraftId[]): string[] {
   return draftIds.flatMap((draftId) => [speechAudioKey(videoId, draftId), transcriptKey(videoId, draftId)])
 }
