@@ -49,12 +49,25 @@ export function seedDraft(db: DatabaseSync, options: SeedOptions = {}): void {
     VALUES (?, ?, ?, 1, ?, ?, 1)`).run(ids.draft, ids.video, ids.file, durationMs, ids.user)
 }
 
-type Param = string | number | null
+export type Param = string | number | null
+
+/** D1 binds `?NNN` placeholders by position. node:sqlite binds them only by name, so the values get numbered. */
+export function statement(db: DatabaseSync, sql: string) {
+  const prepared = db.prepare(sql)
+  const numbered = /\?\d/.test(sql)
+  const named = (params: readonly Param[]) =>
+    Object.fromEntries(params.map((value, index) => [String(index + 1), value]))
+  return {
+    run: (...params: Param[]) => (numbered ? prepared.run(named(params)) : prepared.run(...params)),
+    all: (...params: Param[]) => (numbered ? prepared.all(named(params)) : prepared.all(...params)),
+    get: (...params: Param[]) => (numbered ? prepared.get(named(params)) : prepared.get(...params)),
+  }
+}
 
 type BoundStatement = Readonly<{ sql: string; params: readonly Param[] }>
 
-function execute(db: DatabaseSync, statement: BoundStatement) {
-  const results = db.prepare(statement.sql).all(...statement.params)
+function execute(db: DatabaseSync, bound: BoundStatement) {
+  const results = statement(db, bound.sql).all(...bound.params)
   const { changes } = db.prepare('SELECT changes() AS changes').get() as { changes: number }
   return { results, success: true, meta: { changes } }
 }
@@ -66,7 +79,7 @@ export function d1(db: DatabaseSync): D1Database {
       sql,
       params,
       bind: (...next: Param[]) => bound(next),
-      first: async () => db.prepare(sql).get(...params) ?? null,
+      first: async () => statement(db, sql).get(...params) ?? null,
       run: async () => execute(db, { sql, params }),
       all: async () => execute(db, { sql, params }),
     })
