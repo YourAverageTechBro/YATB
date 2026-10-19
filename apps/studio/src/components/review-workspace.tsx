@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { uploadFile, type UploadProgress } from '#/client/upload'
 import { type Draft } from '#/domain/reviews'
 import { loadDrafts } from '#/server/reviews.functions'
+import { DraftWriteups } from './draft-writeups'
 import { ReviewPane } from './review-pane'
 
 type DraftUpload = Readonly<{
@@ -123,6 +124,7 @@ export function ReviewWorkspace({ videoId, onFootageChanged }: { videoId: string
       : <>
         {selected && <div className="draft-selector"><Label>Draft version<Select value={selected.id} onValueChange={setSelectedId}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{drafts.map((draft) => <SelectItem key={draft.id} value={draft.id}>Version {draft.version} · {draft.file.displayName}</SelectItem>)}</SelectContent></Select></Label><div className="draft-selector-actions"><small>{drafts.length} immutable {drafts.length === 1 ? 'version' : 'versions'} · newest first</small>{drafts.length >= 2 && <Link className={buttonVariants({ variant: 'outline' })} to="/videos/$videoId/compare" params={{ videoId }}>Compare versions</Link>}</div></div>}
         {selected && <ReviewPane key={selected.id} draft={selected} onFootageChanged={onFootageChanged} />}
+        {selected && <DraftWriteups key={`writeups:${selected.id}`} videoId={videoId} draftId={selected.id} />}
       </>}
   </section>
 }
