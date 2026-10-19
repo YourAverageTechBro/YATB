@@ -13,6 +13,8 @@ truth for the Worker, its custom domain, bindings, schedule, and observability.
 - The `yatb-video-compression` Queue exists in the same account. Creating it is
   a one-time operation (`npx wrangler queues create yatb-video-compression
   --cwd apps/studio`); routine deploys must not recreate it.
+- The `yatb-draft-ai` Queue exists in the same account. `apps/studio/DRAFT-AI.md`
+  covers creating it and the one-time AI Gateway setup.
 - The account has Workers Paid enabled for the `video-transcoder` Container.
 - Cloudflare Stream is enabled on the same account. The Worker binds it as
   `STREAM` in `wrangler.jsonc`. No API token is required for copy or signed
@@ -31,6 +33,7 @@ npx wrangler whoami
 npx wrangler d1 info yatb-studio --cwd apps/studio
 npx wrangler r2 bucket info yatb-studio-media --cwd apps/studio
 npx wrangler queues info yatb-video-compression --cwd apps/studio
+npx wrangler queues info yatb-draft-ai --cwd apps/studio
 ```
 
 ## Prepare
