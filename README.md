@@ -36,7 +36,7 @@ Create the local D1 database and start Studio:
 npx wrangler d1 migrations apply yatb-studio --local --cwd apps/studio
 BETTER_AUTH_SECRET=replace-with-at-least-32-random-characters \
 APP_ORIGIN=http://localhost:3001 EMAIL_MODE=capture \
-EMAIL_FROM=studio@studio-mail.youraveragetechbro.com npm run dev:studio
+EMAIL_FROM=studio@studio-mail.youraveragetechbro.com DRAFT_AI_MODE=stub npm run dev:studio
 ```
 
 Set a random `BETTER_AUTH_SECRET` with at least 32 characters. Open

@@ -15,6 +15,7 @@ import {
 } from '#/domain/media'
 import type { Draft, ReviewAuthor } from '#/domain/reviews'
 import type { MediaDerivativeState } from '#/domain/derivatives'
+import { draftAiObjectKeys } from '#/domain/draft-ai'
 import type { LibraryFile } from '#/domain/file-library'
 import { emptyDraftStream } from '#/domain/stream'
 import { ensureDraftDerivative } from './compression.server'
@@ -583,8 +584,15 @@ export async function cleanupTombstonedVideos(envBindings: Bindings, now = Date.
       const derivatives = await envBindings.DB.prepare(
         'SELECT object_key FROM media_derivative WHERE video_id = ?',
       ).bind(video.id).all<{ object_key: string }>()
-      for (let index = 0; index < derivatives.results.length; index += 1000) {
-        await envBindings.MEDIA.delete(derivatives.results.slice(index, index + 1000).map((file) => file.object_key))
+      const drafts = await envBindings.DB.prepare(
+        'SELECT id FROM draft WHERE video_id = ?',
+      ).bind(video.id).all<{ id: string }>()
+      const derivedKeys = [
+        ...derivatives.results.map((file) => file.object_key),
+        ...draftAiObjectKeys(video.id, drafts.results.map((draft) => draft.id)),
+      ]
+      for (let index = 0; index < derivedKeys.length; index += 1000) {
+        await envBindings.MEDIA.delete(derivedKeys.slice(index, index + 1000))
       }
       for (let index = 0; index < files.results.length; index += 1000) {
         await envBindings.MEDIA.delete(files.results.slice(index, index + 1000).map((file) => file.object_key))
