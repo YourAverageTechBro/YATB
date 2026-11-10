@@ -6,10 +6,21 @@ SELECT owner_user_id, id FROM saved_view WHERE owner_user_id = ? AND id = ?
 ON CONFLICT(owner_user_id) DO UPDATE SET default_saved_view_id = excluded.default_saved_view_id`
 export const ORGANIC_LONG_VIDEO_SQL = `${ACTIVE_VIDEO_SQL} AND format = 'long' AND promotion = 'organic'`
 
+export function unpublishedVideoStatuses(): VideoStatusFilter {
+  return VIDEO_STATUSES.filter((status) => status !== 'published')
+}
+
+export function organicVideoOptionValues(excludeId?: string): readonly string[] {
+  const unpublished = statusFilterSql(unpublishedVideoStatuses()).values
+  return excludeId === undefined ? unpublished : [excludeId, ...unpublished, excludeId]
+}
+
 export function organicVideoOptionsSql(excludeCurrent: boolean): string {
+  const unpublished = statusFilterSql(unpublishedVideoStatuses()).clause.replace(/^\s*AND\s*/, '')
   return `SELECT id, title, status, publish_date
 FROM video
 WHERE ${ORGANIC_LONG_VIDEO_SQL}${excludeCurrent ? ' AND id != ?' : ''}
+AND (${unpublished}${excludeCurrent ? ' OR id = (SELECT linked_organic_video_id FROM video WHERE id = ?)' : ''})
 ORDER BY title COLLATE NOCASE ASC, id ASC`
 }
 

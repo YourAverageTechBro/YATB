@@ -19,7 +19,7 @@ import {
 } from '../src/domain/videos'
 import { buildCalendarMonth, calendarMonthRange, parseCalendarMonth, shiftCalendarMonth } from '../src/domain/calendar'
 import { emptyRichDocument } from '../src/server/rich-document'
-import { ACTIVE_VIDEO_SQL, UPDATE_VIDEO_SQL, calendarVideosSql, organicVideoOptionsSql, statusFilterSql } from '../src/server/video-sql'
+import { ACTIVE_VIDEO_SQL, UPDATE_VIDEO_SQL, calendarVideosSql, organicVideoOptionValues, organicVideoOptionsSql, statusFilterSql, unpublishedVideoStatuses } from '../src/server/video-sql'
 
 const first: Video = {
   id: '1b0e913b-645c-4306-a71d-78115390b46d',
@@ -306,19 +306,22 @@ describe('video planning domain', () => {
     db.close()
   })
 
-  it('lists active organic long-form candidates by stable title order and excludes the current video', () => {
+  it('lists unpublished organic long-form candidates by stable title order and keeps a published linked target', () => {
     const db = planningDatabase()
     insertVideo(db, ids.target, 'long', 'organic')
     insertVideo(db, ids.otherTarget, 'long', 'organic')
-    insertVideo(db, ids.firstSource, 'short', 'organic')
+    insertVideo(db, ids.secondSource, 'long', 'organic')
+    insertVideo(db, ids.firstSource, 'long', 'integration', ids.otherTarget)
     db.prepare("UPDATE video SET title = 'Zulu', status = 'filming', publish_date = '2026-10-02' WHERE id = ?").run(ids.target)
     db.prepare("UPDATE video SET title = 'alpha', status = 'published' WHERE id = ?").run(ids.otherTarget)
+    db.prepare("UPDATE video SET title = 'yankee', status = 'published' WHERE id = ?").run(ids.secondSource)
 
-    expect(db.prepare(organicVideoOptionsSql(false)).all()).toEqual([
-      { id: ids.otherTarget, title: 'alpha', status: 'published', publish_date: null },
+    expect(unpublishedVideoStatuses()).toEqual(['not-started', 'filming', 'ready-to-edit', 'ready-to-review'])
+    expect(db.prepare(organicVideoOptionsSql(false)).all(...organicVideoOptionValues())).toEqual([
       { id: ids.target, title: 'Zulu', status: 'filming', publish_date: '2026-10-02' },
     ])
-    expect(db.prepare(organicVideoOptionsSql(true)).all(ids.otherTarget)).toEqual([
+    expect(db.prepare(organicVideoOptionsSql(true)).all(...organicVideoOptionValues(ids.firstSource))).toEqual([
+      { id: ids.otherTarget, title: 'alpha', status: 'published', publish_date: null },
       { id: ids.target, title: 'Zulu', status: 'filming', publish_date: '2026-10-02' },
     ])
     db.close()
