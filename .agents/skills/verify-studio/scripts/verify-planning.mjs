@@ -268,16 +268,31 @@ assert(
 )
 const previousDefault = db.prepare('SELECT default_saved_view_id FROM user_video_preference WHERE owner_user_id = ?').get(savedView.owner_user_id)
 
+function assertPlanningLocation(location, expected, label) {
+  assert(location.pathname === '/videos', `${label} did not land on videos`)
+  const selected = JSON.parse(location.searchParams.get('status'))
+  assert(JSON.stringify(selected) === JSON.stringify(expected.status), `${label} restored the wrong statuses: ${JSON.stringify(selected)}`)
+  for (const field of ['layout', 'groupBy', 'format', 'sort']) {
+    assert(location.searchParams.get(field) === expected[field], `${label} restored the wrong ${field}`)
+  }
+}
+
+async function assertVideosDestination(sessionCookie, expected) {
+  const response = await fetch(`${baseUrl}/videos`, { headers: { Cookie: sessionCookie }, redirect: 'manual' })
+  assert(response.status === 307, `Bare videos list returned ${response.status}`)
+  assertPlanningLocation(new URL(response.headers.get('location'), baseUrl), expected, 'Videos list')
+}
+
 async function assertLoginDestination(sessionCookie, expected) {
   const response = await fetch(`${baseUrl}/`, { headers: { Cookie: sessionCookie }, redirect: 'manual' })
   assert(response.status === 307, `Authenticated login page returned ${response.status}`)
   const location = new URL(response.headers.get('location'), baseUrl)
   assert(location.pathname === '/videos', 'Login did not redirect to videos')
-  const selected = JSON.parse(location.searchParams.get('status'))
-  assert(JSON.stringify(selected) === JSON.stringify(expected.status), `Login restored the wrong statuses: ${JSON.stringify(selected)}`)
-  for (const field of ['layout', 'groupBy', 'format', 'sort']) {
-    assert(location.searchParams.get(field) === expected[field], `Login restored the wrong ${field}`)
+  if ([...location.searchParams].length === 0) {
+    await assertVideosDestination(sessionCookie, expected)
+    return
   }
+  assertPlanningLocation(location, expected, 'Login')
 }
 
 const standardView = { layout: 'list', groupBy: 'none', status: ['not-started', 'filming', 'ready-to-edit', 'ready-to-review', 'published'], format: 'all', sort: 'updated-desc' }
@@ -285,6 +300,7 @@ const defaultBoard = { layout: 'board', groupBy: 'status', status: ['filming', '
 await callServerFunction(ids, cookie, 'setDefaultSavedView', savedView.id)
 assert(db.prepare('SELECT default_saved_view_id FROM user_video_preference WHERE owner_user_id = ?').get(savedView.owner_user_id)?.default_saved_view_id === savedView.id, 'Default view did not persist')
 await assertLoginDestination(await signIn(email, password), defaultBoard)
+await assertVideosDestination(cookie, defaultBoard)
 const defaultPage = await fetch(`${baseUrl}/videos`, { headers: { Cookie: cookie } })
 assert((await defaultPage.text()).includes(`Clear default ${viewName}`), 'Default saved view was not marked in the UI')
 const secondCookie = await signIn(secondEmail, secondPassword)

@@ -18,7 +18,6 @@ import {
   parseAuthSearch,
   shouldShowEmailVerifiedConfirmation,
 } from '#/domain/auth'
-import { loadDefaultVideoView } from '#/server/videos.functions'
 
 type Mode = 'sign-in' | 'sign-up' | 'forgot' | 'reset'
 
@@ -26,7 +25,7 @@ export const Route = createFileRoute('/')({
   validateSearch: (search: Record<string, unknown> & SearchSchemaInput) =>
     parseAuthSearch(search),
   beforeLoad: async () => {
-    if (await loadSession()) throw redirect({ to: '/videos', search: await loadDefaultVideoView() })
+    if (await loadSession()) throw redirect({ to: '/videos' })
   },
   component: Login,
 })
@@ -83,7 +82,7 @@ function Login() {
     } else if (mode === 'sign-up') {
       setMessage('Check your email to verify your account.')
     } else {
-      await navigate({ to: '/videos', search: await loadDefaultVideoView() })
+      await navigate({ to: '/videos' })
     }
     setBusy(false)
   }

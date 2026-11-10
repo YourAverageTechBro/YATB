@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
-import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clapperboard, LayoutGrid, List, Plus, Star, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import {
@@ -17,6 +17,7 @@ import {
   VIDEO_STATUSES,
   encodeStatusFilter,
   groupVideos,
+  hasExplicitPlanningView,
   legalPromotions,
   parseListConfig,
   parsePlanningQuery,
@@ -31,7 +32,7 @@ import {
 } from '#/domain/videos'
 import { buildCalendarMonth, calendarMonthLabel, currentCalendarMonth, shiftCalendarMonth } from '#/domain/calendar'
 import { emptyRichDocument } from '#/server/rich-document'
-import { createSavedView, createVideo, loadPlanning, moveVideoStatus, removeSavedView, setDefaultSavedView } from '#/server/videos.functions'
+import { createSavedView, createVideo, loadDefaultVideoView, loadPlanning, moveVideoStatus, removeSavedView, setDefaultSavedView } from '#/server/videos.functions'
 
 const VIDEO_STATUS_CHIP_CLASS = {
   'not-started': 'video-status-chip--not-started',
@@ -99,6 +100,18 @@ function searchQuery(search: Record<string, unknown>) {
 }
 
 export const Route = createFileRoute('/_app/videos')({
+  beforeLoad: async ({ search }) => {
+    const query = search as Record<string, unknown>
+    if (hasExplicitPlanningView(query)) return
+    throw redirect({
+      to: '/videos',
+      search: {
+        ...await loadDefaultVideoView(),
+        ...(query.page === undefined ? {} : { page: query.page }),
+        ...(query.month === undefined ? {} : { month: query.month }),
+      },
+    })
+  },
   loaderDeps: ({ search }) => searchQuery(search),
   loader: async ({ deps }) => ({ ...deps, ...await loadPlanning({ data: deps }) }),
   component: Videos,

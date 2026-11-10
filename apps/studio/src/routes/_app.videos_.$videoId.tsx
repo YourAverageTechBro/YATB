@@ -12,7 +12,6 @@ import { RichEditor } from '#/components/rich-editor'
 import { ReviewWorkspace } from '#/components/review-workspace'
 import { useVideoAutosave } from '#/components/use-video-autosave'
 import {
-  DEFAULT_LIST_CONFIG,
   STATUS,
   legalPromotions,
   type OrganicVideoOption,
@@ -71,13 +70,13 @@ function VideoEditor({ loaded, organicVideoOptions }: { loaded: Video; organicVi
 
   async function deleteVideo() {
     if (await erase()) {
-      await navigate({ to: '/videos', search: DEFAULT_LIST_CONFIG })
+      await navigate({ to: '/videos' })
     }
   }
 
   return (
     <main className="video-detail">
-      <Link to="/videos" search={DEFAULT_LIST_CONFIG}>← Videos</Link>
+      <Link to="/videos">← Videos</Link>
       <header className="video-detail-heading">
         <div><p className="eyebrow">Production video</p><h1>{video.title}</h1></div>
         <AlertDialog>

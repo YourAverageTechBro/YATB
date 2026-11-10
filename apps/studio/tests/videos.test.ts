@@ -8,6 +8,7 @@ import {
   filterVideos,
   groupVideos,
   parseListConfig,
+  hasExplicitPlanningView,
   parsePlanningQuery,
   parseProduction,
   parseSavedViewName,
@@ -112,6 +113,36 @@ describe('video planning domain', () => {
   it('accepts only positive planning pages', () => {
     expect(parsePlanningQuery({ layout: 'list', groupBy: 'none', status: 'all', format: 'all', sort: 'updated-desc', page: '2', month: '2026-09' }).page).toBe(2)
     expect(() => parsePlanningQuery({ layout: 'list', groupBy: 'none', status: 'all', format: 'all', sort: 'updated-desc', page: 0, month: '2026-09' })).toThrow('Page')
+  })
+
+  it('treats a planning URL as an explicit view only when a view field is present', () => {
+    expect(hasExplicitPlanningView({})).toBe(false)
+    expect(hasExplicitPlanningView({ page: 2, month: '2026-11' })).toBe(false)
+    expect(hasExplicitPlanningView({ layout: 'board' })).toBe(true)
+    expect(hasExplicitPlanningView({ groupBy: 'status' })).toBe(true)
+    expect(hasExplicitPlanningView({ status: 'filming,published' })).toBe(true)
+    expect(hasExplicitPlanningView({ format: 'long' })).toBe(true)
+    expect(hasExplicitPlanningView({ sort: 'title-asc' })).toBe(true)
+  })
+
+  it('resolves a bare videos list visit in the route instead of baking the unfiltered list into entry links', () => {
+    const videos = readFileSync(resolve(process.cwd(), 'src/routes/_app.videos.tsx'), 'utf8')
+    const detail = readFileSync(resolve(process.cwd(), 'src/routes/_app.videos_.$videoId.tsx'), 'utf8')
+    const compare = readFileSync(resolve(process.cwd(), 'src/routes/_app.videos_.$videoId_.compare.tsx'), 'utf8')
+    const login = readFileSync(resolve(process.cwd(), 'src/routes/index.tsx'), 'utf8')
+    const sidebar = readFileSync(resolve(process.cwd(), 'src/components/app-sidebar.tsx'), 'utf8')
+    const shell = readFileSync(resolve(process.cwd(), 'src/routes/_app.tsx'), 'utf8')
+    expect(videos).toContain('hasExplicitPlanningView')
+    expect(videos).toContain('loadDefaultVideoView')
+    expect(videos).toMatch(/throw redirect\(\{[\s\S]*to: '\/videos'/)
+    expect(detail).toContain('<Link to="/videos">← Videos</Link>')
+    expect(detail).not.toContain('DEFAULT_LIST_CONFIG')
+    expect(detail).toContain("navigate({ to: '/videos' })")
+    expect(compare).toContain('href="/videos"')
+    expect(login).toContain("to: '/videos'")
+    expect(login).not.toContain('loadDefaultVideoView')
+    expect(sidebar).toContain('href="/videos"')
+    expect(shell).toContain('href="/videos"')
   })
 
   it('normalizes readable status filters into canonical status order', () => {
