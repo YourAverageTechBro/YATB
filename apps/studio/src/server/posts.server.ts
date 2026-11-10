@@ -1,5 +1,6 @@
 import '@tanstack/react-start/server-only'
 import { env } from 'cloudflare:workers'
+import { applyPosted } from '#/domain/mcp-posts'
 import {
   canMarkReady,
   duplicateAsDraft,
@@ -10,10 +11,14 @@ import {
   parsePostId,
   parsePostItemId,
   parsePostMediaId,
+  parsePostPlatform,
   parsePostRevision,
+  parsePostStatus,
   parsePostTarget,
   postObjectKey,
   type PostDraft,
+  type PostPlatform,
+  type PostStatus,
   type PostSummary,
 } from '#/domain/posts'
 
@@ -97,14 +102,18 @@ async function loadDraft(id: string): Promise<PostDraft | null> {
   })
 }
 
-export async function listPostDrafts(): Promise<readonly PostSummary[]> {
-  const rows = await bindings.DB.prepare(`
+export async function listPostDrafts(status?: PostStatus): Promise<readonly PostSummary[]> {
+  const listSql = `
     SELECT d.id, d.target, d.x_premium, d.status, d.revision, d.updated_at,
            (SELECT count(*) FROM post p WHERE p.draft_id = d.id) AS post_count,
            (SELECT body FROM post p WHERE p.draft_id = d.id ORDER BY position ASC LIMIT 1) AS body
     FROM post_draft d
-    ORDER BY d.updated_at DESC, d.id ASC
-  `).all()
+  `
+  const rows = status
+    ? await bindings.DB.prepare(`${listSql} WHERE d.status = ? ORDER BY d.updated_at DESC, d.id ASC`)
+      .bind(parsePostStatus(status))
+      .all()
+    : await bindings.DB.prepare(`${listSql} ORDER BY d.updated_at DESC, d.id ASC`).all()
   return listPosts(rows.results)
 }
 
@@ -278,6 +287,64 @@ export async function attachPostMedia(input: {
     input.media.byteSize, input.media.contentType, input.media.durationMs, now,
   ).run()
   return loadDraft(input.draftId)
+}
+
+export async function recordStudioPosted(
+  idValue: unknown,
+  platformValue: unknown,
+  postIds: readonly string[],
+  now = Date.now(),
+  urls?: readonly string[],
+): Promise<{ kind: 'ok'; draft: PostDraft } | { kind: 'missing' } | { kind: 'invalid'; message: string }> {
+  const id = parsePostId(idValue)
+  const platform = parsePostPlatform(platformValue)
+  const loaded = await loadDraft(id)
+  if (!loaded) return { kind: 'missing' }
+  const result = applyPosted(loaded, platform as PostPlatform, postIds, now, urls)
+  if (result.kind !== 'ok') return result
+  const unchanged = result.draft.status === loaded.status
+    && result.draft.publications.length === loaded.publications.length
+    && result.draft.publications.every((row, index) => (
+      row.platform === loaded.publications[index]?.platform
+      && row.postIds.join('\0') === loaded.publications[index]?.postIds.join('\0')
+    ))
+  if (unchanged) return { kind: 'ok', draft: loaded }
+  const publication = result.draft.publications.find((row) => row.platform === platform)
+  if (!publication) return { kind: 'invalid', message: 'Posted ids were not recorded.' }
+  await bindings.DB.batch([
+    bindings.DB.prepare(
+      `INSERT INTO post_publication (draft_id, platform, post_ids_json, urls_json, posted_at)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(draft_id, platform) DO UPDATE SET
+         post_ids_json = excluded.post_ids_json,
+         urls_json = excluded.urls_json
+       WHERE post_publication.post_ids_json = excluded.post_ids_json`,
+    ).bind(
+      id,
+      platform,
+      JSON.stringify(publication.postIds),
+      JSON.stringify(publication.urls),
+      publication.postedAt,
+    ),
+    bindings.DB.prepare(
+      `UPDATE post_draft SET status = ?, updated_at = ?, revision = revision + 1 WHERE id = ?`,
+    ).bind(result.draft.status, result.draft.updatedAt, id),
+  ])
+  const saved = await loadDraft(id)
+  if (!saved) return { kind: 'missing' }
+  return { kind: 'ok', draft: saved }
+}
+
+export async function getPostMediaObject(mediaId: string): Promise<{
+  id: string
+  object_key: string
+  display_name: string
+  byte_size: number
+  content_type: string
+} | null> {
+  return bindings.DB.prepare(
+    `SELECT id, object_key, display_name, byte_size, content_type FROM post_media WHERE id = ?`,
+  ).bind(mediaId).first()
 }
 
 export { postObjectKey }

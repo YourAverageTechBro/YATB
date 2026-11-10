@@ -5,7 +5,7 @@ route behavior or application state.
 
 ## Sub-features
 
-- `shared-controls` keeps buttons, fields, selects, cards, alerts, and progress
+- `shared-controls` keeps buttons, fields, checkboxes, selects, cards, alerts, and progress
   controls consistent across both applications.
 - `shared-overlays` provides keyboard-safe dialogs, alert dialogs, the
   responsive Web navigation sheet, and Studio's responsive sidebar.
@@ -39,7 +39,7 @@ Preconditions:
   Reload an explicit choice and confirm it persists. Tab to a field and confirm
   the focus ring is visible.
 - **Drive Studio navigation.** At 390 pixels, open `Open Studio navigation`,
-  verify Videos, Theme, the signed-in account, and Sign out are reachable,
+  verify Videos, Posts, Files, Settings, Theme, the signed-in account, and Sign out are reachable,
   press Escape, and confirm focus returns to the trigger. At desktop width,
   collapse and expand the sidebar and confirm the Videos tooltip remains named.
   Repeat both transitions with Ctrl+B or Cmd+B and confirm the reopen trigger

@@ -9,6 +9,7 @@
     "./badge": "./src/components/badge.tsx",
     "./button": "./src/components/button.tsx",
     "./card": "./src/components/card.tsx",
+    "./checkbox": "./src/components/checkbox.tsx",
     "./dialog": "./src/components/dialog.tsx",
     "./dropdown-menu": "./src/components/dropdown-menu.tsx",
     "./input": "./src/components/input.tsx",

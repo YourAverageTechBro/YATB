@@ -1,6 +1,6 @@
 ---
 name: verify-studio
-description: Drive local and production YATB Studio authentication, planning, Posts composer, private footage, versioned draft review, comparison, and shared UI. Use after changes to routes, sessions, email callbacks, planning data, posts drafts, rich scripts, saved views, multipart uploads, media delivery, review comments, shared primitives, responsive navigation, themes, Cloudflare bindings, or production resources.
+description: Drive local and production YATB Studio authentication, planning, Posts composer, private footage, versioned draft review, comparison, shared UI, and the Posts MCP endpoint. Use after changes to routes, sessions, email callbacks, planning data, posts drafts, rich scripts, saved views, multipart uploads, media delivery, review comments, MCP tokens, shared primitives, responsive navigation, themes, Cloudflare bindings, or production resources.
 ---
 
 # Verify YATB Studio
@@ -28,8 +28,9 @@ For shared UI changes, also launch Web with `npm run dev:web` and wait for
 
 Run `.agents/skills/verify-studio/scripts/doctor.sh`. It passes only when the
 login page returns `200`, the private `/videos` and `/posts` routes redirect to
-`/`, and the raw video and post media routes return `401` with
-`Cache-Control: private, no-store, max-age=0`.
+`/`, the raw video and post media routes return `401` with
+`Cache-Control: private, no-store, max-age=0`, and `POST /mcp` without a bearer
+token returns `401`.
 
 ## Drive
 
@@ -71,6 +72,9 @@ accessibility tree before each action. Use these stable accessible names:
 - `Compare versions`, `Compare drafts`, `Left draft`, and `Right draft` identify the two-version comparison.
 - `Start seconds`, `End seconds`, and `Use playhead` create timestamp ranges; comment timestamp buttons seek the active player.
 - `Edit comment`, `Save comment`, and `Delete comment` identify review mutations.
+- `Settings` opens token management. `Token name`, `Create token`, `posts:read`,
+  `posts:mark_posted`, `Copy this token now`, `New access token`, `Copy token`,
+  and `Revoke` manage MCP bearer tokens.
 - `Color theme` selects `System`, `Light`, or `Dark` on public and private pages.
 - `Toggle menu` opens Web's mobile navigation; `Frequently Asked Questions`
   contains the Web accordion.
@@ -187,6 +191,15 @@ Cloudflare resources and signed-out boundary without changing either:
 
 ```sh
 apps/studio/scripts/audit-production.sh
+```
+
+Exercise the Posts MCP server with a Settings-minted token (never write the
+token into evidence files):
+
+```sh
+STUDIO_MCP_TOKEN=<plaintext> STUDIO_MCP_READ_TOKEN=<read-only-plaintext> \
+STUDIO_MCP_POST_ID=<post-draft-id> \
+node .agents/skills/verify-studio/scripts/verify-mcp.mjs
 ```
 
 Continue with [`features/production-launch.md`](features/production-launch.md).

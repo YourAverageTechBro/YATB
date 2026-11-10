@@ -13,6 +13,8 @@ describe('Studio sidebar', () => {
     expect(markup).toContain('aria-label="Studio navigation"')
     expect(markup).toContain('>Videos</span>')
     expect(markup).toContain('>Posts</span>')
+    expect(markup).toContain('>Files</span>')
+    expect(markup).toContain('>Settings</span>')
     expect(markup).toContain('aria-label="Color theme"')
     expect(markup).toContain('dohyun@example.com')
     expect(markup).toContain('>Sign out</span>')
