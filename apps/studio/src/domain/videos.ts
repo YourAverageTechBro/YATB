@@ -71,6 +71,14 @@ export function parsePlanningQuery(value: unknown): PlanningQuery {
   return { config: parseListConfig(input.config ?? input), page, month: parseCalendarMonth(input.month) }
 }
 
+const PLANNING_VIEW_SEARCH_KEYS = ['layout', 'groupBy', 'status', 'format', 'sort'] as const
+
+export function hasExplicitPlanningView(search: unknown): boolean {
+  if (typeof search !== 'object' || search === null || Array.isArray(search)) return false
+  const input = search as Record<string, unknown>
+  return PLANNING_VIEW_SEARCH_KEYS.some((key) => input[key] !== undefined)
+}
+
 export type Video = Readonly<{
   id: VideoId
   title: string
