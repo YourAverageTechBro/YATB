@@ -2,6 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@yatb/ui/button'
 import { Card } from '@yatb/ui/card'
+import { Checkbox } from '@yatb/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@yatb/ui/dialog'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
@@ -64,12 +65,10 @@ function SettingsPage() {
         <legend>Scopes</legend>
         {MCP_SCOPES.map((scope) => (
           <Label key={scope} className="mcp-token-scope">
-            <input
-              type="checkbox"
-              name="scopes"
-              value={scope}
+            <Checkbox
               checked={scopes.includes(scope)}
-              onChange={(event) => toggleScope(scope, event.target.checked)}
+              onCheckedChange={(checked) => toggleScope(scope, checked === true)}
+              aria-label={scope}
             />
             {scope}
           </Label>

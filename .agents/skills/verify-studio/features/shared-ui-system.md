@@ -5,7 +5,7 @@ route behavior or application state.
 
 ## Sub-features
 
-- `shared-controls` keeps buttons, fields, selects, cards, alerts, and progress
+- `shared-controls` keeps buttons, fields, checkboxes, selects, cards, alerts, and progress
   controls consistent across both applications.
 - `shared-overlays` provides keyboard-safe dialogs, alert dialogs, the
   responsive Web navigation sheet, and Studio's responsive sidebar.
