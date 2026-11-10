@@ -3,6 +3,7 @@ import { cleanupTombstonedVideos } from './server/media.server'
 import { consumeCompressionQueue, reconcileDerivatives } from './server/compression.server'
 import { consumeDraftAiQueue, reconcileDraftAiJobs } from './server/draft-ai.server'
 import { reconcileDraftStreams } from './server/stream.server'
+import { handleStudioMcp } from './server/mcp.server'
 
 export { CompressionContainer } from './server/compression-container'
 
@@ -16,6 +17,8 @@ const QUEUE_CONSUMERS = new Map<string, QueueConsumer>([
 
 export default {
   fetch(request) {
+    const path = new URL(request.url).pathname
+    if (path === '/mcp' || path.startsWith('/mcp/media/')) return handleStudioMcp(request)
     return handler.fetch(request)
   },
   async scheduled(_controller, env) {

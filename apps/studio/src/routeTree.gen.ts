@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppFilesRouteImport } from './routes/_app.files'
 import { Route as AppPostsRouteImport } from './routes/_app.posts'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppVideosRouteImport } from './routes/_app.videos'
 import { Route as ApiStreamWebhookRouteImport } from './routes/api.stream-webhook'
 import { Route as SharedFilesTokenRouteImport } from './routes/shared-files.$token'
@@ -54,6 +55,11 @@ const AppFilesRoute = AppFilesRouteImport.update({
 const AppPostsRoute = AppPostsRouteImport.update({
   id: '/posts',
   path: '/posts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppVideosRoute = AppVideosRouteImport.update({
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/files': typeof AppFilesRoute
   '/posts': typeof AppPostsRoute
+  '/settings': typeof AppSettingsRoute
   '/videos': typeof AppVideosRoute
   '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/files': typeof AppFilesRoute
   '/posts': typeof AppPostsRoute
+  '/settings': typeof AppSettingsRoute
   '/videos': typeof AppVideosRoute
   '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_app/files': typeof AppFilesRoute
   '/_app/posts': typeof AppPostsRoute
+  '/_app/settings': typeof AppSettingsRoute
   '/_app/videos': typeof AppVideosRoute
   '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/'
     | '/files'
     | '/posts'
+    | '/settings'
     | '/videos'
     | '/api/stream-webhook'
     | '/shared-files/$token'
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/'
     | '/files'
     | '/posts'
+    | '/settings'
     | '/videos'
     | '/api/stream-webhook'
     | '/shared-files/$token'
@@ -330,6 +341,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_app/files'
     | '/_app/posts'
+    | '/_app/settings'
     | '/_app/videos'
     | '/api/stream-webhook'
     | '/shared-files/$token'
@@ -400,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/posts'
       fullPath: '/posts'
       preLoaderRoute: typeof AppPostsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/videos': {
@@ -569,6 +588,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppFilesRoute: typeof AppFilesRoute
   AppPostsRoute: typeof AppPostsRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppVideosRoute: typeof AppVideosRoute
   AppPostsPostIdRoute: typeof AppPostsPostIdRoute
   AppVideosVideoIdRoute: typeof AppVideosVideoIdRoute
@@ -578,6 +598,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppFilesRoute: AppFilesRoute,
   AppPostsRoute: AppPostsRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppVideosRoute: AppVideosRoute,
   AppPostsPostIdRoute: AppPostsPostIdRoute,
   AppVideosVideoIdRoute: AppVideosVideoIdRoute,

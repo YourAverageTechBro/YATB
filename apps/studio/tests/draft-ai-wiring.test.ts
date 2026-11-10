@@ -25,6 +25,7 @@ vi.mock('../src/server/draft-ai.server', () => ({
   consumeDraftAiQueue: mocks.consumeDraftAiQueue,
   reconcileDraftAiJobs: mocks.reconcileDraftAiJobs,
 }))
+vi.mock('../src/server/mcp.server', () => ({ handleStudioMcp: vi.fn(async () => new Response('mcp')) }))
 
 const config: Unstable_Config = unstable_readConfig(
   { config: fileURLToPath(new URL('../wrangler.jsonc', import.meta.url)) },

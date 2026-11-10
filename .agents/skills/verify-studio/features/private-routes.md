@@ -4,7 +4,7 @@ Studio denies unauthenticated, revoked, and cross-origin access at server bounda
 
 ## Sub-features
 
-- `private-navigation` redirects `/videos` and `/posts` to `/` without a session.
+- `private-navigation` redirects `/videos`, `/posts`, and `/settings` to `/` without a session.
 - `unknown-navigation` returns a private-data-free not-found page.
 - `private-media` returns `401` and private cache policy.
 - `allowlist-revocation` denies an existing session after D1 disables its email.
@@ -12,7 +12,7 @@ Studio denies unauthenticated, revoked, and cross-origin access at server bounda
 
 ## How to get to it (user POV)
 
-- Open `/videos` or `/posts` without signing in.
+- Open `/videos`, `/posts`, or `/settings` without signing in.
 - Use the app after an administrator revokes the account.
 
 ## Driving it with Codex computer control
@@ -22,7 +22,7 @@ Preconditions:
 - Studio passes the doctor.
 - Use a disposable local session for the revocation check.
 
-- **Navigate.** Open `/videos` and `/posts` without cookies. The browser returns to `/`.
+- **Navigate.** Open `/videos`, `/posts`, and `/settings` without cookies. The browser returns to `/`.
 - **Open unknown page.** Open `/not-a-route`. The response is `404` and shows no workspace data.
 - **Request media.** Request `/api/videos/1b0e913b-645c-4306-a71d-78115390b46d/media/28a2b4a2-1ee2-44d8-8e3a-0c2dbd5b2d27?download=1` without cookies. The response is `401` with private no-store caching.
 - **Revoke.** Set the signed-in email's `allowed_email.enabled` value to `0`, then reload `/videos`. The browser returns to `/`. Restore the value to `1` before the origin check.

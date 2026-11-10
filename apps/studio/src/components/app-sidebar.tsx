@@ -1,4 +1,4 @@
-import { Clapperboard, Files, LogOut, PenLine } from 'lucide-react'
+import { Clapperboard, Files, LogOut, PenLine, Settings } from 'lucide-react'
 import { Button } from '@yatb/ui/button'
 import {
   Sidebar,
@@ -55,6 +55,11 @@ export function AppSidebar({ user, onSignOut, pathname = '/videos' }: AppSidebar
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === '/files'} tooltip="Files">
                   <a href="/files" onClick={closeMobileNavigation}><Files /><span>Files</span></a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip="Settings">
+                  <a href="/settings" onClick={closeMobileNavigation}><Settings /><span>Settings</span></a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

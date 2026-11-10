@@ -40,4 +40,10 @@ curl -sS -D "$scratch_dir/post-media.headers" -o /dev/null \
 rg -q '^HTTP/1.1 401' "$scratch_dir/post-media.headers"
 rg -qi '^cache-control: private, no-store, max-age=0\r?$' "$scratch_dir/post-media.headers"
 
+mcp_status="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$studio_url/mcp" \
+  -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"doctor","version":"0"}}}')"
+test "$mcp_status" = "401"
+
 echo "Studio doctor passed at $studio_url"
