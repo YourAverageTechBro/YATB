@@ -27,7 +27,8 @@
     "hls.js": "^1.7.3",
     "lucide-react": "^0.479.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "twitter-text": "^3.1.0"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.54.8",
@@ -36,6 +37,7 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/twitter-text": "^3.1.10",
     "@vitejs/plugin-react": "6.1.1",
     "tailwindcss": "^4.0.14",
     "typescript": "6.0.3",
