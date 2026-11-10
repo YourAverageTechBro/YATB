@@ -136,8 +136,8 @@ a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .posts-composer-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
 .posts-composer-header h1 { margin: 7px 0 0; overflow-wrap: anywhere; font-size: 36px; letter-spacing: -.045em; }
 .posts-composer-actions { display: flex; gap: 8px; align-items: start; }
-.post-targets { display: flex; gap: 16px; border: 0; padding: 0; }
-.post-targets label, .post-premium { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 620; }
+.post-targets { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; }
+.post-targets label { display: grid; gap: 7px; font-size: 13px; font-weight: 620; }
 .post-editor { display: grid; gap: 12px; padding: 16px; }
 .post-editor header { display: flex; justify-content: space-between; align-items: center; }
 .post-editor h2 { margin: 0; font-size: 18px; }

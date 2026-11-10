@@ -26,7 +26,7 @@ Preconditions:
 - Local D1 migration `0014_posts.sql` is applied.
 
 - **Open the list.** Confirm the heading `Posts`, empty copy `No posts yet` when none exist, and `New draft`.
-- **Compose a thread.** Enter text in `Post 1 text`, choose `Add post`, enter `Post 2 text`. Confirm `X <used>/280` and `Threads <used>/500` update live. Confirm `X preview` and `Threads preview` exist when Target is `Both`.
+- **Compose a thread.** Enter text in `Post 1 text`, choose `Add post`, enter `Post 2 text`. Confirm `X <used>/280` and `Threads <used>/500` update live. Confirm `X preview` and `Threads preview` exist when `Target` is `Both`.
 - **Autosave.** Wait for the live `Saved` status. Reload. Confirm both post bodies remain.
 - **Block Ready.** Paste 281 ASCII characters into post 1 with Target `Both` and Premium long post off. Confirm `Mark ready` is disabled and the page names the X length error.
 - **Mark ready.** Restore valid text, wait for `Saved`, choose `Mark ready`. Reload and confirm the badge/status is ready. Confirm there is no control that posts to X or Threads.

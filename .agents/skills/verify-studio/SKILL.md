@@ -44,7 +44,7 @@ accessibility tree before each action. Use these stable accessible names:
 - `Videos` and `No videos yet` identify the protected video shell.
 - `Posts`, `No posts yet`, and `New draft` identify the shared Posts list.
 - `Post 1 text`, `Add post`, `Add media`, `Mark ready`, `Duplicate as new draft`,
-  `Premium long post`, `X preview`, and `Threads preview` identify the composer.
+  `Target`, `Premium long post`, `X preview`, and `Threads preview` identify the composer.
   Wait for the live `Saved` status before reloading to confirm persistence.
   `Mark ready` stays disabled while any selected-target rule fails.
 - `New video`, `Title`, `Format`, `Promotion`, `Organic video (optional)`, and

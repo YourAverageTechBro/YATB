@@ -4,6 +4,7 @@ import { Button } from '@yatb/ui/button'
 import { Card } from '@yatb/ui/card'
 import { Input } from '@yatb/ui/input'
 import { Label } from '@yatb/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@yatb/ui/select'
 import { Textarea } from '@yatb/ui/textarea'
 import { useNavigate } from '@tanstack/react-router'
 import type { PostDraft, PostItem, PostMedia } from '#/domain/posts'
@@ -144,17 +145,27 @@ export function PostsComposer({ loaded }: { loaded: PostDraft }) {
     </header>
     {status.kind === 'conflict' && <Alert><AlertDescription>This draft changed elsewhere. <Button type="button" variant="outline" onClick={loadLatest}>Load latest</Button></AlertDescription></Alert>}
     {status.kind === 'error' && <Alert><AlertDescription>{status.message} <Button type="button" variant="outline" onClick={retry}>Retry</Button></AlertDescription></Alert>}
-    <fieldset className="post-targets" disabled={readOnly}>
-      <legend>Target</legend>
-      {(['x', 'threads', 'both'] as const).map((target) => <Label key={target}>
-        <input type="radio" name="target" checked={draft.target === target} onChange={() => patch({ target })} value={target} />
-        {target === 'x' ? 'X' : target === 'threads' ? 'Threads' : 'Both'}
-      </Label>)}
-    </fieldset>
-    <Label className="post-premium">
-      <input type="checkbox" checked={draft.xPremium} disabled={readOnly} onChange={(event) => patch({ xPremium: event.target.checked })} />
-      Premium long post
-    </Label>
+    <div className="post-targets">
+      <Label>Target
+        <Select disabled={readOnly} value={draft.target} onValueChange={(target) => {
+          if (target === 'x' || target === 'threads' || target === 'both') patch({ target })
+        }}>
+          <SelectTrigger aria-label="Target"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="x">X</SelectItem>
+            <SelectItem value="threads">Threads</SelectItem>
+            <SelectItem value="both">Both</SelectItem>
+          </SelectContent>
+        </Select>
+      </Label>
+      <Button
+        type="button"
+        variant={draft.xPremium ? 'default' : 'outline'}
+        disabled={readOnly}
+        aria-pressed={draft.xPremium}
+        onClick={() => patch({ xPremium: !draft.xPremium })}
+      >Premium long post</Button>
+    </div>
     {draft.items.map((item, index) => <Card className="post-editor" key={item.id}>
       <header>
         <h2>Post {index + 1}</h2>
