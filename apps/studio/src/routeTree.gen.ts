@@ -12,22 +12,29 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppFilesRouteImport } from './routes/_app.files'
+import { Route as AppPostsRouteImport } from './routes/_app.posts'
 import { Route as AppVideosRouteImport } from './routes/_app.videos'
 import { Route as ApiStreamWebhookRouteImport } from './routes/api.stream-webhook'
 import { Route as SharedFilesTokenRouteImport } from './routes/shared-files.$token'
 import { Route as SharedReviewsTokenRouteImport } from './routes/shared-reviews.$token'
+import { Route as AppPostsPostIdRouteImport } from './routes/_app.posts_.$postId'
 import { Route as AppVideosVideoIdRouteImport } from './routes/_app.videos_.$videoId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
 import { Route as ApiSharedFilesTokenRouteImport } from './routes/api.shared-files.$token'
 import { Route as ApiSharedReviewsTokenRouteImport } from './routes/api.shared-reviews.$token'
 import { Route as ApiStreamSourceFileIdRouteImport } from './routes/api.stream-source.$fileId'
 import { Route as AppVideosVideoIdCompareRouteImport } from './routes/_app.videos_.$videoId_.compare'
+import { Route as ApiPostsDraftIdUploadsRouteImport } from './routes/api.posts.$draftId.uploads'
 import { Route as ApiVideosVideoIdMediaRouteImport } from './routes/api.videos.$videoId.media'
 import { Route as ApiVideosVideoIdUploadsRouteImport } from './routes/api.videos.$videoId.uploads'
+import { Route as ApiPostsDraftIdMediaMediaIdRouteImport } from './routes/api.posts.$draftId.media.$mediaId'
+import { Route as ApiPostsDraftIdUploadsUploadIdRouteImport } from './routes/api.posts.$draftId.uploads.$uploadId'
 import { Route as ApiVideosVideoIdMediaFileIdRouteImport } from './routes/api.videos.$videoId.media.$fileId'
 import { Route as ApiVideosVideoIdUploadsUploadIdRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId'
+import { Route as ApiPostsDraftIdUploadsUploadIdCompleteRouteImport } from './routes/api.posts.$draftId.uploads.$uploadId.complete'
 import { Route as ApiVideosVideoIdDraftsDraftIdTranscriptRouteImport } from './routes/api.videos.$videoId.drafts.$draftId.transcript'
 import { Route as ApiVideosVideoIdUploadsUploadIdCompleteRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId.complete'
+import { Route as ApiPostsDraftIdUploadsUploadIdPartsPartNumberRouteImport } from './routes/api.posts.$draftId.uploads.$uploadId.parts.$partNumber'
 import { Route as ApiVideosVideoIdUploadsUploadIdPartsPartNumberRouteImport } from './routes/api.videos.$videoId.uploads.$uploadId.parts.$partNumber'
 
 const IndexRoute = IndexRouteImport.update({
@@ -42,6 +49,11 @@ const AppRoute = AppRouteImport.update({
 const AppFilesRoute = AppFilesRouteImport.update({
   id: '/files',
   path: '/files',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPostsRoute = AppPostsRouteImport.update({
+  id: '/posts',
+  path: '/posts',
   getParentRoute: () => AppRoute,
 } as any)
 const AppVideosRoute = AppVideosRouteImport.update({
@@ -63,6 +75,11 @@ const SharedReviewsTokenRoute = SharedReviewsTokenRouteImport.update({
   id: '/shared-reviews/$token',
   path: '/shared-reviews/$token',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppPostsPostIdRoute = AppPostsPostIdRouteImport.update({
+  id: '/posts_/$postId',
+  path: '/posts/$postId',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppVideosVideoIdRoute = AppVideosVideoIdRouteImport.update({
   id: '/videos_/$videoId',
@@ -94,6 +111,11 @@ const AppVideosVideoIdCompareRoute = AppVideosVideoIdCompareRouteImport.update({
   path: '/videos/$videoId/compare',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPostsDraftIdUploadsRoute = ApiPostsDraftIdUploadsRouteImport.update({
+  id: '/api/posts/$draftId/uploads',
+  path: '/api/posts/$draftId/uploads',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiVideosVideoIdMediaRoute = ApiVideosVideoIdMediaRouteImport.update({
   id: '/api/videos/$videoId/media',
   path: '/api/videos/$videoId/media',
@@ -104,6 +126,18 @@ const ApiVideosVideoIdUploadsRoute = ApiVideosVideoIdUploadsRouteImport.update({
   path: '/api/videos/$videoId/uploads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPostsDraftIdMediaMediaIdRoute =
+  ApiPostsDraftIdMediaMediaIdRouteImport.update({
+    id: '/api/posts/$draftId/media/$mediaId',
+    path: '/api/posts/$draftId/media/$mediaId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPostsDraftIdUploadsUploadIdRoute =
+  ApiPostsDraftIdUploadsUploadIdRouteImport.update({
+    id: '/$uploadId',
+    path: '/$uploadId',
+    getParentRoute: () => ApiPostsDraftIdUploadsRoute,
+  } as any)
 const ApiVideosVideoIdMediaFileIdRoute =
   ApiVideosVideoIdMediaFileIdRouteImport.update({
     id: '/$fileId',
@@ -115,6 +149,12 @@ const ApiVideosVideoIdUploadsUploadIdRoute =
     id: '/$uploadId',
     path: '/$uploadId',
     getParentRoute: () => ApiVideosVideoIdUploadsRoute,
+  } as any)
+const ApiPostsDraftIdUploadsUploadIdCompleteRoute =
+  ApiPostsDraftIdUploadsUploadIdCompleteRouteImport.update({
+    id: '/complete',
+    path: '/complete',
+    getParentRoute: () => ApiPostsDraftIdUploadsUploadIdRoute,
   } as any)
 const ApiVideosVideoIdDraftsDraftIdTranscriptRoute =
   ApiVideosVideoIdDraftsDraftIdTranscriptRouteImport.update({
@@ -128,6 +168,12 @@ const ApiVideosVideoIdUploadsUploadIdCompleteRoute =
     path: '/complete',
     getParentRoute: () => ApiVideosVideoIdUploadsUploadIdRoute,
   } as any)
+const ApiPostsDraftIdUploadsUploadIdPartsPartNumberRoute =
+  ApiPostsDraftIdUploadsUploadIdPartsPartNumberRouteImport.update({
+    id: '/parts/$partNumber',
+    path: '/parts/$partNumber',
+    getParentRoute: () => ApiPostsDraftIdUploadsUploadIdRoute,
+  } as any)
 const ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute =
   ApiVideosVideoIdUploadsUploadIdPartsPartNumberRouteImport.update({
     id: '/parts/$partNumber',
@@ -138,43 +184,57 @@ const ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/files': typeof AppFilesRoute
+  '/posts': typeof AppPostsRoute
   '/videos': typeof AppVideosRoute
   '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
   '/shared-reviews/$token': typeof SharedReviewsTokenRoute
+  '/posts/$postId': typeof AppPostsPostIdRoute
   '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shared-files/$token': typeof ApiSharedFilesTokenRoute
   '/api/shared-reviews/$token': typeof ApiSharedReviewsTokenRoute
   '/api/stream-source/$fileId': typeof ApiStreamSourceFileIdRoute
   '/videos/$videoId/compare': typeof AppVideosVideoIdCompareRoute
+  '/api/posts/$draftId/uploads': typeof ApiPostsDraftIdUploadsRouteWithChildren
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/posts/$draftId/media/$mediaId': typeof ApiPostsDraftIdMediaMediaIdRoute
+  '/api/posts/$draftId/uploads/$uploadId': typeof ApiPostsDraftIdUploadsUploadIdRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
   '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/posts/$draftId/uploads/$uploadId/complete': typeof ApiPostsDraftIdUploadsUploadIdCompleteRoute
   '/api/videos/$videoId/drafts/$draftId/transcript': typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
   '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
+  '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber': typeof ApiPostsDraftIdUploadsUploadIdPartsPartNumberRoute
   '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/files': typeof AppFilesRoute
+  '/posts': typeof AppPostsRoute
   '/videos': typeof AppVideosRoute
   '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
   '/shared-reviews/$token': typeof SharedReviewsTokenRoute
+  '/posts/$postId': typeof AppPostsPostIdRoute
   '/videos/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shared-files/$token': typeof ApiSharedFilesTokenRoute
   '/api/shared-reviews/$token': typeof ApiSharedReviewsTokenRoute
   '/api/stream-source/$fileId': typeof ApiStreamSourceFileIdRoute
   '/videos/$videoId/compare': typeof AppVideosVideoIdCompareRoute
+  '/api/posts/$draftId/uploads': typeof ApiPostsDraftIdUploadsRouteWithChildren
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/posts/$draftId/media/$mediaId': typeof ApiPostsDraftIdMediaMediaIdRoute
+  '/api/posts/$draftId/uploads/$uploadId': typeof ApiPostsDraftIdUploadsUploadIdRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
   '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/posts/$draftId/uploads/$uploadId/complete': typeof ApiPostsDraftIdUploadsUploadIdCompleteRoute
   '/api/videos/$videoId/drafts/$draftId/transcript': typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
   '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
+  '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber': typeof ApiPostsDraftIdUploadsUploadIdPartsPartNumberRoute
   '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
 export interface FileRoutesById {
@@ -182,22 +242,29 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/_app/files': typeof AppFilesRoute
+  '/_app/posts': typeof AppPostsRoute
   '/_app/videos': typeof AppVideosRoute
   '/api/stream-webhook': typeof ApiStreamWebhookRoute
   '/shared-files/$token': typeof SharedFilesTokenRoute
   '/shared-reviews/$token': typeof SharedReviewsTokenRoute
+  '/_app/posts_/$postId': typeof AppPostsPostIdRoute
   '/_app/videos_/$videoId': typeof AppVideosVideoIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/shared-files/$token': typeof ApiSharedFilesTokenRoute
   '/api/shared-reviews/$token': typeof ApiSharedReviewsTokenRoute
   '/api/stream-source/$fileId': typeof ApiStreamSourceFileIdRoute
   '/_app/videos_/$videoId_/compare': typeof AppVideosVideoIdCompareRoute
+  '/api/posts/$draftId/uploads': typeof ApiPostsDraftIdUploadsRouteWithChildren
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/posts/$draftId/media/$mediaId': typeof ApiPostsDraftIdMediaMediaIdRoute
+  '/api/posts/$draftId/uploads/$uploadId': typeof ApiPostsDraftIdUploadsUploadIdRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
   '/api/videos/$videoId/uploads/$uploadId': typeof ApiVideosVideoIdUploadsUploadIdRouteWithChildren
+  '/api/posts/$draftId/uploads/$uploadId/complete': typeof ApiPostsDraftIdUploadsUploadIdCompleteRoute
   '/api/videos/$videoId/drafts/$draftId/transcript': typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
   '/api/videos/$videoId/uploads/$uploadId/complete': typeof ApiVideosVideoIdUploadsUploadIdCompleteRoute
+  '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber': typeof ApiPostsDraftIdUploadsUploadIdPartsPartNumberRoute
   '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': typeof ApiVideosVideoIdUploadsUploadIdPartsPartNumberRoute
 }
 export interface FileRouteTypes {
@@ -205,65 +272,86 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/files'
+    | '/posts'
     | '/videos'
     | '/api/stream-webhook'
     | '/shared-files/$token'
     | '/shared-reviews/$token'
+    | '/posts/$postId'
     | '/videos/$videoId'
     | '/api/auth/$'
     | '/api/shared-files/$token'
     | '/api/shared-reviews/$token'
     | '/api/stream-source/$fileId'
     | '/videos/$videoId/compare'
+    | '/api/posts/$draftId/uploads'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
+    | '/api/posts/$draftId/media/$mediaId'
+    | '/api/posts/$draftId/uploads/$uploadId'
     | '/api/videos/$videoId/media/$fileId'
     | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/posts/$draftId/uploads/$uploadId/complete'
     | '/api/videos/$videoId/drafts/$draftId/transcript'
     | '/api/videos/$videoId/uploads/$uploadId/complete'
+    | '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber'
     | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/files'
+    | '/posts'
     | '/videos'
     | '/api/stream-webhook'
     | '/shared-files/$token'
     | '/shared-reviews/$token'
+    | '/posts/$postId'
     | '/videos/$videoId'
     | '/api/auth/$'
     | '/api/shared-files/$token'
     | '/api/shared-reviews/$token'
     | '/api/stream-source/$fileId'
     | '/videos/$videoId/compare'
+    | '/api/posts/$draftId/uploads'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
+    | '/api/posts/$draftId/media/$mediaId'
+    | '/api/posts/$draftId/uploads/$uploadId'
     | '/api/videos/$videoId/media/$fileId'
     | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/posts/$draftId/uploads/$uploadId/complete'
     | '/api/videos/$videoId/drafts/$draftId/transcript'
     | '/api/videos/$videoId/uploads/$uploadId/complete'
+    | '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber'
     | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/_app/files'
+    | '/_app/posts'
     | '/_app/videos'
     | '/api/stream-webhook'
     | '/shared-files/$token'
     | '/shared-reviews/$token'
+    | '/_app/posts_/$postId'
     | '/_app/videos_/$videoId'
     | '/api/auth/$'
     | '/api/shared-files/$token'
     | '/api/shared-reviews/$token'
     | '/api/stream-source/$fileId'
     | '/_app/videos_/$videoId_/compare'
+    | '/api/posts/$draftId/uploads'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
+    | '/api/posts/$draftId/media/$mediaId'
+    | '/api/posts/$draftId/uploads/$uploadId'
     | '/api/videos/$videoId/media/$fileId'
     | '/api/videos/$videoId/uploads/$uploadId'
+    | '/api/posts/$draftId/uploads/$uploadId/complete'
     | '/api/videos/$videoId/drafts/$draftId/transcript'
     | '/api/videos/$videoId/uploads/$uploadId/complete'
+    | '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber'
     | '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
   fileRoutesById: FileRoutesById
 }
@@ -277,8 +365,10 @@ export interface RootRouteChildren {
   ApiSharedFilesTokenRoute: typeof ApiSharedFilesTokenRoute
   ApiSharedReviewsTokenRoute: typeof ApiSharedReviewsTokenRoute
   ApiStreamSourceFileIdRoute: typeof ApiStreamSourceFileIdRoute
+  ApiPostsDraftIdUploadsRoute: typeof ApiPostsDraftIdUploadsRouteWithChildren
   ApiVideosVideoIdMediaRoute: typeof ApiVideosVideoIdMediaRouteWithChildren
   ApiVideosVideoIdUploadsRoute: typeof ApiVideosVideoIdUploadsRouteWithChildren
+  ApiPostsDraftIdMediaMediaIdRoute: typeof ApiPostsDraftIdMediaMediaIdRoute
   ApiVideosVideoIdDraftsDraftIdTranscriptRoute: typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
 }
 
@@ -303,6 +393,13 @@ declare module '@tanstack/react-router' {
       path: '/files'
       fullPath: '/files'
       preLoaderRoute: typeof AppFilesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/posts': {
+      id: '/_app/posts'
+      path: '/posts'
+      fullPath: '/posts'
+      preLoaderRoute: typeof AppPostsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/videos': {
@@ -332,6 +429,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/shared-reviews/$token'
       preLoaderRoute: typeof SharedReviewsTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/posts_/$postId': {
+      id: '/_app/posts_/$postId'
+      path: '/posts/$postId'
+      fullPath: '/posts/$postId'
+      preLoaderRoute: typeof AppPostsPostIdRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/videos_/$videoId': {
       id: '/_app/videos_/$videoId'
@@ -375,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVideosVideoIdCompareRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/posts/$draftId/uploads': {
+      id: '/api/posts/$draftId/uploads'
+      path: '/api/posts/$draftId/uploads'
+      fullPath: '/api/posts/$draftId/uploads'
+      preLoaderRoute: typeof ApiPostsDraftIdUploadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/videos/$videoId/media': {
       id: '/api/videos/$videoId/media'
       path: '/api/videos/$videoId/media'
@@ -388,6 +499,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/videos/$videoId/uploads'
       preLoaderRoute: typeof ApiVideosVideoIdUploadsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/posts/$draftId/media/$mediaId': {
+      id: '/api/posts/$draftId/media/$mediaId'
+      path: '/api/posts/$draftId/media/$mediaId'
+      fullPath: '/api/posts/$draftId/media/$mediaId'
+      preLoaderRoute: typeof ApiPostsDraftIdMediaMediaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/posts/$draftId/uploads/$uploadId': {
+      id: '/api/posts/$draftId/uploads/$uploadId'
+      path: '/$uploadId'
+      fullPath: '/api/posts/$draftId/uploads/$uploadId'
+      preLoaderRoute: typeof ApiPostsDraftIdUploadsUploadIdRouteImport
+      parentRoute: typeof ApiPostsDraftIdUploadsRoute
     }
     '/api/videos/$videoId/media/$fileId': {
       id: '/api/videos/$videoId/media/$fileId'
@@ -403,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiVideosVideoIdUploadsUploadIdRouteImport
       parentRoute: typeof ApiVideosVideoIdUploadsRoute
     }
+    '/api/posts/$draftId/uploads/$uploadId/complete': {
+      id: '/api/posts/$draftId/uploads/$uploadId/complete'
+      path: '/complete'
+      fullPath: '/api/posts/$draftId/uploads/$uploadId/complete'
+      preLoaderRoute: typeof ApiPostsDraftIdUploadsUploadIdCompleteRouteImport
+      parentRoute: typeof ApiPostsDraftIdUploadsUploadIdRoute
+    }
     '/api/videos/$videoId/drafts/$draftId/transcript': {
       id: '/api/videos/$videoId/drafts/$draftId/transcript'
       path: '/api/videos/$videoId/drafts/$draftId/transcript'
@@ -417,6 +549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiVideosVideoIdUploadsUploadIdCompleteRouteImport
       parentRoute: typeof ApiVideosVideoIdUploadsUploadIdRoute
     }
+    '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber': {
+      id: '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber'
+      path: '/parts/$partNumber'
+      fullPath: '/api/posts/$draftId/uploads/$uploadId/parts/$partNumber'
+      preLoaderRoute: typeof ApiPostsDraftIdUploadsUploadIdPartsPartNumberRouteImport
+      parentRoute: typeof ApiPostsDraftIdUploadsUploadIdRoute
+    }
     '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber': {
       id: '/api/videos/$videoId/uploads/$uploadId/parts/$partNumber'
       path: '/parts/$partNumber'
@@ -429,19 +568,56 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppFilesRoute: typeof AppFilesRoute
+  AppPostsRoute: typeof AppPostsRoute
   AppVideosRoute: typeof AppVideosRoute
+  AppPostsPostIdRoute: typeof AppPostsPostIdRoute
   AppVideosVideoIdRoute: typeof AppVideosVideoIdRoute
   AppVideosVideoIdCompareRoute: typeof AppVideosVideoIdCompareRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppFilesRoute: AppFilesRoute,
+  AppPostsRoute: AppPostsRoute,
   AppVideosRoute: AppVideosRoute,
+  AppPostsPostIdRoute: AppPostsPostIdRoute,
   AppVideosVideoIdRoute: AppVideosVideoIdRoute,
   AppVideosVideoIdCompareRoute: AppVideosVideoIdCompareRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
+interface ApiPostsDraftIdUploadsUploadIdRouteChildren {
+  ApiPostsDraftIdUploadsUploadIdCompleteRoute: typeof ApiPostsDraftIdUploadsUploadIdCompleteRoute
+  ApiPostsDraftIdUploadsUploadIdPartsPartNumberRoute: typeof ApiPostsDraftIdUploadsUploadIdPartsPartNumberRoute
+}
+
+const ApiPostsDraftIdUploadsUploadIdRouteChildren: ApiPostsDraftIdUploadsUploadIdRouteChildren =
+  {
+    ApiPostsDraftIdUploadsUploadIdCompleteRoute:
+      ApiPostsDraftIdUploadsUploadIdCompleteRoute,
+    ApiPostsDraftIdUploadsUploadIdPartsPartNumberRoute:
+      ApiPostsDraftIdUploadsUploadIdPartsPartNumberRoute,
+  }
+
+const ApiPostsDraftIdUploadsUploadIdRouteWithChildren =
+  ApiPostsDraftIdUploadsUploadIdRoute._addFileChildren(
+    ApiPostsDraftIdUploadsUploadIdRouteChildren,
+  )
+
+interface ApiPostsDraftIdUploadsRouteChildren {
+  ApiPostsDraftIdUploadsUploadIdRoute: typeof ApiPostsDraftIdUploadsUploadIdRouteWithChildren
+}
+
+const ApiPostsDraftIdUploadsRouteChildren: ApiPostsDraftIdUploadsRouteChildren =
+  {
+    ApiPostsDraftIdUploadsUploadIdRoute:
+      ApiPostsDraftIdUploadsUploadIdRouteWithChildren,
+  }
+
+const ApiPostsDraftIdUploadsRouteWithChildren =
+  ApiPostsDraftIdUploadsRoute._addFileChildren(
+    ApiPostsDraftIdUploadsRouteChildren,
+  )
 
 interface ApiVideosVideoIdMediaRouteChildren {
   ApiVideosVideoIdMediaFileIdRoute: typeof ApiVideosVideoIdMediaFileIdRoute
@@ -499,11 +675,22 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSharedFilesTokenRoute: ApiSharedFilesTokenRoute,
   ApiSharedReviewsTokenRoute: ApiSharedReviewsTokenRoute,
   ApiStreamSourceFileIdRoute: ApiStreamSourceFileIdRoute,
+  ApiPostsDraftIdUploadsRoute: ApiPostsDraftIdUploadsRouteWithChildren,
   ApiVideosVideoIdMediaRoute: ApiVideosVideoIdMediaRouteWithChildren,
   ApiVideosVideoIdUploadsRoute: ApiVideosVideoIdUploadsRouteWithChildren,
+  ApiPostsDraftIdMediaMediaIdRoute: ApiPostsDraftIdMediaMediaIdRoute,
   ApiVideosVideoIdDraftsDraftIdTranscriptRoute:
     ApiVideosVideoIdDraftsDraftIdTranscriptRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

@@ -21,6 +21,9 @@ fi
 curl -sS -D "$scratch_dir/videos.headers" -o /dev/null "$studio_url/videos"
 rg -qi '^location: /\r?$' "$scratch_dir/videos.headers"
 
+curl -sS -D "$scratch_dir/posts.headers" -o /dev/null "$studio_url/posts"
+rg -qi '^location: /\r?$' "$scratch_dir/posts.headers"
+
 curl -sS -D "$scratch_dir/missing.headers" -o "$scratch_dir/missing" "$studio_url/not-a-route"
 rg -q '^HTTP/1.1 404' "$scratch_dir/missing.headers"
 if rg -q 'No videos yet' "$scratch_dir/missing"; then
@@ -31,5 +34,10 @@ curl -sS -D "$scratch_dir/media.headers" -o /dev/null \
   "$studio_url/api/videos/1b0e913b-645c-4306-a71d-78115390b46d/media/28a2b4a2-1ee2-44d8-8e3a-0c2dbd5b2d27"
 rg -q '^HTTP/1.1 401' "$scratch_dir/media.headers"
 rg -qi '^cache-control: private, no-store, max-age=0\r?$' "$scratch_dir/media.headers"
+
+curl -sS -D "$scratch_dir/post-media.headers" -o /dev/null \
+  "$studio_url/api/posts/1b0e913b-645c-4306-a71d-78115390b46d/media/28a2b4a2-1ee2-44d8-8e3a-0c2dbd5b2d27"
+rg -q '^HTTP/1.1 401' "$scratch_dir/post-media.headers"
+rg -qi '^cache-control: private, no-store, max-age=0\r?$' "$scratch_dir/post-media.headers"
 
 echo "Studio doctor passed at $studio_url"

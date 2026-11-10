@@ -1,6 +1,6 @@
 ---
 name: verify-studio
-description: Drive local and production YATB Studio authentication, planning, private footage, versioned draft review, comparison, and shared UI. Use after changes to routes, sessions, email callbacks, planning data, rich scripts, saved views, multipart uploads, media delivery, review comments, shared primitives, responsive navigation, themes, Cloudflare bindings, or production resources.
+description: Drive local and production YATB Studio authentication, planning, Posts composer, private footage, versioned draft review, comparison, and shared UI. Use after changes to routes, sessions, email callbacks, planning data, posts drafts, rich scripts, saved views, multipart uploads, media delivery, review comments, shared primitives, responsive navigation, themes, Cloudflare bindings, or production resources.
 ---
 
 # Verify YATB Studio
@@ -27,8 +27,9 @@ For shared UI changes, also launch Web with `npm run dev:web` and wait for
 ## Doctor
 
 Run `.agents/skills/verify-studio/scripts/doctor.sh`. It passes only when the
-login page returns `200`, the private route redirects to `/`, and the raw media
-route returns `401` with `Cache-Control: private, no-store, max-age=0`.
+login page returns `200`, the private `/videos` and `/posts` routes redirect to
+`/`, and the raw video and post media routes return `401` with
+`Cache-Control: private, no-store, max-age=0`.
 
 ## Drive
 
@@ -40,7 +41,12 @@ accessibility tree before each action. Use these stable accessible names:
 - `Need an account? Request access` opens signup.
 - `Forgot password?` opens reset request.
 - `Sign out` ends a session.
-- `Videos` and `No videos yet` identify the protected shell.
+- `Videos` and `No videos yet` identify the protected video shell.
+- `Posts`, `No posts yet`, and `New draft` identify the shared Posts list.
+- `Post 1 text`, `Add post`, `Add media`, `Mark ready`, `Duplicate as new draft`,
+  `Target`, `Premium long post`, `X preview`, and `Threads preview` identify the composer.
+  Wait for the live `Saved` status before reloading to confirm persistence.
+  `Mark ready` stays disabled while any selected-target rule fails.
 - `New video`, `Title`, `Format`, `Promotion`, `Organic video (optional)`, and
   `Create` identify video creation. The optional select uses `Not linked` for
   an empty relationship.
@@ -118,6 +124,14 @@ Drive the planning server functions through two real local sessions:
 STUDIO_TEST_EMAIL=<primary-email> STUDIO_TEST_PASSWORD=<primary-password> \
 STUDIO_SECOND_TEST_EMAIL=<secondary-email> STUDIO_SECOND_TEST_PASSWORD=<secondary-password> \
 node .agents/skills/verify-studio/scripts/verify-planning.mjs
+```
+
+Exercise shared Posts drafts, thread persistence, over-limit Ready rejection,
+platform previews, and anonymous post-media `401`:
+
+```sh
+STUDIO_TEST_EMAIL=<email> STUDIO_TEST_PASSWORD=<password> \
+node .agents/skills/verify-studio/scripts/verify-posts.mjs
 ```
 
 Exercise multipart R2 upload, retry recovery, rename, exact download, range,
