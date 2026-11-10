@@ -169,6 +169,20 @@ export function parsePostStatus(value: unknown): PostStatus {
   invalid('Status is invalid.')
 }
 
+export function parsePostBody(value: unknown): string {
+  const body = asString(value, 'Post body is required.')
+  if (body.length > 100_000) invalid('Post text is too long.')
+  return body
+}
+
+export function parseAlt(value: unknown): string | null {
+  if (value === null || value === undefined) return null
+  const alt = asString(value, 'Alt text is invalid.')
+  if (alt.length > 2000) invalid('Alt text is too long.')
+  const trimmed = alt.trim()
+  return trimmed === '' ? null : trimmed
+}
+
 export function parsePostPlatform(value: unknown): PostPlatform {
   const platform = asString(value, 'Platform is required.')
   if (platform === 'x' || platform === 'threads') return platform
