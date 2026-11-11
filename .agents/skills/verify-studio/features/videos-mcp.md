@@ -28,6 +28,6 @@ Preconditions:
 
 ## Gotchas
 
-- Create always stores status `not-started`, matching the New video form. Status changes go through `update_video`.
+- Create defaults status to `not-started`. An optional `status` uses the same enum and the existing update path after insert.
 - PR #39 occupancy is picker-only. Shared organic links still save on main.
 - Never log or paste the bearer token into evidence files. Record only the last four characters.

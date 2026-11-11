@@ -138,6 +138,14 @@ const short = parseTool(await withClient(writeToken, (client) => client.callTool
 })))
 assert(!short.isError, `create short failed: ${JSON.stringify(short.body)}`)
 assert(short.body.format === 'short', 'short video format mismatch')
+assert(short.body.status === 'not-started', 'omitted create status should be not-started')
+
+const filming = parseTool(await withClient(writeToken, (client) => client.callTool({
+  name: 'create_video',
+  arguments: { title: 'MCP filming proof', format: 'short', promotion: 'organic', status: 'filming' },
+})))
+assert(!filming.isError, `create with status failed: ${JSON.stringify(filming.body)}`)
+assert(filming.body.status === 'filming', `expected filming, got ${filming.body.status}`)
 
 const organic = parseTool(await withClient(writeToken, (client) => client.callTool({
   name: 'create_video',
@@ -204,10 +212,14 @@ assert(unknown.isError, 'unknown list field was accepted')
 const storedShort = db.prepare('SELECT title, format, promotion, script_json FROM video WHERE id = ?').get(short.body.id)
 assert(storedShort?.title === 'MCP short proof', 'D1 missing short video')
 assert(String(storedShort.script_json).includes('docs.google.com'), 'D1 script was not updated')
+const storedFilming = db.prepare('SELECT status FROM video WHERE id = ?').get(filming.body.id)
+assert(storedFilming?.status === 'filming', `D1 status ${storedFilming?.status}`)
 
 const evidence = {
   tools: names,
   shortId: short.body.id,
+  filmingId: filming.body.id,
+  filmingStatus: filming.body.status,
   organicId: organic.body.id,
   integrationId: integration.body.id,
   shortTokenSuffix: writeToken.slice(-4),

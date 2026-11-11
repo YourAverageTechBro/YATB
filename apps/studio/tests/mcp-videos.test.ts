@@ -47,11 +47,24 @@ describe('MCP video parsing', () => {
       promotion: 'integration',
       organicVideoId: organic.id,
     })
+    expect(created.status).toBe('not-started')
+    expect(parseCreateVideoToolInput({
+      title: 'Filming now',
+      format: 'short',
+      promotion: 'organic',
+      status: 'filming',
+    }).status).toBe('filming')
     expect(() => parseCreateVideoToolInput({
       title: 'Nope',
       format: 'short',
       promotion: 'integration',
     })).toThrow(/not available/)
+    expect(() => parseCreateVideoToolInput({
+      title: 'Nope',
+      format: 'short',
+      promotion: 'organic',
+      status: 'draft',
+    })).toThrow()
   })
 
   it('merges a script-only patch onto the current video', () => {

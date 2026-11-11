@@ -50,6 +50,7 @@ export const createVideoInputSchema = z.object({
   format: z.enum(VIDEO_FORMATS),
   promotion: z.enum(VIDEO_PROMOTIONS),
   organic_video_id: z.string().nullable().optional(),
+  status: z.enum(VIDEO_STATUSES).optional(),
   publish_date: z.string().nullable().optional(),
   script: z.unknown().optional(),
 }).strict()
@@ -111,6 +112,7 @@ export function parseGetVideoInput(value: unknown): VideoId {
 export function parseCreateVideoToolInput(value: unknown): {
   title: string
   production: Production
+  status: VideoStatus
   publishDate: string | null
   script: unknown | undefined
 } {
@@ -122,6 +124,7 @@ export function parseCreateVideoToolInput(value: unknown): {
       promotion: input.promotion,
       organicVideoId: input.organic_video_id,
     }),
+    status: input.status === undefined ? 'not-started' : parseStatus(input.status),
     publishDate: parsePublishDate(input.publish_date ?? null),
     script: input.script,
   }

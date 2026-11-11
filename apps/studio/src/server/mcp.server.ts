@@ -241,7 +241,17 @@ const mcpHandler = createMcpHandler((ctx) => {
           script,
         }))
         if (result.kind === 'invalid-link') return jsonTool({ error: result.message }, true)
-        return jsonTool(mcpVideoView(result.video))
+        if (input.status === 'not-started') return jsonTool(mcpVideoView(result.video))
+        const saved = await updateStudioVideo(parseEditVideoInput({
+          ...result.video,
+          expectedRevision: result.video.revision,
+          status: input.status,
+        }))
+        if (saved.kind === 'invalid-link') return jsonTool({ error: saved.message }, true)
+        if (saved.kind === 'conflict' || saved.kind === 'not-found') {
+          return jsonTool({ error: 'Created video could not be updated.' }, true)
+        }
+        return jsonTool(mcpVideoView(saved.video))
       } catch (error) {
         return toolCaught(error)
       }
