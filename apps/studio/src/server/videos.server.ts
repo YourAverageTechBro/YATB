@@ -32,6 +32,7 @@ import {
   UPDATE_VIDEO_SQL,
   SET_DEFAULT_SAVED_VIEW_SQL,
   calendarVideosSql,
+  organicVideoOptionValues,
   organicVideoOptionsSql,
   statusFilterSql,
 } from './video-sql'
@@ -203,9 +204,7 @@ export async function listCalendarVideos(
 
 export async function listOrganicVideoOptions(excludeId?: VideoId): Promise<OrganicVideoOption[]> {
   const query = bindings.DB.prepare(organicVideoOptionsSql(excludeId !== undefined))
-  const result = excludeId
-    ? await query.bind(excludeId).all<unknown>()
-    : await query.all<unknown>()
+  const result = await query.bind(...organicVideoOptionValues(excludeId)).all<unknown>()
   return result.results.map(parseOrganicVideoOptionRow)
 }
 
