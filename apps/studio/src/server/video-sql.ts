@@ -12,17 +12,33 @@ export function unpublishedVideoStatuses(): VideoStatusFilter {
 
 export function organicVideoOptionValues(excludeId?: string): readonly string[] {
   const unpublished = statusFilterSql(unpublishedVideoStatuses()).values
-  return excludeId === undefined ? unpublished : [excludeId, ...unpublished, excludeId]
+  return excludeId === undefined ? unpublished : [excludeId, ...unpublished, excludeId, excludeId]
 }
 
 export function organicVideoOptionsSql(excludeCurrent: boolean): string {
   const unpublished = statusFilterSql(unpublishedVideoStatuses()).clause.replace(/^\s*AND\s*/, '')
+  const keepLinked = excludeCurrent
+    ? ' OR id = (SELECT linked_organic_video_id FROM video WHERE id = ?)'
+    : ''
+  const unoccupied = `NOT EXISTS (
+    SELECT 1 FROM video AS integration
+    WHERE integration.deleted_at IS NULL
+      AND integration.format = 'long'
+      AND integration.promotion = 'integration'
+      AND integration.linked_organic_video_id = video.id
+      ${excludeCurrent ? 'AND integration.id != ?' : ''}
+  )`
   return `SELECT id, title, status, publish_date
 FROM video
 WHERE ${ORGANIC_LONG_VIDEO_SQL}${excludeCurrent ? ' AND id != ?' : ''}
-AND (${unpublished}${excludeCurrent ? ' OR id = (SELECT linked_organic_video_id FROM video WHERE id = ?)' : ''})
+AND ((${unpublished} AND ${unoccupied})${keepLinked})
 ORDER BY title COLLATE NOCASE ASC, id ASC`
 }
+
+export const INBOUND_INTEGRATIONS_SQL = `SELECT id, title, promotion
+FROM video
+WHERE ${ACTIVE_VIDEO_SQL} AND format = 'long' AND promotion = 'integration' AND linked_organic_video_id = ?
+ORDER BY title COLLATE NOCASE ASC, id ASC`
 
 export function statusFilterSql(statuses: VideoStatusFilter): Readonly<{ clause: string; values: VideoStatusFilter }> {
   if (statuses.length === VIDEO_STATUSES.length) return { clause: '', values: [] }

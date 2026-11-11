@@ -14,6 +14,7 @@ import { useVideoAutosave } from '#/components/use-video-autosave'
 import {
   STATUS,
   legalPromotions,
+  type LinkedIntegration,
   type OrganicVideoOption,
   type Production,
   type Video,
@@ -26,7 +27,11 @@ export const Route = createFileRoute('/_app/videos_/$videoId')({
   loader: async ({ params }) => {
     const result = await loadVideo({ data: params.videoId })
     if (!result.video) throw notFound()
-    return { video: result.video, organicVideoOptions: result.organicVideoOptions }
+    return {
+      video: result.video,
+      organicVideoOptions: result.organicVideoOptions,
+      inboundIntegrations: result.inboundIntegrations,
+    }
   },
   component: VideoDetail,
 })
@@ -44,11 +49,19 @@ function asProduction(
 }
 
 function VideoDetail() {
-  const { video: loaded, organicVideoOptions } = Route.useLoaderData()
-  return <VideoEditor key={loaded.id} loaded={loaded} organicVideoOptions={organicVideoOptions} />
+  const { video: loaded, organicVideoOptions, inboundIntegrations } = Route.useLoaderData()
+  return <VideoEditor key={loaded.id} loaded={loaded} organicVideoOptions={organicVideoOptions} inboundIntegrations={inboundIntegrations} />
 }
 
-function VideoEditor({ loaded, organicVideoOptions }: { loaded: Video; organicVideoOptions: OrganicVideoOption[] }) {
+function VideoEditor({
+  loaded,
+  organicVideoOptions,
+  inboundIntegrations,
+}: {
+  loaded: Video
+  organicVideoOptions: OrganicVideoOption[]
+  inboundIntegrations: LinkedIntegration[]
+}) {
   const navigate = useNavigate()
   const { video, draft, status: saveStatus, deleting, edit, retry, loadLatest, flush, erase } = useVideoAutosave(loaded)
   const { title, production, status, publishDate, script } = draft
@@ -105,6 +118,16 @@ function VideoEditor({ loaded, organicVideoOptions }: { loaded: Video; organicVi
                 <p className="field-help">Choose the organic long-form video that will carry this integration.</p>
                 {organicVideoOptions.length === 0 && <p className="field-help">No organic long-form videos available.</p>}
                 {persistedOrganicVideoId && <Button asChild variant="link" size="sm"><a href={`/videos/${persistedOrganicVideoId}`}>Open linked video</a></Button>}
+              </div>
+            </div>}
+            {video.production.format === 'long' && video.production.promotion === 'organic' && inboundIntegrations.length > 0 && <div className="linked-video-field field-grid-wide">
+              <p className="field-help">Ad integrations</p>
+              <div className="linked-video-help">
+                {inboundIntegrations.map((item) => (
+                  <Button asChild variant="link" size="sm" key={item.id}>
+                    <a href={`/videos/${item.id}`}>Open {item.title} ({item.promotion})</a>
+                  </Button>
+                ))}
               </div>
             </div>}
           </div>

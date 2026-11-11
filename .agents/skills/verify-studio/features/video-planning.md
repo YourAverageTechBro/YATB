@@ -9,7 +9,10 @@ An authenticated user creates and edits every legal video production type.
 - `planning-long-organic` stores a long video without an integration.
 - `planning-long-integration` stores a long video with an ad integration.
 - `planning-integration-organic-link` optionally connects a long-form integration
-  to the unpublished organic long-form video that will carry it.
+  to an unpublished organic long-form video that is not already carrying another
+  integration.
+- `planning-organic-inbound-integrations` shows the connected ad integrations on
+  an organic long-form video and opens each integration's task page.
 - `planning-status-date` stores one of five statuses and an optional calendar date.
 - `planning-pages` keeps large schedules reachable through bounded pages.
 
@@ -37,6 +40,14 @@ Preconditions:
 - **Keep a published link.** Link an integration to an unpublished organic
   video, then mark that organic video `Published`. Reopen the integration and
   confirm the published title remains selected in `Organic video (optional)`.
+- **Exclude an occupied organic.** Link one integration to an unpublished organic
+  video. Open `New video` as a long-form integration and confirm that organic
+  title is absent from `Organic video (optional)`. Reopen the first integration
+  and confirm its own linked title remains listed and selected.
+- **Open inbound integrations.** Open the occupied organic video and confirm
+  `Ad integrations` lists `Open <integration title> (integration)`. Choose that
+  link and confirm the browser opens the integration task page. Open an organic
+  video with no inbound integrations and confirm `Ad integrations` is absent.
 - **Invalidate a target.** Link two integrations to the same organic video, then
   change the organic video to an ineligible production type. Reload both
   integrations and confirm each is unlinked without losing its other fields.
@@ -68,9 +79,12 @@ Preconditions:
 ## Gotchas
 
 - Production format and promotion form a closed union. Do not test impossible states by writing D1 directly.
-- Only unpublished active long-form organic videos appear in `Organic video (optional)`.
+- Only unpublished active long-form organic videos that no other active
+  long-form integration already links appear in `Organic video (optional)`.
   Unpublished matches a Non Published Videos saved view: every `VIDEO_STATUSES`
-  value except `published`. A currently linked published organic video stays in
-  the editor picker so the existing link remains visible. Candidate ordering is
-  title-first and does not depend on the current planning page.
+  value except `published`. Occupancy is query-only; writes still accept a
+  shared target. When editing an integration, its currently linked organic
+  video stays listed even if it is published or occupied by this integration.
+  Candidate ordering is title-first and does not depend on the current planning
+  page.
 - A syntactically shaped date still fails when it is not a real calendar day.
