@@ -69,12 +69,13 @@ export const loadVideo = createServerFn({ method: 'GET' })
   .validator(parseVideoId)
   .handler(async ({ data }) => {
     await readSession()
-    const { getVideo, listOrganicVideoOptions } = await import('./videos.server')
-    const [video, organicVideoOptions] = await Promise.all([
+    const { getVideo, listInboundIntegrations, listOrganicVideoOptions } = await import('./videos.server')
+    const [video, organicVideoOptions, inboundIntegrations] = await Promise.all([
       getVideo(data),
       listOrganicVideoOptions(data),
+      listInboundIntegrations(data),
     ])
-    return { video, organicVideoOptions }
+    return { video, organicVideoOptions, inboundIntegrations }
   })
 
 export const createVideo = createServerFn({ method: 'POST' })

@@ -15,6 +15,7 @@ import {
   type SavedView,
   type SavedViewId,
   type CreateVideoResult,
+  type LinkedIntegration,
   type OrganicVideoOption,
   type SaveVideoResult,
   type Video,
@@ -32,6 +33,7 @@ import {
   UPDATE_VIDEO_SQL,
   SET_DEFAULT_SAVED_VIEW_SQL,
   calendarVideosSql,
+  INBOUND_INTEGRATIONS_SQL,
   organicVideoOptionValues,
   organicVideoOptionsSql,
   statusFilterSql,
@@ -121,6 +123,16 @@ function parseOrganicVideoOptionRow(value: unknown): OrganicVideoOption {
   }
 }
 
+function parseLinkedIntegrationRow(value: unknown): LinkedIntegration {
+  const row = asRecord(value)
+  if (row.promotion !== 'integration') throw new Error('Stored integration promotion is invalid.')
+  return {
+    id: parseVideoId(row.id),
+    title: parseTitle(row.title),
+    promotion: 'integration',
+  }
+}
+
 function parseSavedViewRow(value: unknown): SavedView {
   const row = asRecord(value)
   return {
@@ -206,6 +218,11 @@ export async function listOrganicVideoOptions(excludeId?: VideoId): Promise<Orga
   const query = bindings.DB.prepare(organicVideoOptionsSql(excludeId !== undefined))
   const result = await query.bind(...organicVideoOptionValues(excludeId)).all<unknown>()
   return result.results.map(parseOrganicVideoOptionRow)
+}
+
+export async function listInboundIntegrations(organicVideoId: VideoId): Promise<LinkedIntegration[]> {
+  const result = await bindings.DB.prepare(INBOUND_INTEGRATIONS_SQL).bind(organicVideoId).all<unknown>()
+  return result.results.map(parseLinkedIntegrationRow)
 }
 
 export async function getVideo(id: VideoId): Promise<Video | null> {
