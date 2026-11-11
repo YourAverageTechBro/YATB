@@ -34,7 +34,11 @@ function studioDb() {
 function parseTool(result) {
   const text = result.content?.find((part) => part.type === 'text')?.text
   if (!text) throw new Error('Tool result had no text')
-  return { isError: result.isError === true, body: JSON.parse(text) }
+  try {
+    return { isError: result.isError === true, body: JSON.parse(text) }
+  } catch {
+    return { isError: result.isError === true, body: { error: text } }
+  }
 }
 
 async function withClient(bearer, fn) {
