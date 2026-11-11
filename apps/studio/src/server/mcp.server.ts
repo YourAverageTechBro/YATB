@@ -4,15 +4,38 @@ import { z } from 'zod'
 import { mcpTargets, parseMarkPostedInput } from '#/domain/mcp-posts'
 import {
   MCP_MEDIA_TTL_MS,
+  MCP_SCOPES,
   isMcpScope,
   parseBearerToken,
   signMcpMedia,
   verifyMcpMediaMac,
   type McpScope,
 } from '#/domain/mcp-tokens'
+import {
+  applyVideoPatch,
+  createVideoInputSchema,
+  getVideoInputSchema,
+  linkedOrganicId,
+  listVideosInputSchema,
+  mcpVideoView,
+  parseCreateVideoToolInput,
+  parseGetVideoInput,
+  parseListVideosInput,
+  updateVideoInputSchema,
+} from '#/domain/mcp-videos'
 import { parsePostId, parsePostMediaId, parsePostStatus, type PostDraft, type PostStatus } from '#/domain/posts'
+import { emptyRichDocument, parseRichDocument } from './rich-document'
 import { getPostDraft, getPostMediaObject, listPostDrafts, recordStudioPosted } from './posts.server'
 import { resolveMcpBearer } from './mcp-tokens.server'
+import {
+  createVideo as createStudioVideo,
+  getVideo as getStudioVideo,
+  listInboundIntegrations,
+  listMcpVideos,
+  parseCreateVideoInput,
+  parseEditVideoInput,
+  updateVideo as updateStudioVideo,
+} from './videos.server'
 
 const bindings = env as Cloudflare.Env & { BETTER_AUTH_SECRET: string }
 
@@ -39,8 +62,13 @@ function missingScope(scope: McpScope) {
 
 function scopesOf(auth: AuthInfo | undefined): readonly McpScope[] {
   return (auth?.scopes ?? []).filter((scope): scope is McpScope => (
-    scope === 'posts:read' || scope === 'posts:mark_posted'
+    (MCP_SCOPES as readonly string[]).includes(scope)
   ))
+}
+
+function toolCaught(error: unknown) {
+  if (error instanceof Error) return jsonTool({ error: error.message }, true)
+  return jsonTool({ error: 'Request is invalid.' }, true)
 }
 
 async function signedMediaUrl(mediaId: string, now: number): Promise<string> {
@@ -134,6 +162,114 @@ const mcpHandler = createMcpHandler((ctx) => {
         status: result.draft.status,
         publications: result.draft.publications,
       })
+    },
+  )
+
+  server.registerTool(
+    'list_videos',
+    {
+      description: 'List Studio videos. Optional filters: status, format, promotion. Paginated.',
+      inputSchema: listVideosInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:read')) return missingScope('videos:read')
+      try {
+        const input = parseListVideosInput(raw)
+        const rows = await listMcpVideos({
+          status: input.status,
+          format: input.format,
+          promotion: input.promotion,
+          limit: input.limit + 1,
+          offset: (input.page - 1) * input.limit,
+        })
+        const hasMore = rows.length > input.limit
+        return jsonTool({
+          videos: rows.slice(0, input.limit).map(mcpVideoView),
+          page: input.page,
+          limit: input.limit,
+          has_more: hasMore,
+        })
+      } catch (error) {
+        return toolCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'get_video',
+    {
+      description: 'Get one Studio video, including the linked organic video and inbound integrations.',
+      inputSchema: getVideoInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:read')) return missingScope('videos:read')
+      try {
+        const id = parseGetVideoInput(raw)
+        const video = await getStudioVideo(id)
+        if (!video) return jsonTool({ error: 'Video not found.' }, true)
+        const organicId = linkedOrganicId(video.production)
+        const [linkedOrganic, inbound] = await Promise.all([
+          organicId ? getStudioVideo(organicId) : Promise.resolve(null),
+          listInboundIntegrations(id),
+        ])
+        return jsonTool({
+          ...mcpVideoView(video),
+          linked_organic: linkedOrganic ? mcpVideoView(linkedOrganic) : null,
+          inbound_integrations: inbound.map(mcpVideoView),
+        })
+      } catch (error) {
+        return toolCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'create_video',
+    {
+      description: 'Create a Studio video. Same validation as the New video form.',
+      inputSchema: createVideoInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:write')) return missingScope('videos:write')
+      try {
+        const input = parseCreateVideoToolInput(raw)
+        const script = input.script === undefined ? emptyRichDocument() : parseRichDocument(input.script)
+        const result = await createStudioVideo(parseCreateVideoInput({
+          title: input.title,
+          production: input.production,
+          publishDate: input.publishDate,
+          script,
+        }))
+        if (result.kind === 'invalid-link') return jsonTool({ error: result.message }, true)
+        return jsonTool(mcpVideoView(result.video))
+      } catch (error) {
+        return toolCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'update_video',
+    {
+      description: 'Partially update a Studio video. Same validation as the video editor save path.',
+      inputSchema: updateVideoInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:write')) return missingScope('videos:write')
+      try {
+        const id = parseGetVideoInput({ id: typeof raw === 'object' && raw !== null && 'id' in raw ? raw.id : undefined })
+        const current = await getStudioVideo(id)
+        if (!current) return jsonTool({ error: 'Video not found.' }, true)
+        const patch = applyVideoPatch(current, raw)
+        const script = patch.script === current.script ? current.script : parseRichDocument(patch.script)
+        const result = await updateStudioVideo(parseEditVideoInput({ ...patch, script }))
+        if (result.kind === 'invalid-link') return jsonTool({ error: result.message }, true)
+        if (result.kind === 'conflict') return jsonTool({ error: 'Video was updated elsewhere. Retry.' }, true)
+        if (result.kind === 'not-found') return jsonTool({ error: 'Video not found.' }, true)
+        return jsonTool(mcpVideoView(result.video))
+      } catch (error) {
+        return toolCaught(error)
+      }
     },
   )
 

@@ -49,3 +49,4 @@ Each feature file describes its browser entry, exact drive, proof, and traps.
 - [Shared UI system](./shared-ui-system.md)
 - [Production launch](./production-launch.md)
 - [Posts MCP](./posts-mcp.md)
+- [Videos MCP](./videos-mcp.md)

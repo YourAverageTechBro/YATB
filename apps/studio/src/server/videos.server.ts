@@ -21,7 +21,9 @@ import {
   type VideoId,
   type VideoListConfig,
   type VideoRevision,
+  type VideoPromotion,
   type VideoSort,
+  type VideoStatus,
   type VideoSummary,
 } from '#/domain/videos'
 import { parseRichDocument, type RichDocument } from './rich-document'
@@ -211,6 +213,43 @@ export async function listOrganicVideoOptions(excludeId?: VideoId): Promise<Orga
 
 export async function getVideo(id: VideoId): Promise<Video | null> {
   return activeVideo(id)
+}
+
+export async function listMcpVideos(filters: Readonly<{
+  status?: VideoStatus
+  format?: Video['production']['format']
+  promotion?: VideoPromotion
+  limit: number
+  offset: number
+}>): Promise<Video[]> {
+  const clauses = [ACTIVE_VIDEO_SQL]
+  const values: string[] = []
+  if (filters.status) {
+    clauses.push('status = ?')
+    values.push(filters.status)
+  }
+  if (filters.format) {
+    clauses.push('format = ?')
+    values.push(filters.format)
+  }
+  if (filters.promotion) {
+    clauses.push('promotion = ?')
+    values.push(filters.promotion)
+  }
+  const result = await bindings.DB.prepare(
+    `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, script_json, revision, created_at, updated_at
+     FROM video WHERE ${clauses.join(' AND ')} ORDER BY updated_at DESC, id ASC LIMIT ? OFFSET ?`,
+  ).bind(...values, filters.limit, filters.offset).all<unknown>()
+  return result.results.map(parseVideoRow)
+}
+
+export async function listInboundIntegrations(organicId: VideoId): Promise<Video[]> {
+  const result = await bindings.DB.prepare(
+    `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, script_json, revision, created_at, updated_at
+     FROM video WHERE linked_organic_video_id = ? AND ${ACTIVE_VIDEO_SQL}
+     ORDER BY title COLLATE NOCASE ASC, id ASC`,
+  ).bind(organicId).all<unknown>()
+  return result.results.map(parseVideoRow)
 }
 
 function linkedOrganicVideoId(production: Video['production']): VideoId | null {

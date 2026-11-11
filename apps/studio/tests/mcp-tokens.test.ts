@@ -4,7 +4,6 @@ import { resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { applyPosted } from '../src/domain/mcp-posts'
 import {
-  MCP_SCOPES,
   isMcpScope,
   parseBearerToken,
   parseMcpScopes,
@@ -56,9 +55,12 @@ describe('MCP token parsing', () => {
 
   it('keeps named scopes and rejects an empty list', () => {
     expect(parseMcpTokenName(' Poster bot ')).toBe('Poster bot')
-    expect(parseMcpScopes(['posts:mark_posted', 'posts:read', 'posts:read'])).toEqual([...MCP_SCOPES])
+    expect(parseMcpScopes(['posts:mark_posted', 'posts:read', 'posts:read'])).toEqual(['posts:read', 'posts:mark_posted'])
+    expect(parseMcpScopes(['videos:write', 'videos:read'])).toEqual(['videos:read', 'videos:write'])
     expect(isMcpScope(['posts:read'], 'posts:mark_posted')).toBe(false)
+    expect(isMcpScope(['videos:read'], 'videos:write')).toBe(false)
     expect(() => parseMcpScopes([])).toThrow(/at least one scope/)
+    expect(() => parseMcpScopes(['posts:read', 'videos:admin'])).toThrow(/scope is invalid/)
   })
 
   it('accepts a 15 minute media mac and rejects an expired one', async () => {

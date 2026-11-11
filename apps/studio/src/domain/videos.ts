@@ -4,12 +4,25 @@ export type VideoId = string
 export type SavedViewId = string
 export type VideoRevision = number
 
-export type VideoFormat = 'short' | 'long'
+export const VIDEO_FORMATS = ['short', 'long'] as const
+export type VideoFormat = (typeof VIDEO_FORMATS)[number]
+
+export const VIDEO_PROMOTIONS = ['organic', 'advertisement', 'integration'] as const
+export type VideoPromotion = (typeof VIDEO_PROMOTIONS)[number]
 
 export type Production =
   | { format: 'short'; promotion: 'organic' | 'advertisement' }
   | { format: 'long'; promotion: 'organic' }
   | { format: 'long'; promotion: 'integration'; organicVideoId: VideoId | null }
+
+export const VIDEO_STATUSES = [
+  'not-started',
+  'filming',
+  'ready-to-edit',
+  'ready-to-review',
+  'published',
+] as const
+export type VideoStatus = (typeof VIDEO_STATUSES)[number]
 
 export const STATUS = {
   'not-started': { label: 'Not started', order: 0 },
@@ -17,10 +30,8 @@ export const STATUS = {
   'ready-to-edit': { label: 'Ready to edit', order: 2 },
   'ready-to-review': { label: 'Ready to review', order: 3 },
   published: { label: 'Published', order: 4 },
-} as const
+} as const satisfies Record<VideoStatus, { label: string; order: number }>
 
-export type VideoStatus = keyof typeof STATUS
-export const VIDEO_STATUSES = Object.keys(STATUS) as VideoStatus[]
 export type VideoStatusFilter = readonly VideoStatus[]
 
 export type VideoSort = 'updated-desc' | 'publish-date-asc' | 'title-asc'
