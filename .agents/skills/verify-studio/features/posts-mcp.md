@@ -4,7 +4,7 @@ A signed-in operator mints a hashed bearer token in Settings. An MCP client uses
 
 ## Sub-features
 
-- `token-create` shows plaintext once, stores only SHA-256, and lists name, scopes, created, last used.
+- `token-create` shows plaintext once, stores only SHA-256, and lists name, scopes, created, last used. Settings also lists `videos:read` and `videos:write` for the Videos MCP tools.
 - `token-revoke` stops that token with HTTP 401.
 - `mcp-unauthenticated` returns 401 without a bearer token.
 - `mcp-scope` returns a tool error when `mark_posted` runs with only `posts:read`.

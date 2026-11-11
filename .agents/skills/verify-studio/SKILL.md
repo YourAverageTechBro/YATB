@@ -73,8 +73,8 @@ accessibility tree before each action. Use these stable accessible names:
 - `Start seconds`, `End seconds`, and `Use playhead` create timestamp ranges; comment timestamp buttons seek the active player.
 - `Edit comment`, `Save comment`, and `Delete comment` identify review mutations.
 - `Settings` opens token management. `Token name`, `Create token`, `posts:read`,
-  `posts:mark_posted`, `Copy this token now`, `New access token`, `Copy token`,
-  and `Revoke` manage MCP bearer tokens.
+  `posts:mark_posted`, `videos:read`, `videos:write`, `Copy this token now`,
+  `New access token`, `Copy token`, and `Revoke` manage MCP bearer tokens.
 - `Color theme` selects `System`, `Light`, or `Dark` on public and private pages.
 - `Toggle menu` opens Web's mobile navigation; `Frequently Asked Questions`
   contains the Web accordion.
@@ -200,6 +200,13 @@ token into evidence files):
 STUDIO_MCP_TOKEN=<plaintext> STUDIO_MCP_READ_TOKEN=<read-only-plaintext> \
 STUDIO_MCP_POST_ID=<post-draft-id> \
 node .agents/skills/verify-studio/scripts/verify-mcp.mjs
+```
+
+Exercise video MCP tools. The script mints `videos:read` / `videos:write` tokens
+through the same Settings server function when env tokens are omitted:
+
+```sh
+node .agents/skills/verify-studio/scripts/verify-videos-mcp.mjs
 ```
 
 Continue with [`features/production-launch.md`](features/production-launch.md).

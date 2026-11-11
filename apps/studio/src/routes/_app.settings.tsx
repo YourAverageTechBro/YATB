@@ -58,7 +58,7 @@ function SettingsPage() {
 
   return <main className="workspace">
     <header className="workspace-header"><div><p className="eyebrow">Studio</p><h1>Settings</h1></div></header>
-    <p className="library-intro">Create access tokens for the Posts MCP endpoint at /mcp. The plaintext token is shown once.</p>
+    <p className="library-intro">Create access tokens for the Studio MCP endpoint at /mcp. The plaintext token is shown once.</p>
     <form className="mcp-token-form" onSubmit={(event) => { event.preventDefault(); void createToken() }}>
       <Label>Token name<Input aria-label="Token name" name="name" value={name} onChange={(event) => setName(event.target.value)} required maxLength={80} /></Label>
       <fieldset className="mcp-token-scopes">

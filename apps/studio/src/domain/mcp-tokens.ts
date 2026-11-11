@@ -1,4 +1,4 @@
-export const MCP_SCOPES = ['posts:read', 'posts:mark_posted'] as const
+export const MCP_SCOPES = ['posts:read', 'posts:mark_posted', 'videos:read', 'videos:write'] as const
 export type McpScope = (typeof MCP_SCOPES)[number]
 
 export const MCP_TOKEN_PREFIX = 'yst_'
@@ -36,7 +36,9 @@ export function parseMcpTokenName(value: unknown): string {
 }
 
 export function parseMcpScope(value: unknown): McpScope {
-  if (value === 'posts:read' || value === 'posts:mark_posted') return value
+  if (typeof value === 'string' && (MCP_SCOPES as readonly string[]).includes(value)) {
+    return value as McpScope
+  }
   invalid('Token scope is invalid.')
 }
 
