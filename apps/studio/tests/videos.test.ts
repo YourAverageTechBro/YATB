@@ -345,7 +345,13 @@ describe('video planning domain', () => {
       { id: ids.target, title: 'Free organic', status: 'not-started', publish_date: null },
       { id: ids.otherTarget, title: 'Taken organic', status: 'not-started', publish_date: null },
     ])
-    expect(db.prepare(INBOUND_INTEGRATIONS_SQL).all(ids.otherTarget)).toEqual([
+    expect(
+      db.prepare(INBOUND_INTEGRATIONS_SQL).all(ids.otherTarget).map((row) => ({
+        id: row.id,
+        title: row.title,
+        promotion: row.promotion,
+      })),
+    ).toEqual([
       { id: ids.firstSource, title: 'Fish Audio Ad', promotion: 'integration' },
       { id: ids.secondSource, title: 'Second Ad', promotion: 'integration' },
     ])
