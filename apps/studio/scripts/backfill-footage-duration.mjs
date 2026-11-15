@@ -2,10 +2,11 @@
 import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 
 const remote = process.argv.includes('--remote')
-const cwd = new URL('..', import.meta.url).pathname
+const cwd = fileURLToPath(new URL('..', import.meta.url))
 const wrangler = ['wrangler']
 const d1 = ['d1', 'execute', 'yatb-studio', '--cwd', cwd, '--json']
 if (!remote) d1.push('--local')
@@ -75,10 +76,10 @@ try {
     }
     const dest = join(scratch, `${row.id}.bin`)
     const getArgs = [
-      'r2', 'object', 'get', 'yatb-studio-media', row.object_key,
-      '--file', dest, '--cwd', cwd,
+      'r2', 'object', 'get', `yatb-studio-media/${row.object_key}`,
+      '--file', dest,
     ]
-    if (!remote) getArgs.push('--local')
+    if (!remote) getArgs.push('--local', '--persist-to', join(cwd, '.wrangler/state'))
     const got = spawnSync('npx', ['wrangler', ...getArgs], { encoding: 'utf8', cwd })
     if (got.status !== 0) {
       skipped += 1

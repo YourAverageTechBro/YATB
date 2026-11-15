@@ -218,6 +218,13 @@ Exercise file catalog MCP tools (`list_files`, `get_file`, `set_file_tags`,
 node .agents/skills/verify-studio/scripts/verify-files-mcp.mjs
 ```
 
+Set a tag in the Studio UI and confirm it appears over MCP (`playwright` must be
+installed for this script):
+
+```sh
+STUDIO_VIDEO_ID=<video-id> node .agents/skills/verify-studio/scripts/verify-files-ui.mjs
+```
+
 After migration 0016, backfill footage duration on a local or remote D1:
 
 ```sh
