@@ -19,7 +19,7 @@ import {
 } from '../src/domain/videos'
 import { buildCalendarMonth, calendarMonthRange, parseCalendarMonth, shiftCalendarMonth } from '../src/domain/calendar'
 import { emptyRichDocument } from '../src/server/rich-document'
-import { ACTIVE_VIDEO_SQL, UPDATE_VIDEO_SQL, calendarVideosSql, organicVideoOptionValues, organicVideoOptionsSql, statusFilterSql, unpublishedVideoStatuses } from '../src/server/video-sql'
+import { ACTIVE_VIDEO_SQL, INBOUND_INTEGRATIONS_SQL, UPDATE_VIDEO_SQL, calendarVideosSql, organicVideoOptionValues, organicVideoOptionsSql, statusFilterSql, unpublishedVideoStatuses } from '../src/server/video-sql'
 
 const first: Video = {
   id: '1b0e913b-645c-4306-a71d-78115390b46d',
@@ -324,6 +324,32 @@ describe('video planning domain', () => {
       { id: ids.otherTarget, title: 'alpha', status: 'published', publish_date: null },
       { id: ids.target, title: 'Zulu', status: 'filming', publish_date: '2026-10-02' },
     ])
+    db.close()
+  })
+
+  it('omits an organic already linked from another integration and lists inbound integrations', () => {
+    const db = planningDatabase()
+    insertVideo(db, ids.target, 'long', 'organic')
+    insertVideo(db, ids.otherTarget, 'long', 'organic')
+    insertVideo(db, ids.firstSource, 'long', 'integration', ids.otherTarget)
+    insertVideo(db, ids.secondSource, 'long', 'integration', ids.otherTarget)
+    db.prepare("UPDATE video SET title = 'Free organic' WHERE id = ?").run(ids.target)
+    db.prepare("UPDATE video SET title = 'Taken organic' WHERE id = ?").run(ids.otherTarget)
+    db.prepare("UPDATE video SET title = 'Fish Audio Ad' WHERE id = ?").run(ids.firstSource)
+    db.prepare("UPDATE video SET title = 'Second Ad' WHERE id = ?").run(ids.secondSource)
+
+    expect(db.prepare(organicVideoOptionsSql(false)).all(...organicVideoOptionValues())).toEqual([
+      { id: ids.target, title: 'Free organic', status: 'not-started', publish_date: null },
+    ])
+    expect(db.prepare(organicVideoOptionsSql(true)).all(...organicVideoOptionValues(ids.firstSource))).toEqual([
+      { id: ids.target, title: 'Free organic', status: 'not-started', publish_date: null },
+      { id: ids.otherTarget, title: 'Taken organic', status: 'not-started', publish_date: null },
+    ])
+    expect(db.prepare(INBOUND_INTEGRATIONS_SQL).all(ids.otherTarget)).toEqual([
+      { id: ids.firstSource, title: 'Fish Audio Ad', promotion: 'integration' },
+      { id: ids.secondSource, title: 'Second Ad', promotion: 'integration' },
+    ])
+    expect(db.prepare(INBOUND_INTEGRATIONS_SQL).all(ids.target)).toEqual([])
     db.close()
   })
 

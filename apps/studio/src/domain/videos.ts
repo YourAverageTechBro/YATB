@@ -111,6 +111,12 @@ export type OrganicVideoOption = Readonly<{
   publishDate: string | null
 }>
 
+export type LinkedIntegration = Readonly<{
+  id: VideoId
+  title: string
+  promotion: 'integration'
+}>
+
 export type SavedView = Readonly<{
   id: SavedViewId
   name: string
