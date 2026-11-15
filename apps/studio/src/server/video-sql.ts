@@ -35,9 +35,9 @@ AND ((${unpublished} AND ${unoccupied})${keepLinked})
 ORDER BY title COLLATE NOCASE ASC, id ASC`
 }
 
-export const INBOUND_INTEGRATIONS_SQL = `SELECT id, title, promotion
+export const INBOUND_INTEGRATIONS_SQL = `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, script_json, revision, created_at, updated_at
 FROM video
-WHERE ${ACTIVE_VIDEO_SQL} AND format = 'long' AND promotion = 'integration' AND linked_organic_video_id = ?
+WHERE linked_organic_video_id = ? AND ${ACTIVE_VIDEO_SQL}
 ORDER BY title COLLATE NOCASE ASC, id ASC`
 
 export function statusFilterSql(statuses: VideoStatusFilter): Readonly<{ clause: string; values: VideoStatusFilter }> {

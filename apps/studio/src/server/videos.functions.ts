@@ -4,7 +4,9 @@ import {
   parsePlanningQuery,
   parseSavedViewId,
   parseVideoId,
+  type LinkedIntegration,
   type Production,
+  type Video,
   type VideoListConfig,
   type VideoRevision,
   type VideoStatus,
@@ -27,6 +29,13 @@ type EditVideoData = CreateVideoData & {
 type MoveVideoData = { id: string; expectedRevision: VideoRevision; status: VideoStatus }
 type DeleteVideoData = { id: string; expectedRevision: VideoRevision }
 type SavedViewData = { name: string; config: VideoListConfig }
+
+function linkedIntegrationSummary(video: Video): LinkedIntegration {
+  if (video.production.promotion !== 'integration') {
+    throw new Error('Stored integration promotion is invalid.')
+  }
+  return { id: video.id, title: video.title, promotion: 'integration' }
+}
 
 async function readSession() {
   const { PRIVATE_NO_STORE, requireStudioSession } = await import('./auth.server')
@@ -70,12 +79,12 @@ export const loadVideo = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     await readSession()
     const { getVideo, listInboundIntegrations, listOrganicVideoOptions } = await import('./videos.server')
-    const [video, organicVideoOptions, inboundIntegrations] = await Promise.all([
+    const [video, organicVideoOptions, inbound] = await Promise.all([
       getVideo(data),
       listOrganicVideoOptions(data),
       listInboundIntegrations(data),
     ])
-    return { video, organicVideoOptions, inboundIntegrations }
+    return { video, organicVideoOptions, inboundIntegrations: inbound.map(linkedIntegrationSummary) }
   })
 
 export const createVideo = createServerFn({ method: 'POST' })

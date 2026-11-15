@@ -15,7 +15,6 @@ import {
   type SavedView,
   type SavedViewId,
   type CreateVideoResult,
-  type LinkedIntegration,
   type OrganicVideoOption,
   type SaveVideoResult,
   type Video,
@@ -125,16 +124,6 @@ function parseOrganicVideoOptionRow(value: unknown): OrganicVideoOption {
   }
 }
 
-function parseLinkedIntegrationRow(value: unknown): LinkedIntegration {
-  const row = asRecord(value)
-  if (row.promotion !== 'integration') throw new Error('Stored integration promotion is invalid.')
-  return {
-    id: parseVideoId(row.id),
-    title: parseTitle(row.title),
-    promotion: 'integration',
-  }
-}
-
 function parseSavedViewRow(value: unknown): SavedView {
   const row = asRecord(value)
   return {
@@ -222,11 +211,6 @@ export async function listOrganicVideoOptions(excludeId?: VideoId): Promise<Orga
   return result.results.map(parseOrganicVideoOptionRow)
 }
 
-export async function listInboundIntegrations(organicVideoId: VideoId): Promise<LinkedIntegration[]> {
-  const result = await bindings.DB.prepare(INBOUND_INTEGRATIONS_SQL).bind(organicVideoId).all<unknown>()
-  return result.results.map(parseLinkedIntegrationRow)
-}
-
 export async function getVideo(id: VideoId): Promise<Video | null> {
   return activeVideo(id)
 }
@@ -260,11 +244,7 @@ export async function listMcpVideos(filters: Readonly<{
 }
 
 export async function listInboundIntegrations(organicId: VideoId): Promise<Video[]> {
-  const result = await bindings.DB.prepare(
-    `SELECT id, title, format, promotion, linked_organic_video_id, status, publish_date, script_json, revision, created_at, updated_at
-     FROM video WHERE linked_organic_video_id = ? AND ${ACTIVE_VIDEO_SQL}
-     ORDER BY title COLLATE NOCASE ASC, id ASC`,
-  ).bind(organicId).all<unknown>()
+  const result = await bindings.DB.prepare(INBOUND_INTEGRATIONS_SQL).bind(organicId).all<unknown>()
   return result.results.map(parseVideoRow)
 }
 
