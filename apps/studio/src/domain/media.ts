@@ -61,6 +61,7 @@ export type BeginUpload = Readonly<{
   byteSize: number
   contentType: string
   purpose: UploadPurpose
+  durationMs: number | null
 }>
 
 export type ByteRange = Readonly<{ offset: number; length: number }>
@@ -141,6 +142,14 @@ export function parseDurationMs(value: unknown): number {
   return value
 }
 
+export function parseOptionalDurationMs(value: unknown): number | null {
+  if (value === undefined || value === null) return null
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1 || value > MAX_DRAFT_DURATION_MS) {
+    return invalid('Duration is invalid.')
+  }
+  return value
+}
+
 export function parseUploadPurpose(value: unknown, contentType: string): UploadPurpose {
   const input = record(value)
   if (input.kind === 'footage') return { kind: 'footage' }
@@ -168,6 +177,7 @@ export function parseBeginUpload(value: unknown): BeginUpload {
     byteSize: parseByteSize(input.byteSize),
     contentType,
     purpose: parseUploadPurpose(input.purpose, contentType),
+    durationMs: parseOptionalDurationMs(input.durationMs),
   }
 }
 
@@ -216,6 +226,7 @@ export function sameUpload(left: BeginUpload, right: Omit<BeginUpload, 'videoId'
     && left.displayName === right.displayName
     && left.byteSize === right.byteSize
     && left.contentType === right.contentType
+    && left.durationMs === right.durationMs
     && left.purpose.kind === right.purpose.kind
     && (left.purpose.kind === 'footage'
       || (right.purpose.kind === 'draft' && left.purpose.durationMs === right.purpose.durationMs))
