@@ -3,3 +3,5 @@ APP_ORIGIN=http://localhost:3001
 EMAIL_MODE=capture
 EMAIL_FROM=studio@studio-mail.youraveragetechbro.com
 DRAFT_AI_MODE=stub
+R2_ACCESS_KEY_ID=local-r2-access-key-id
+R2_SECRET_ACCESS_KEY=local-r2-secret-access-key

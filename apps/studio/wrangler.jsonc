@@ -74,7 +74,8 @@
     "APP_ORIGIN": "https://studio.youraveragetechbro.com",
     "EMAIL_MODE": "cloudflare",
     "EMAIL_FROM": "studio@studio-mail.youraveragetechbro.com",
-    "DRAFT_AI_MODE": "live"
+    "DRAFT_AI_MODE": "live",
+    "CLOUDFLARE_ACCOUNT_ID": "2a59d9e0842dc0b3d920f591fe82702c"
   },
   "d1_databases": [
     {
@@ -87,7 +88,13 @@
   "r2_buckets": [
     {
       "binding": "MEDIA",
-      "bucket_name": "yatb-studio-media"
+      "bucket_name": "yatb-studio-media",
+      "local_dev": {
+        "experimental_s3_credentials": {
+          "accessKeyId": "local-r2-access-key-id",
+          "secretAccessKey": "local-r2-secret-access-key"
+        }
+      }
     }
   ],
   "send_email": [

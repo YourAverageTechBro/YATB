@@ -1,5 +1,5 @@
 import handler from '@tanstack/react-start/server-entry'
-import { cleanupTombstonedVideos } from './server/media.server'
+import { cleanupExpiredMcpUploads, cleanupTombstonedVideos } from './server/media.server'
 import { consumeCompressionQueue, reconcileDerivatives } from './server/compression.server'
 import { consumeDraftAiQueue, reconcileDraftAiJobs } from './server/draft-ai.server'
 import { reconcileDraftStreams } from './server/stream.server'
@@ -24,6 +24,7 @@ export default {
   async scheduled(_controller, env) {
     await Promise.all([
       cleanupTombstonedVideos(env),
+      cleanupExpiredMcpUploads(env),
       reconcileDerivatives(env),
       reconcileDraftStreams(env),
       reconcileDraftAiJobs(env),
