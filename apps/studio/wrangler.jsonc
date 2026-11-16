@@ -67,7 +67,7 @@
       }
     ]
   },
-  "secrets": { "required": ["BETTER_AUTH_SECRET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY"] },
+  "secrets": { "required": ["BETTER_AUTH_SECRET"] },
   "stream": { "binding": "STREAM" },
   "ai": { "binding": "AI" },
   "vars": {
