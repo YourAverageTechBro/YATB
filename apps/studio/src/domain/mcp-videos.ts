@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { parseContentType, parseDisplayName, parseMediaId } from './media'
+import type { Draft } from './reviews'
 import {
   parseProduction,
   parsePublishDate,
@@ -15,6 +17,9 @@ import {
   type VideoPromotion,
   type VideoStatus,
 } from './videos'
+
+export const MCP_DRAFT_UPLOAD_MAX_BYTES = 100 * 1024 * 1024
+export const MCP_DRAFT_UPLOAD_TTL_MS = 60 * 60 * 1000
 
 export const MCP_VIDEO_PAGE_SIZE = 20
 export const MCP_VIDEO_PAGE_MAX = 100
@@ -66,6 +71,35 @@ export const updateVideoInputSchema = z.object({
   script: z.unknown().optional(),
 }).strict()
 
+export const requestVideoUploadInputSchema = z.object({
+  video_id: z.string(),
+  filename: z.string(),
+  content_type: z.string(),
+  size: z.number().int(),
+}).strict()
+
+export const finalizeVideoUploadInputSchema = z.object({
+  upload_id: z.string(),
+}).strict()
+
+export const listDraftVersionsInputSchema = z.object({
+  video_id: z.string(),
+}).strict()
+
+export type McpDraftVersionView = Readonly<{
+  id: string
+  version: number
+  filename: string
+  content_type: string
+  size_bytes: number
+  duration_ms: number
+  created_at: number
+  stream_state: Draft['stream']['state']
+  stream_uid: string | null
+  download_url: string
+  download_expires_at: number
+}>
+
 export function mcpVideoView(video: Video): McpVideoView {
   return {
     id: video.id,
@@ -107,6 +141,54 @@ export function parseListVideosInput(value: unknown): {
 
 export function parseGetVideoInput(value: unknown): VideoId {
   return parseVideoId(parseSchema(getVideoInputSchema, value).id)
+}
+
+export function parseRequestVideoUploadInput(value: unknown): {
+  videoId: VideoId
+  filename: string
+  contentType: string
+  size: number
+} {
+  const input = parseSchema(requestVideoUploadInputSchema, value)
+  const contentType = parseContentType(input.content_type)
+  if (!contentType.startsWith('video/')) throw new Error('content_type must be a video type.')
+  if (input.size < 1 || input.size > MCP_DRAFT_UPLOAD_MAX_BYTES) {
+    throw new Error(`size must be between 1 and ${MCP_DRAFT_UPLOAD_MAX_BYTES} bytes.`)
+  }
+  return {
+    videoId: parseVideoId(input.video_id),
+    filename: parseDisplayName(input.filename),
+    contentType,
+    size: input.size,
+  }
+}
+
+export function parseFinalizeVideoUploadInput(value: unknown): string {
+  return parseMediaId(parseSchema(finalizeVideoUploadInputSchema, value).upload_id)
+}
+
+export function parseListDraftVersionsInput(value: unknown): VideoId {
+  return parseVideoId(parseSchema(listDraftVersionsInputSchema, value).video_id)
+}
+
+export function mcpDraftVersionView(
+  draft: Draft,
+  downloadUrl: string,
+  expiresAt: number,
+): McpDraftVersionView {
+  return {
+    id: draft.id,
+    version: draft.version,
+    filename: draft.file.displayName,
+    content_type: draft.file.contentType,
+    size_bytes: draft.file.byteSize,
+    duration_ms: draft.durationMs,
+    created_at: draft.createdAt,
+    stream_state: draft.stream.state,
+    stream_uid: draft.stream.uid,
+    download_url: downloadUrl,
+    download_expires_at: expiresAt,
+  }
 }
 
 export function parseCreateVideoToolInput(value: unknown): {

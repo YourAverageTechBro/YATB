@@ -127,6 +127,9 @@ assert(names.includes('get_video'), 'tools/list missing get_video')
 assert(names.includes('create_video'), 'tools/list missing create_video')
 assert(names.includes('update_video'), 'tools/list missing update_video')
 assert(names.includes('list_posts'), 'posts tools were removed')
+assert(names.includes('request_video_upload'), 'tools/list missing request_video_upload')
+assert(names.includes('finalize_video_upload'), 'tools/list missing finalize_video_upload')
+assert(names.includes('list_draft_versions'), 'tools/list missing list_draft_versions')
 
 const listed = parseTool(await withClient(writeToken, (client) => client.callTool({ name: 'list_videos', arguments: {} })))
 assert(!listed.isError, `list_videos failed: ${JSON.stringify(listed.body)}`)
@@ -195,6 +198,13 @@ const updated = parseTool(await withClient(writeToken, (client) => client.callTo
 })))
 assert(!updated.isError, `update_video failed: ${JSON.stringify(updated.body)}`)
 assert(JSON.stringify(updated.body.script).includes('docs.google.com'), 'script update did not persist')
+
+const deniedUpload = parseTool(await withClient(readToken, (client) => client.callTool({
+  name: 'request_video_upload',
+  arguments: { video_id: organic.body.id, filename: 'cut.mp4', content_type: 'video/mp4', size: 64 },
+})))
+assert(deniedUpload.isError, 'read-only token was allowed to request_video_upload')
+assert(String(deniedUpload.body.error ?? '').includes('videos:write'), `Expected missing-scope error, got ${JSON.stringify(deniedUpload.body)}`)
 
 const denied = parseTool(await withClient(readToken, (client) => client.callTool({
   name: 'create_video',

@@ -11,22 +11,36 @@ import {
   verifyMcpMediaMac,
   type McpScope,
 } from '#/domain/mcp-tokens'
+import { parseMediaId } from '#/domain/media'
 import {
   applyVideoPatch,
   createVideoInputSchema,
+  finalizeVideoUploadInputSchema,
   getVideoInputSchema,
   linkedOrganicId,
+  listDraftVersionsInputSchema,
   listVideosInputSchema,
+  mcpDraftVersionView,
   mcpVideoView,
   parseCreateVideoToolInput,
+  parseFinalizeVideoUploadInput,
   parseGetVideoInput,
+  parseListDraftVersionsInput,
   parseListVideosInput,
+  parseRequestVideoUploadInput,
+  requestVideoUploadInputSchema,
   updateVideoInputSchema,
 } from '#/domain/mcp-videos'
 import { parsePostId, parsePostMediaId, parsePostStatus, type PostDraft, type PostStatus } from '#/domain/posts'
 import { emptyRichDocument, parseRichDocument } from './rich-document'
 import { getPostDraft, getPostMediaObject, listPostDrafts, recordStudioPosted } from './posts.server'
 import { resolveMcpBearer } from './mcp-tokens.server'
+import {
+  finalizeVideoUpload,
+  getDraftOriginal,
+  requestVideoUpload,
+} from './media.server'
+import { listDrafts } from './reviews.server'
 import {
   createVideo as createStudioVideo,
   getVideo as getStudioVideo,
@@ -78,6 +92,21 @@ async function signedMediaUrl(mediaId: string, now: number): Promise<string> {
   return `${origin}/mcp/media/${mediaId}?exp=${exp}&sig=${sig}`
 }
 
+async function signedDraftOriginalUrl(fileId: string, now: number): Promise<{ url: string; exp: number }> {
+  const exp = now + MCP_MEDIA_TTL_MS
+  const sig = await signMcpMedia(bindings.BETTER_AUTH_SECRET, `draft:${fileId}`, exp)
+  const origin = new URL(bindings.APP_ORIGIN).origin
+  return { url: `${origin}/mcp/media/draft/${fileId}?exp=${exp}&sig=${sig}`, exp }
+}
+
+async function mcpDraftVersions(videoId: ReturnType<typeof parseGetVideoInput>, now: number) {
+  const drafts = await listDrafts(videoId)
+  return Promise.all(drafts.map(async (draft) => {
+    const download = await signedDraftOriginalUrl(draft.file.id, now)
+    return mcpDraftVersionView(draft, download.url, download.exp)
+  }))
+}
+
 async function mcpPostView(draft: PostDraft, now: number) {
   return {
     id: draft.id,
@@ -101,6 +130,7 @@ async function mcpPostView(draft: PostDraft, now: number) {
 
 const mcpHandler = createMcpHandler((ctx) => {
   const scopes = scopesOf(ctx.authInfo)
+  const userId = typeof ctx.authInfo?.extra?.userId === 'string' ? ctx.authInfo.extra.userId : ''
   const server = new McpServer({ name: 'yatb-studio-posts', version: '1.0.0' })
 
   server.registerTool(
@@ -216,6 +246,7 @@ const mcpHandler = createMcpHandler((ctx) => {
           ...mcpVideoView(video),
           linked_organic: linkedOrganic ? mcpVideoView(linkedOrganic) : null,
           inbound_integrations: inbound.map(mcpVideoView),
+          draft_versions: await mcpDraftVersions(id, Date.now()),
         })
       } catch (error) {
         return toolCaught(error)
@@ -283,6 +314,61 @@ const mcpHandler = createMcpHandler((ctx) => {
     },
   )
 
+  server.registerTool(
+    'request_video_upload',
+    {
+      description: 'Create a presigned R2 PUT URL for a finished edit. Finalize after the PUT to attach it as the newest draft version.',
+      inputSchema: requestVideoUploadInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:write')) return missingScope('videos:write')
+      try {
+        if (!userId) throw new Error('Token is missing its owner.')
+        const input = parseRequestVideoUploadInput(raw)
+        return jsonTool(await requestVideoUpload(input, userId))
+      } catch (error) {
+        return toolCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'finalize_video_upload',
+    {
+      description: 'Publish an uploaded edit as the newest draft version. Idempotent for the same upload_id.',
+      inputSchema: finalizeVideoUploadInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:write')) return missingScope('videos:write')
+      try {
+        const draft = await finalizeVideoUpload(parseFinalizeVideoUploadInput(raw))
+        const download = await signedDraftOriginalUrl(draft.file.id, Date.now())
+        return jsonTool(mcpDraftVersionView(draft, download.url, download.exp))
+      } catch (error) {
+        return toolCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'list_draft_versions',
+    {
+      description: 'List draft versions for a video, newest first, with short-lived original download URLs and Stream state.',
+      inputSchema: listDraftVersionsInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:read')) return missingScope('videos:read')
+      try {
+        const videoId = parseListDraftVersionsInput(raw)
+        const video = await getStudioVideo(videoId)
+        if (!video) return jsonTool({ error: 'Video not found.' }, true)
+        return jsonTool({ drafts: await mcpDraftVersions(videoId, Date.now()) })
+      } catch (error) {
+        return toolCaught(error)
+      }
+    },
+  )
+
   return server
 })
 
@@ -308,35 +394,58 @@ async function authorizeMcp(request: Request): Promise<AuthInfo | null> {
     token: token.id,
     clientId: token.id,
     scopes: [...token.scopes],
+    extra: { userId: token.userId },
   }
 }
 
 async function handleMcpMedia(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const mediaId = url.pathname.slice('/mcp/media/'.length)
+  const exp = Number(url.searchParams.get('exp'))
+  const sig = url.searchParams.get('sig') ?? ''
+  const draftPrefix = 'draft/'
+  if (mediaId.startsWith(draftPrefix)) {
+    let fileId: string
+    try { fileId = parseMediaId(mediaId.slice(draftPrefix.length)) } catch {
+      return new Response('Not found.', { status: 404 })
+    }
+    if (!(await verifyMcpMediaMac(bindings.BETTER_AUTH_SECRET, `draft:${fileId}`, exp, sig))) {
+      return new Response('Not found.', { status: 404 })
+    }
+    const file = await getDraftOriginal(fileId)
+    if (!file) return new Response('Not found.', { status: 404 })
+    return sendMcpObject(request, file.object_key, file.content_type, file.display_name)
+  }
   let id: string
   try { id = parsePostMediaId(mediaId) } catch {
     return new Response('Not found.', { status: 404 })
   }
-  const exp = Number(url.searchParams.get('exp'))
-  const sig = url.searchParams.get('sig') ?? ''
   if (!(await verifyMcpMediaMac(bindings.BETTER_AUTH_SECRET, id, exp, sig))) {
     return new Response('Not found.', { status: 404 })
   }
   const file = await getPostMediaObject(id)
   if (!file) return new Response('Not found.', { status: 404 })
+  return sendMcpObject(request, file.object_key, file.content_type, file.display_name)
+}
+
+async function sendMcpObject(
+  request: Request,
+  objectKey: string,
+  contentType: string,
+  displayName: string,
+): Promise<Response> {
   const headers = new Headers({
     'Cache-Control': 'private, no-store, max-age=0',
-    'Content-Type': file.content_type,
-    'Content-Disposition': `inline; filename="${file.display_name.replace(/[^\x20-\x7e]/g, '_')}"`,
+    'Content-Type': contentType,
+    'Content-Disposition': `inline; filename="${displayName.replace(/[^\x20-\x7e]/g, '_')}"`,
     'X-Content-Type-Options': 'nosniff',
   })
   if (request.method === 'HEAD') {
-    const object = await bindings.MEDIA.head(file.object_key)
+    const object = await bindings.MEDIA.head(objectKey)
     if (!object) return new Response('Not found.', { status: 404 })
     return new Response(null, { status: 200, headers })
   }
-  const object = await bindings.MEDIA.get(file.object_key)
+  const object = await bindings.MEDIA.get(objectKey)
   if (!object) return new Response('Not found.', { status: 404 })
   return new Response(object.body, { status: 200, headers })
 }

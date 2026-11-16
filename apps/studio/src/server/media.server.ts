@@ -13,6 +13,11 @@ import {
   type UploadSnapshot,
   type UploadState,
 } from '#/domain/media'
+import {
+  MCP_DRAFT_UPLOAD_TTL_MS,
+} from '#/domain/mcp-videos'
+import { readMp4DurationMs } from '#/domain/mp4-duration'
+import { presignR2Url } from '#/domain/r2-presign'
 import type { Draft, ReviewAuthor } from '#/domain/reviews'
 import type { MediaDerivativeState } from '#/domain/derivatives'
 import { draftAiObjectKeys } from '#/domain/draft-ai'
@@ -22,8 +27,35 @@ import { ensureDraftDerivative } from './compression.server'
 import { deleteDraftStreams, draftStreamFromRow, ensureDraftStream } from './stream.server'
 import { ACTIVE_VIDEO_SQL } from './video-sql'
 
-type Bindings = Cloudflare.Env & { DB: D1Database; MEDIA: R2Bucket }
+type Bindings = Cloudflare.Env & {
+  DB: D1Database
+  MEDIA: R2Bucket
+  R2_ACCESS_KEY_ID?: string
+  R2_SECRET_ACCESS_KEY?: string
+  CLOUDFLARE_ACCOUNT_ID?: string
+}
 const bindings = env as Bindings
+
+type McpVideoUploadRow = {
+  id: string
+  video_id: string
+  created_by_user_id: string
+  file_id: string
+  object_key: string
+  display_name: string
+  byte_size: number
+  content_type: string
+  expires_at: number
+  draft_id: string | null
+  created_at: number
+}
+
+export type RequestedVideoUpload = Readonly<{
+  upload_id: string
+  upload_url: string
+  headers: Readonly<Record<string, string>>
+  expires_at: number
+}>
 
 export class MediaError extends Error {
   constructor(public readonly status: number, message: string) {
@@ -554,6 +586,165 @@ export async function getSharedFile(token: string): Promise<{ file: MediaFile; v
 
 function isNoSuchUpload(error: unknown): boolean {
   return error instanceof Error && /(?:NoSuchUpload|10024)/.test(error.message)
+}
+
+export async function requestVideoUpload(
+  input: { videoId: string; filename: string; contentType: string; size: number },
+  userId: string,
+  now = Date.now(),
+): Promise<RequestedVideoUpload> {
+  if (!(await activeVideoExists(input.videoId))) throw new MediaError(404, 'Video not found.')
+  const credentials = r2S3Credentials()
+  const id = crypto.randomUUID()
+  const fileId = crypto.randomUUID()
+  const objectKey = `videos/${input.videoId}/drafts/${fileId}`
+  const expiresAt = now + MCP_DRAFT_UPLOAD_TTL_MS
+  await bindings.DB.prepare(
+    `INSERT INTO mcp_video_upload (
+       id, video_id, created_by_user_id, file_id, object_key, display_name,
+       byte_size, content_type, expires_at, created_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).bind(
+    id, input.videoId, userId, fileId, objectKey, input.filename,
+    input.size, input.contentType, expiresAt, now,
+  ).run()
+  const uploadUrl = await presignR2Url({
+    accessKeyId: credentials.accessKeyId,
+    secretAccessKey: credentials.secretAccessKey,
+    endpoint: r2S3Endpoint(),
+    bucket: 'yatb-studio-media',
+    key: objectKey,
+    method: 'PUT',
+    contentType: input.contentType,
+    expiresInSeconds: Math.floor(MCP_DRAFT_UPLOAD_TTL_MS / 1000),
+    now: new Date(now),
+  })
+  return {
+    upload_id: id,
+    upload_url: uploadUrl,
+    headers: { 'Content-Type': input.contentType },
+    expires_at: expiresAt,
+  }
+}
+
+export async function finalizeVideoUpload(uploadId: string, now = Date.now()): Promise<Draft> {
+  const pending = await bindings.DB.prepare(
+    'SELECT * FROM mcp_video_upload WHERE id = ?',
+  ).bind(uploadId).first<McpVideoUploadRow>()
+  if (!pending) throw new MediaError(404, 'Upload not found.')
+  if (!(await activeVideoExists(pending.video_id))) throw new MediaError(404, 'Video not found.')
+  if (pending.draft_id) {
+    const published = await storedDraftById(pending.draft_id, pending.video_id)
+    if (published) return published
+  }
+  if (pending.expires_at <= now && !pending.draft_id) throw new MediaError(410, 'Upload expired.')
+  const object = await bindings.MEDIA.head(pending.object_key)
+  if (!object) throw new MediaError(400, 'Upload object is missing.')
+  if (object.size !== pending.byte_size) throw new MediaError(400, 'Upload size does not match.')
+  const durationMs = await readUploadedDuration(pending.object_key)
+  const draftId = pending.draft_id ?? crypto.randomUUID()
+  const session = await insertMcpUploadSession(pending, draftId, durationMs, now)
+  const snapshot = await publish(session, object)
+  if (snapshot.result?.kind !== 'draft') throw new MediaError(500, 'Draft publication did not finish.')
+  await bindings.DB.prepare(
+    'UPDATE mcp_video_upload SET draft_id = ? WHERE id = ?',
+  ).bind(snapshot.result.draft.id, pending.id).run()
+  return snapshot.result.draft
+}
+
+export async function getDraftOriginal(fileId: string): Promise<StoredFileRow | null> {
+  return bindings.DB.prepare(
+    `SELECT f.id, f.video_id, f.display_name, f.byte_size, f.content_type, f.purpose,
+            f.object_key, f.object_etag, f.created_at, f.updated_at
+     FROM media_file f JOIN video v ON v.id = f.video_id
+     WHERE f.id = ? AND f.purpose = 'draft' AND v.${ACTIVE_VIDEO_SQL}`,
+  ).bind(fileId).first<StoredFileRow>()
+}
+
+export async function cleanupExpiredMcpUploads(envBindings: Bindings = bindings, now = Date.now()): Promise<number> {
+  const due = await envBindings.DB.prepare(
+    `SELECT id, object_key FROM mcp_video_upload WHERE draft_id IS NULL AND expires_at <= ? LIMIT 50`,
+  ).bind(now).all<{ id: string; object_key: string }>()
+  for (const row of due.results) {
+    await envBindings.MEDIA.delete(row.object_key)
+    await envBindings.DB.prepare('DELETE FROM mcp_video_upload WHERE id = ? AND draft_id IS NULL').bind(row.id).run()
+  }
+  return due.results.length
+}
+
+function r2S3Credentials(): { accessKeyId: string; secretAccessKey: string } {
+  const accessKeyId = bindings.R2_ACCESS_KEY_ID
+  const secretAccessKey = bindings.R2_SECRET_ACCESS_KEY
+  if (!accessKeyId || !secretAccessKey) {
+    throw new MediaError(
+      500,
+      'R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY are required to request a video upload. Set both Worker secrets to the Access Key ID and Secret Access Key from an R2 API token with Object Read & Write on bucket yatb-studio-media.',
+    )
+  }
+  return { accessKeyId, secretAccessKey }
+}
+
+function r2S3Endpoint(): string {
+  const origin = new URL(bindings.APP_ORIGIN)
+  if (origin.hostname === 'localhost' || origin.hostname === '127.0.0.1') {
+    return `${origin.origin}/cdn-cgi/local/r2/s3`
+  }
+  const accountId = bindings.CLOUDFLARE_ACCOUNT_ID
+  if (!accountId) {
+    throw new MediaError(500, 'CLOUDFLARE_ACCOUNT_ID is required to request a video upload.')
+  }
+  return `https://${accountId}.r2.cloudflarestorage.com`
+}
+
+async function readUploadedDuration(objectKey: string): Promise<number> {
+  const object = await bindings.MEDIA.get(objectKey, { range: { offset: 0, length: 2_000_000 } })
+  if (!object) throw new MediaError(400, 'Upload object is missing.')
+  const bytes = new Uint8Array(await new Response(object.body).arrayBuffer())
+  const durationMs = readMp4DurationMs(bytes)
+  if (durationMs === null) throw new MediaError(400, 'Draft duration could not be read from the uploaded file.')
+  return durationMs
+}
+
+async function insertMcpUploadSession(
+  pending: McpVideoUploadRow,
+  draftId: string,
+  durationMs: number,
+  now: number,
+): Promise<UploadRow> {
+  await bindings.DB.prepare(
+    `INSERT OR IGNORE INTO upload_session (
+       id, video_id, created_by_user_id, client_request_id, file_id, object_key,
+       display_name, byte_size, content_type, purpose, draft_id, draft_duration_ms,
+       part_size, part_count, state, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, 1, 'completing', ?, ?)`,
+  ).bind(
+    pending.id, pending.video_id, pending.created_by_user_id, pending.id, pending.file_id,
+    pending.object_key, pending.display_name, pending.byte_size, pending.content_type,
+    draftId, durationMs, UPLOAD_PART_SIZE, now, now,
+  ).run()
+  const row = await uploadRow(pending.id, pending.video_id)
+  if (!row) throw new MediaError(500, 'Upload session could not be created.')
+  if (row.state === 'ready') return row
+  if (row.draft_duration_ms !== durationMs || row.draft_id !== draftId) {
+    await bindings.DB.prepare(
+      `UPDATE upload_session SET draft_id = ?, draft_duration_ms = ?, state = 'completing', updated_at = ?
+       WHERE id = ? AND state != 'ready'`,
+    ).bind(draftId, durationMs, now, pending.id).run()
+  }
+  const current = await uploadRow(pending.id, pending.video_id)
+  if (!current) throw new MediaError(500, 'Upload session could not be created.')
+  return current
+}
+
+async function storedDraftById(draftId: string, videoId: string): Promise<Draft | null> {
+  const file = await bindings.DB.prepare(
+    `SELECT f.id, f.video_id, f.display_name, f.byte_size, f.content_type, f.purpose,
+            f.created_at, f.updated_at
+     FROM draft d JOIN media_file f ON f.id = d.media_file_id AND f.video_id = d.video_id
+     WHERE d.id = ? AND d.video_id = ?`,
+  ).bind(draftId, videoId).first<FileRow>()
+  if (!file) return null
+  return storedDraft(file.id, videoId, publicFile(file))
 }
 
 export async function cleanupTombstonedVideos(envBindings: Bindings, now = Date.now()): Promise<number> {

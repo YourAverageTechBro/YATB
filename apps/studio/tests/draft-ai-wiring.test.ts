@@ -15,7 +15,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@tanstack/react-start/server-entry', () => ({ default: { fetch: vi.fn() } }))
 vi.mock('../src/server/compression-container', () => ({ CompressionContainer: class {} }))
-vi.mock('../src/server/media.server', () => ({ cleanupTombstonedVideos: vi.fn(async () => undefined) }))
+vi.mock('../src/server/media.server', () => ({
+  cleanupTombstonedVideos: vi.fn(async () => undefined),
+  cleanupExpiredMcpUploads: vi.fn(async () => 0),
+}))
 vi.mock('../src/server/stream.server', () => ({ reconcileDraftStreams: vi.fn(async () => 0) }))
 vi.mock('../src/server/compression.server', () => ({
   consumeCompressionQueue: mocks.consumeCompressionQueue,

@@ -17,6 +17,7 @@ type TokenRow = {
   id: string
   name: string
   scopes_json: string
+  created_by_user_id: string
   created_at: number
   last_used_at: number | null
   revoked_at: number | null
@@ -24,7 +25,7 @@ type TokenRow = {
 
 export async function listMcpTokens(): Promise<readonly McpAccessToken[]> {
   const result = await bindings.DB.prepare(
-    `SELECT id, name, scopes_json, created_at, last_used_at, revoked_at
+    `SELECT id, name, scopes_json, created_by_user_id, created_at, last_used_at, revoked_at
      FROM mcp_access_token
      ORDER BY created_at DESC, id ASC`,
   ).all<TokenRow>()
@@ -64,12 +65,12 @@ export async function revokeMcpToken(idValue: unknown, now = Date.now()): Promis
   ).bind(now, id).run()
 }
 
-export type ResolvedMcpToken = McpAccessToken & Readonly<{ hash: string }>
+export type ResolvedMcpToken = McpAccessToken & Readonly<{ hash: string; userId: string }>
 
 export async function resolveMcpBearer(plaintext: string, now = Date.now()): Promise<ResolvedMcpToken | null> {
   const hash = await sha256Hex(plaintext)
   const row = await bindings.DB.prepare(
-    `SELECT id, name, token_hash, scopes_json, created_at, last_used_at, revoked_at
+    `SELECT id, name, token_hash, scopes_json, created_by_user_id, created_at, last_used_at, revoked_at
      FROM mcp_access_token WHERE token_hash = ?`,
   ).bind(hash).first<TokenRow & { token_hash: string }>()
   if (!row || row.revoked_at !== null) return null
@@ -77,5 +78,5 @@ export async function resolveMcpBearer(plaintext: string, now = Date.now()): Pro
   await bindings.DB.prepare(
     `UPDATE mcp_access_token SET last_used_at = ? WHERE id = ?`,
   ).bind(now, token.id).run()
-  return { ...token, hash: row.token_hash }
+  return { ...token, hash: row.token_hash, userId: row.created_by_user_id }
 }
