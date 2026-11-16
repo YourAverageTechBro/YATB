@@ -12,6 +12,20 @@ import {
   type McpScope,
 } from '#/domain/mcp-tokens'
 import {
+  FILES_MIGRATION_MESSAGE,
+  getFileInputSchema,
+  listFilesInputSchema,
+  parseFileKind,
+  parseGetFileInput,
+  parseListFilesInput,
+  parsePatchFileTagsInput,
+  parseSetFileTagsInput,
+  patchFileTagsInputSchema,
+  setFileTagsInputSchema,
+  type CatalogFile,
+  type FileKind,
+} from '#/domain/mcp-files'
+import {
   applyVideoPatch,
   createVideoInputSchema,
   getVideoInputSchema,
@@ -23,9 +37,19 @@ import {
   parseListVideosInput,
   updateVideoInputSchema,
 } from '#/domain/mcp-videos'
+import { parseMediaId } from '#/domain/media'
 import { parsePostId, parsePostMediaId, parsePostStatus, type PostDraft, type PostStatus } from '#/domain/posts'
 import { emptyRichDocument, parseRichDocument } from './rich-document'
 import { getPostDraft, getPostMediaObject, listPostDrafts, recordStudioPosted } from './posts.server'
+import {
+  addFileTags,
+  FilesCatalogError,
+  getCatalogObject,
+  listCatalogFiles,
+  removeFileTags,
+  resolveCatalogFile,
+  setFileTags,
+} from './files.server'
 import { resolveMcpBearer } from './mcp-tokens.server'
 import {
   createVideo as createStudioVideo,
@@ -76,6 +100,32 @@ async function signedMediaUrl(mediaId: string, now: number): Promise<string> {
   const sig = await signMcpMedia(bindings.BETTER_AUTH_SECRET, mediaId, exp)
   const origin = new URL(bindings.APP_ORIGIN).origin
   return `${origin}/mcp/media/${mediaId}?exp=${exp}&sig=${sig}`
+}
+
+async function signedFileUrl(kind: CatalogFile['kind'], fileId: string, now: number): Promise<{
+  download_url: string
+  download_expires_at: number
+}> {
+  const exp = now + MCP_MEDIA_TTL_MS
+  const mediaId = `${kind}/${fileId}`
+  const sig = await signMcpMedia(bindings.BETTER_AUTH_SECRET, mediaId, exp)
+  const origin = new URL(bindings.APP_ORIGIN).origin
+  return {
+    download_url: `${origin}/mcp/files/${kind}/${fileId}?exp=${exp}&sig=${sig}`,
+    download_expires_at: exp,
+  }
+}
+
+async function mcpFileView(file: CatalogFile, now: number) {
+  return { ...file, ...await signedFileUrl(file.kind, file.id, now) }
+}
+
+function filesCaught(error: unknown) {
+  if (error instanceof FilesCatalogError) return jsonTool({ error: error.message }, true)
+  if (error instanceof Error && error.message === FILES_MIGRATION_MESSAGE) {
+    return jsonTool({ error: FILES_MIGRATION_MESSAGE }, true)
+  }
+  return toolCaught(error)
 }
 
 async function mcpPostView(draft: PostDraft, now: number) {
@@ -283,6 +333,98 @@ const mcpHandler = createMcpHandler((ctx) => {
     },
   )
 
+  server.registerTool(
+    'list_files',
+    {
+      description: 'List Studio files across footage, review cuts, and post media. Filter by kind, video, post, tag, name, type, or created range.',
+      inputSchema: listFilesInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'files:read')) return missingScope('files:read')
+      try {
+        const input = parseListFilesInput(raw)
+        const listed = await listCatalogFiles(input)
+        const now = Date.now()
+        return jsonTool({
+          files: await Promise.all(listed.files.map((file) => mcpFileView(file, now))),
+          page: listed.page,
+          limit: listed.limit,
+          has_more: listed.has_more,
+        })
+      } catch (error) {
+        return filesCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'get_file',
+    {
+      description: 'Get one Studio file. Pass kind when the same id could exist in more than one catalog.',
+      inputSchema: getFileInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'files:read')) return missingScope('files:read')
+      try {
+        const input = parseGetFileInput(raw)
+        return jsonTool(await mcpFileView(await resolveCatalogFile(input.id, input.kind), Date.now()))
+      } catch (error) {
+        return filesCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'set_file_tags',
+    {
+      description: 'Replace all tags on a Studio file. Requires files:write.',
+      inputSchema: setFileTagsInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'files:write')) return missingScope('files:write')
+      try {
+        const input = parseSetFileTagsInput(raw)
+        return jsonTool(await mcpFileView(await setFileTags(input.kind, input.id, input.tags), Date.now()))
+      } catch (error) {
+        return filesCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'add_file_tags',
+    {
+      description: 'Add tags to a Studio file without removing existing ones. Requires files:write.',
+      inputSchema: patchFileTagsInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'files:write')) return missingScope('files:write')
+      try {
+        const input = parsePatchFileTagsInput(raw)
+        return jsonTool(await mcpFileView(await addFileTags(input.kind, input.id, input.tags), Date.now()))
+      } catch (error) {
+        return filesCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'remove_file_tags',
+    {
+      description: 'Remove tags from a Studio file. Requires files:write.',
+      inputSchema: patchFileTagsInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'files:write')) return missingScope('files:write')
+      try {
+        const input = parsePatchFileTagsInput(raw)
+        return jsonTool(await mcpFileView(await removeFileTags(input.kind, input.id, input.tags), Date.now()))
+      } catch (error) {
+        return filesCaught(error)
+      }
+    },
+  )
+
   return server
 })
 
@@ -341,9 +483,56 @@ async function handleMcpMedia(request: Request): Promise<Response> {
   return new Response(object.body, { status: 200, headers })
 }
 
+async function handleMcpFile(request: Request): Promise<Response> {
+  const url = new URL(request.url)
+  const rest = url.pathname.slice('/mcp/files/'.length)
+  const slash = rest.indexOf('/')
+  if (slash < 1) return new Response('Not found.', { status: 404 })
+  let kind: FileKind
+  let id: string
+  try {
+    kind = parseFileKind(rest.slice(0, slash))
+    id = kind === 'post_media' ? parsePostMediaId(rest.slice(slash + 1)) : parseMediaId(rest.slice(slash + 1))
+  } catch {
+    return new Response('Not found.', { status: 404 })
+  }
+  const exp = Number(url.searchParams.get('exp'))
+  const sig = url.searchParams.get('sig') ?? ''
+  if (!(await verifyMcpMediaMac(bindings.BETTER_AUTH_SECRET, `${kind}/${id}`, exp, sig))) {
+    return new Response('Not found.', { status: 404 })
+  }
+  let file
+  try {
+    file = await getCatalogObject(kind, id)
+  } catch {
+    return new Response('Not found.', { status: 404 })
+  }
+  if (!file) return new Response('Not found.', { status: 404 })
+  const headers = new Headers({
+    'Cache-Control': 'private, no-store, max-age=0',
+    'Content-Type': file.content_type,
+    'Content-Disposition': `attachment; filename="${file.display_name.replace(/[^\x20-\x7e]/g, '_')}"`,
+    'X-Content-Type-Options': 'nosniff',
+  })
+  if (request.method === 'HEAD') {
+    const object = await bindings.MEDIA.head(file.object_key)
+    if (!object) return new Response('Not found.', { status: 404 })
+    return new Response(null, { status: 200, headers })
+  }
+  const object = await bindings.MEDIA.get(file.object_key)
+  if (!object) return new Response('Not found.', { status: 404 })
+  return new Response(object.body, { status: 200, headers })
+}
+
 export async function handleStudioMcp(request: Request): Promise<Response> {
   const path = new URL(request.url).pathname
   if (!mcpOriginAllowed(request)) return new Response('Forbidden', { status: 403 })
+  if (path.startsWith('/mcp/files/')) {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return new Response('Method not allowed', { status: 405 })
+    }
+    return handleMcpFile(request)
+  }
   if (path.startsWith('/mcp/media/')) {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Method not allowed', { status: 405 })

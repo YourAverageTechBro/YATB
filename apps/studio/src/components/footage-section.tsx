@@ -7,6 +7,7 @@ import { Label } from '@yatb/ui/label'
 import { Progress } from '@yatb/ui/progress'
 import { uploadFile, type UploadProgress } from '#/client/upload'
 import type { MediaFile } from '#/domain/media'
+import { FileTags } from './file-tags'
 import { MediaPreview } from './media-preview'
 
 type Pending = {
@@ -163,7 +164,9 @@ export function FootageSection({ videoId, refreshToken = 0 }: { videoId: string;
               <div><Button size="sm" type="submit" disabled={rename.pending}>{rename.pending ? 'Saving…' : 'Save filename'}</Button><Button size="sm" variant="outline" type="button" disabled={rename.pending} onClick={() => setRename(null)}>Cancel rename</Button></div>
             </form>
             : <>
-              <div className="footage-metadata"><strong>{file.displayName}</strong><small>{formatBytes(file.byteSize)}</small></div>
+              <div className="footage-metadata"><strong>{file.displayName}</strong><small>{formatBytes(file.byteSize)}</small>
+                <FileTags kind="footage" fileId={file.id} name={file.displayName} />
+              </div>
               <footer>
                 <Button variant="ghost" size="sm" type="button" onClick={() => setRename({ fileId: file.id, value: file.displayName, pending: false })}><Pencil /> Rename</Button>
                 <Button asChild variant="ghost" size="sm"><a href={`/api/videos/${videoId}/media/${file.id}?download=1`}><Download /> Download</a></Button>

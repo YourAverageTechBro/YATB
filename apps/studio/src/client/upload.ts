@@ -1,4 +1,5 @@
 import type { ReadyUpload, UploadPurpose, UploadSnapshot } from '#/domain/media'
+import { videoDurationMs } from './post-upload'
 
 export type UploadProgress = Readonly<{
   sentBytes: number
@@ -93,6 +94,7 @@ export async function uploadFile(
       byteSize: file.size,
       contentType: file.type || 'application/octet-stream',
       purpose: options.purpose,
+      durationMs: options.purpose.kind === 'footage' ? await videoDurationMs(file) : null,
     }),
   })), options.signal)
   while (upload.state === 'initializing') {

@@ -18,7 +18,9 @@ const QUEUE_CONSUMERS = new Map<string, QueueConsumer>([
 export default {
   fetch(request) {
     const path = new URL(request.url).pathname
-    if (path === '/mcp' || path.startsWith('/mcp/media/')) return handleStudioMcp(request)
+    if (path === '/mcp' || path.startsWith('/mcp/media/') || path.startsWith('/mcp/files/')) {
+      return handleStudioMcp(request)
+    }
     return handler.fetch(request)
   },
   async scheduled(_controller, env) {

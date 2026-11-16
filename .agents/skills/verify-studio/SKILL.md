@@ -76,8 +76,10 @@ accessibility tree before each action. Use these stable accessible names:
 - `Start seconds`, `End seconds`, and `Use playhead` create timestamp ranges; comment timestamp buttons seek the active player.
 - `Edit comment`, `Save comment`, and `Delete comment` identify review mutations.
 - `Settings` opens token management. `Token name`, `Create token`, `posts:read`,
-  `posts:mark_posted`, `videos:read`, `videos:write`, `Copy this token now`,
-  `New access token`, `Copy token`, and `Revoke` manage MCP bearer tokens.
+  `posts:mark_posted`, `videos:read`, `videos:write`, `files:read`, `files:write`,
+  `Copy this token now`, `New access token`, `Copy token`, and `Revoke` manage MCP bearer tokens.
+- `Tags for <filename>` identifies free-form file tags on footage cards, the selected
+  review cut, and post media.
 - `Color theme` selects `System`, `Light`, or `Dark` on public and private pages.
 - `Toggle menu` opens Web's mobile navigation; `Frequently Asked Questions`
   contains the Web accordion.
@@ -210,6 +212,27 @@ through the same Settings server function when env tokens are omitted:
 
 ```sh
 node .agents/skills/verify-studio/scripts/verify-videos-mcp.mjs
+```
+
+Exercise file catalog MCP tools (`list_files`, `get_file`, `set_file_tags`,
+`add_file_tags`, `remove_file_tags`) and `files:write` scope denial:
+
+```sh
+node .agents/skills/verify-studio/scripts/verify-files-mcp.mjs
+```
+
+Set a tag in the Studio UI and confirm it appears over MCP (`playwright` must be
+installed for this script):
+
+```sh
+STUDIO_VIDEO_ID=<video-id> node .agents/skills/verify-studio/scripts/verify-files-ui.mjs
+```
+
+After migration 0016, backfill footage duration on a local or remote D1:
+
+```sh
+node apps/studio/scripts/backfill-footage-duration.mjs --local
+node apps/studio/scripts/backfill-footage-duration.mjs --remote
 ```
 
 Continue with [`features/production-launch.md`](features/production-launch.md).

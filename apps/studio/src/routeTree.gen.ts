@@ -28,6 +28,7 @@ import { Route as AppVideosVideoIdCompareRouteImport } from './routes/_app.video
 import { Route as ApiPostsDraftIdUploadsRouteImport } from './routes/api.posts.$draftId.uploads'
 import { Route as ApiVideosVideoIdMediaRouteImport } from './routes/api.videos.$videoId.media'
 import { Route as ApiVideosVideoIdUploadsRouteImport } from './routes/api.videos.$videoId.uploads'
+import { Route as ApiFilesKindFileIdTagsRouteImport } from './routes/api.files.$kind.$fileId.tags'
 import { Route as ApiPostsDraftIdMediaMediaIdRouteImport } from './routes/api.posts.$draftId.media.$mediaId'
 import { Route as ApiPostsDraftIdUploadsUploadIdRouteImport } from './routes/api.posts.$draftId.uploads.$uploadId'
 import { Route as ApiVideosVideoIdMediaFileIdRouteImport } from './routes/api.videos.$videoId.media.$fileId'
@@ -132,6 +133,11 @@ const ApiVideosVideoIdUploadsRoute = ApiVideosVideoIdUploadsRouteImport.update({
   path: '/api/videos/$videoId/uploads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiFilesKindFileIdTagsRoute = ApiFilesKindFileIdTagsRouteImport.update({
+  id: '/api/files/$kind/$fileId/tags',
+  path: '/api/files/$kind/$fileId/tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPostsDraftIdMediaMediaIdRoute =
   ApiPostsDraftIdMediaMediaIdRouteImport.update({
     id: '/api/posts/$draftId/media/$mediaId',
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/api/posts/$draftId/uploads': typeof ApiPostsDraftIdUploadsRouteWithChildren
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/files/$kind/$fileId/tags': typeof ApiFilesKindFileIdTagsRoute
   '/api/posts/$draftId/media/$mediaId': typeof ApiPostsDraftIdMediaMediaIdRoute
   '/api/posts/$draftId/uploads/$uploadId': typeof ApiPostsDraftIdUploadsUploadIdRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/api/posts/$draftId/uploads': typeof ApiPostsDraftIdUploadsRouteWithChildren
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/files/$kind/$fileId/tags': typeof ApiFilesKindFileIdTagsRoute
   '/api/posts/$draftId/media/$mediaId': typeof ApiPostsDraftIdMediaMediaIdRoute
   '/api/posts/$draftId/uploads/$uploadId': typeof ApiPostsDraftIdUploadsUploadIdRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
@@ -266,6 +274,7 @@ export interface FileRoutesById {
   '/api/posts/$draftId/uploads': typeof ApiPostsDraftIdUploadsRouteWithChildren
   '/api/videos/$videoId/media': typeof ApiVideosVideoIdMediaRouteWithChildren
   '/api/videos/$videoId/uploads': typeof ApiVideosVideoIdUploadsRouteWithChildren
+  '/api/files/$kind/$fileId/tags': typeof ApiFilesKindFileIdTagsRoute
   '/api/posts/$draftId/media/$mediaId': typeof ApiPostsDraftIdMediaMediaIdRoute
   '/api/posts/$draftId/uploads/$uploadId': typeof ApiPostsDraftIdUploadsUploadIdRouteWithChildren
   '/api/videos/$videoId/media/$fileId': typeof ApiVideosVideoIdMediaFileIdRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/api/posts/$draftId/uploads'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
+    | '/api/files/$kind/$fileId/tags'
     | '/api/posts/$draftId/media/$mediaId'
     | '/api/posts/$draftId/uploads/$uploadId'
     | '/api/videos/$videoId/media/$fileId'
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/api/posts/$draftId/uploads'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
+    | '/api/files/$kind/$fileId/tags'
     | '/api/posts/$draftId/media/$mediaId'
     | '/api/posts/$draftId/uploads/$uploadId'
     | '/api/videos/$videoId/media/$fileId'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/api/posts/$draftId/uploads'
     | '/api/videos/$videoId/media'
     | '/api/videos/$videoId/uploads'
+    | '/api/files/$kind/$fileId/tags'
     | '/api/posts/$draftId/media/$mediaId'
     | '/api/posts/$draftId/uploads/$uploadId'
     | '/api/videos/$videoId/media/$fileId'
@@ -380,6 +392,7 @@ export interface RootRouteChildren {
   ApiPostsDraftIdUploadsRoute: typeof ApiPostsDraftIdUploadsRouteWithChildren
   ApiVideosVideoIdMediaRoute: typeof ApiVideosVideoIdMediaRouteWithChildren
   ApiVideosVideoIdUploadsRoute: typeof ApiVideosVideoIdUploadsRouteWithChildren
+  ApiFilesKindFileIdTagsRoute: typeof ApiFilesKindFileIdTagsRoute
   ApiPostsDraftIdMediaMediaIdRoute: typeof ApiPostsDraftIdMediaMediaIdRoute
   ApiVideosVideoIdDraftsDraftIdTranscriptRoute: typeof ApiVideosVideoIdDraftsDraftIdTranscriptRoute
 }
@@ -517,6 +530,13 @@ declare module '@tanstack/react-router' {
       path: '/api/videos/$videoId/uploads'
       fullPath: '/api/videos/$videoId/uploads'
       preLoaderRoute: typeof ApiVideosVideoIdUploadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/files/$kind/$fileId/tags': {
+      id: '/api/files/$kind/$fileId/tags'
+      path: '/api/files/$kind/$fileId/tags'
+      fullPath: '/api/files/$kind/$fileId/tags'
+      preLoaderRoute: typeof ApiFilesKindFileIdTagsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/posts/$draftId/media/$mediaId': {
@@ -699,6 +719,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPostsDraftIdUploadsRoute: ApiPostsDraftIdUploadsRouteWithChildren,
   ApiVideosVideoIdMediaRoute: ApiVideosVideoIdMediaRouteWithChildren,
   ApiVideosVideoIdUploadsRoute: ApiVideosVideoIdUploadsRouteWithChildren,
+  ApiFilesKindFileIdTagsRoute: ApiFilesKindFileIdTagsRoute,
   ApiPostsDraftIdMediaMediaIdRoute: ApiPostsDraftIdMediaMediaIdRoute,
   ApiVideosVideoIdDraftsDraftIdTranscriptRoute:
     ApiVideosVideoIdDraftsDraftIdTranscriptRoute,

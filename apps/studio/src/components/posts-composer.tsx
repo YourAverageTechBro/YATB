@@ -10,6 +10,7 @@ import { useNavigate } from '@tanstack/react-router'
 import type { PostDraft, PostItem, PostMedia } from '#/domain/posts'
 import { duplicatePostDraft, markPostReady } from '#/server/posts.functions'
 import { uploadPostMedia, videoDurationMs } from '#/client/post-upload'
+import { FileTags } from './file-tags'
 import { usePostsAutosave } from './use-posts-autosave'
 
 function saveLabel(kind: string): string {
@@ -87,6 +88,7 @@ function MediaList({
           value={file.alt ?? ''}
           onChange={(event) => onChange(item.media.map((entry) => entry.id === file.id ? { ...entry, alt: event.target.value || null } : entry))}
         /></Label>
+        <FileTags kind="post_media" fileId={file.id} name={file.displayName} />
         {!readOnly && <div className="post-media-item-actions">
           <Button type="button" size="sm" variant="outline" onClick={() => move(index, -1)}>Up</Button>
           <Button type="button" size="sm" variant="outline" onClick={() => move(index, 1)}>Down</Button>

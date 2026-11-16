@@ -219,6 +219,7 @@ function matchesInput(row: UploadRow, input: BeginUpload): boolean {
     byteSize: row.byte_size,
     contentType: row.content_type,
     purpose: uploadPurpose(row),
+    durationMs: row.purpose === 'footage' ? row.draft_duration_ms : null,
   })
 }
 
@@ -269,7 +270,7 @@ export async function beginUpload(input: BeginUpload, userId: string): Promise<U
     `videos/${input.videoId}/${input.purpose.kind === 'draft' ? 'drafts' : 'footage'}/${fileId}`,
     token, now + 30_000, input.displayName, input.byteSize, input.contentType,
     input.purpose.kind, input.purpose.kind === 'draft' ? crypto.randomUUID() : null,
-    input.purpose.kind === 'draft' ? input.purpose.durationMs : null, UPLOAD_PART_SIZE,
+    input.purpose.kind === 'draft' ? input.purpose.durationMs : input.durationMs, UPLOAD_PART_SIZE,
     partCount(input.byteSize), now, now,
   ).run()
   let row = await uploadByRequest(input, userId)
@@ -348,6 +349,15 @@ async function publish(row: UploadRow, object: R2Object): Promise<UploadSnapshot
   const now = Date.now()
   if (row.purpose === 'footage') {
     await bindings.DB.batch([mediaInsert(row, object, now), readyUpdate(row, object, now)])
+    if (row.draft_duration_ms !== null) {
+      try {
+        await bindings.DB.prepare(
+          "UPDATE media_file SET duration_ms = ? WHERE id = ? AND purpose = 'footage'",
+        ).bind(row.draft_duration_ms, row.file_id).run()
+      } catch {
+        // ponytail: duration_ms lands in 0016; publish still succeeds without it
+      }
+    }
   } else {
     if (!row.draft_id || row.draft_duration_ms === null) throw new MediaError(500, 'Draft publication data is missing.')
     for (let attempt = 0; attempt < 8; attempt += 1) {

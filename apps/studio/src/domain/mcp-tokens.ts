@@ -1,4 +1,11 @@
-export const MCP_SCOPES = ['posts:read', 'posts:mark_posted', 'videos:read', 'videos:write'] as const
+export const MCP_SCOPES = [
+  'posts:read',
+  'posts:mark_posted',
+  'videos:read',
+  'videos:write',
+  'files:read',
+  'files:write',
+] as const
 export type McpScope = (typeof MCP_SCOPES)[number]
 
 export const MCP_TOKEN_PREFIX = 'yst_'
