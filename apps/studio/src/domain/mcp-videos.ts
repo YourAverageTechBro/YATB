@@ -18,8 +18,11 @@ import {
   type VideoStatus,
 } from './videos'
 
-export const MCP_DRAFT_UPLOAD_MAX_BYTES = 100 * 1024 * 1024
-export const MCP_DRAFT_UPLOAD_TTL_MS = 60 * 60 * 1000
+const GIB = 1024 * 1024 * 1024
+/** R2 single-object PUT max is just under 5 GiB. */
+export const MCP_DRAFT_UPLOAD_MAX_BYTES = Math.floor(4.9 * GIB)
+export const MCP_DRAFT_UPLOAD_URL_TTL_MS = 2 * 60 * 60 * 1000
+export const MCP_DRAFT_UPLOAD_TTL_MS = MCP_DRAFT_UPLOAD_URL_TTL_MS + 15 * 60 * 1000
 
 export const MCP_VIDEO_PAGE_SIZE = 20
 export const MCP_VIDEO_PAGE_MAX = 100

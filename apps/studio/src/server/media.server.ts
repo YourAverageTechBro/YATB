@@ -15,6 +15,7 @@ import {
 } from '#/domain/media'
 import {
   MCP_DRAFT_UPLOAD_TTL_MS,
+  MCP_DRAFT_UPLOAD_URL_TTL_MS,
 } from '#/domain/mcp-videos'
 import { readMp4DurationMs } from '#/domain/mp4-duration'
 import { presignR2Url } from '#/domain/r2-presign'
@@ -616,7 +617,7 @@ export async function requestVideoUpload(
     key: objectKey,
     method: 'PUT',
     contentType: input.contentType,
-    expiresInSeconds: Math.floor(MCP_DRAFT_UPLOAD_TTL_MS / 1000),
+    expiresInSeconds: Math.floor(MCP_DRAFT_UPLOAD_URL_TTL_MS / 1000),
     now: new Date(now),
   })
   return {

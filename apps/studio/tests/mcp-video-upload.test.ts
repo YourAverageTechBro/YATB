@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DatabaseSync } from 'node:sqlite'
 import {
   MCP_DRAFT_UPLOAD_MAX_BYTES,
+  MCP_DRAFT_UPLOAD_TTL_MS,
+  MCP_DRAFT_UPLOAD_URL_TTL_MS,
   parseListDraftVersionsInput,
   parseRequestVideoUploadInput,
 } from '../src/domain/mcp-videos'
@@ -90,13 +92,20 @@ function useEnv(db: DatabaseSync, objects: Map<string, StoredObject>, extra: Rec
 }
 
 describe('MCP draft upload parsing', () => {
-  it('accepts a video type under the 100 MB cap and rejects the rest', () => {
+  it('accepts a video type under the R2 single-PUT cap and rejects the rest', () => {
+    expect(MCP_DRAFT_UPLOAD_MAX_BYTES).toBe(Math.floor(4.9 * 1024 * 1024 * 1024))
     expect(parseRequestVideoUploadInput({
       video_id: videoId,
       filename: 'cut.mp4',
       content_type: 'video/mp4',
       size: 12,
     })).toMatchObject({ videoId, filename: 'cut.mp4', contentType: 'video/mp4', size: 12 })
+    expect(parseRequestVideoUploadInput({
+      video_id: videoId,
+      filename: 'cut.mp4',
+      content_type: 'video/mp4',
+      size: MCP_DRAFT_UPLOAD_MAX_BYTES,
+    }).size).toBe(MCP_DRAFT_UPLOAD_MAX_BYTES)
     expect(() => parseRequestVideoUploadInput({
       video_id: videoId, filename: 'cut.mp4', content_type: 'image/png', size: 12,
     })).toThrow(/video type/)
@@ -104,6 +113,11 @@ describe('MCP draft upload parsing', () => {
       video_id: videoId, filename: 'cut.mp4', content_type: 'video/mp4', size: MCP_DRAFT_UPLOAD_MAX_BYTES + 1,
     })).toThrow(/size/)
     expect(parseListDraftVersionsInput({ video_id: videoId })).toBe(videoId)
+  })
+
+  it('keeps the pending row alive after the presigned PUT window', () => {
+    expect(MCP_DRAFT_UPLOAD_URL_TTL_MS).toBeGreaterThanOrEqual(60 * 60 * 1000)
+    expect(MCP_DRAFT_UPLOAD_TTL_MS).toBeGreaterThan(MCP_DRAFT_UPLOAD_URL_TTL_MS)
   })
 
   it('reads duration from an mvhd box', () => {
@@ -168,7 +182,7 @@ describe('MCP draft upload', () => {
     expect(result.upload_id).toMatch(/^[0-9a-f-]{36}$/)
     expect(result.headers).toEqual({ 'Content-Type': 'video/mp4' })
     expect(result.upload_url).toContain('yatb-studio-media/videos/')
-    expect(result.expires_at).toBe(1_700_000_000_000 + 60 * 60 * 1000)
+    expect(result.expires_at).toBe(1_700_000_000_000 + MCP_DRAFT_UPLOAD_TTL_MS)
   })
 
   it('fails clearly when R2 S3 secrets are missing', async () => {
