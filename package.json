@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "npm run dev --workspace @yatb/web",
     "dev:studio": "npm run dev --workspace @yatb/studio",
+    "dev:review": "npm run dev --workspace @yatb/review",
+    "review": "node --disable-warning=ExperimentalWarning apps/review/bin/review.ts",
     "check:ui": "node scripts/check-shared-ui.mjs",
     "check": "npm run check:ui && npm run check --workspaces --if-present",
     "build": "npm run build --workspaces --if-present && node scripts/check-emitted-ui.mjs",
