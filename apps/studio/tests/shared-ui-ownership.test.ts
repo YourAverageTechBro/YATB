@@ -11,7 +11,7 @@ const fixtures: string[] = []
 async function fixture(overrides: { source?: string; styles?: string } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'yatb-ui-audit-'))
   fixtures.push(root)
-  for (const app of ['studio', 'web']) {
+  for (const app of ['studio', 'web', 'review']) {
     const sourceRoot = join(root, 'apps', app, 'src')
     await mkdir(sourceRoot, { recursive: true })
     await writeFile(join(root, 'apps', app, 'package.json'), JSON.stringify({ dependencies: { '@yatb/ui': '*' } }))
