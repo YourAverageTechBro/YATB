@@ -1,0 +1,26 @@
+{
+  "name": "@yatb/review",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 3002 --strictPort",
+    "check": "tsc --noEmit && vitest run"
+  },
+  "dependencies": {
+    "@yatb/ui": "*",
+    "lucide-react": "^0.479.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.14",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "tailwindcss": "^4.0.14",
+    "typescript": "6.0.3",
+    "vite": "8.3.0",
+    "vitest": "^3.2.4"
+  }
+}

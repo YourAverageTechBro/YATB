@@ -49,6 +49,24 @@ copies published drafts into Cloudflare Stream (`STREAM` binding) and plays
 signed HLS. Apply `0010_draft_stream.sql` and set `STREAM_WEBHOOK_SECRET`
 after attaching the Stream webhook. See `docs/studio/production-runbook.md`.
 
+## Run Review
+
+Review is a local-only frame.io-style player. Claude posts each draft render, Thomas
+comments on timestamps in the browser, and Claude reads the open feedback from the
+command line. It needs no auth and no cloud. Data lives in `~/.yatb-review/review.db`
+(override with `YATB_REVIEW_DB`).
+
+```sh
+npm run dev:review   # http://127.0.0.1:3002
+npm run review -- post my-video ~/Videos/edits/my-video/cut-v1.mp4 --note "first cut"
+npm run review -- feedback my-video          # open threads; add --all or --json
+npm run review -- reply <id-prefix> "Trimmed the pause"   # marks the thread addressed
+npm run review -- list
+```
+
+Thomas resolves or reopens addressed threads in the browser. The CLI runs on plain
+Node 22.18+ and prints a Node SQLite experimental warning.
+
 ## Check a change
 
 Run the type and Cloudflare binding checks:

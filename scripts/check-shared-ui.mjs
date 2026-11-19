@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
-const appNames = ['studio', 'web']
+const appNames = ['studio', 'web', 'review']
 const rawControls = /<(button|input|progress|select|textarea)\b/
 const browserPrompts = /window\.(alert|confirm|prompt)\s*\(/
 const legacyImports = /(?:components\/ui|@\/lib\/utils)/
