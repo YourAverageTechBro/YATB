@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { COMMENT_STATUSES, ReviewError, canTransition, formatAnchor, parseAnchor, parseBody, type CommentStatus } from '../shared/domain.ts'
 
 describe('status state machine', () => {
-  const allowed: [CommentStatus, CommentStatus][] = [['open', 'addressed'], ['addressed', 'resolved'], ['addressed', 'open'], ['resolved', 'open']]
+  const allowed: [CommentStatus, CommentStatus][] = [['open', 'addressed'], ['open', 'resolved'], ['addressed', 'resolved'], ['addressed', 'open'], ['resolved', 'open']]
 
   it.each(allowed)('allows %s -> %s', (from, to) => {
     expect(canTransition(from, to)).toBe(true)

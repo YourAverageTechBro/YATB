@@ -60,8 +60,9 @@ describe('review loop', () => {
     cli('post', 'demo', 'cut.mp4')
     const draft = store.getProject('demo').drafts[0]!
     const a = store.addComment({ draftId: draft.id, anchor: { kind: 'point', atMs: 1 }, body: 'a', author: 'thomas' })
-    expect(() => cli('reply', a.id.slice(0, 8), 'done', '--status', 'resolved')).toThrow(/cannot change status from open to resolved/)
-    expect(store.findComment(a.id).status).toBe('open')
+    store.setStatus(a.id, 'resolved')
+    expect(() => cli('reply', a.id.slice(0, 8), 'done')).toThrow(/cannot change status from resolved to addressed/)
+    expect(store.findComment(a.id).status).toBe('resolved')
     expect(() => store.findComment('-')).toThrow()
   })
 

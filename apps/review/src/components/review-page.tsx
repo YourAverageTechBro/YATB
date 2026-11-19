@@ -37,6 +37,10 @@ export function ReviewPage({ slug, version }: { slug: string; version?: number }
   const threads = useMemo(() => commentThreads(data?.comments.filter((c) => c.draftId === draft?.id) ?? []), [data, draft?.id])
   const markers = useMemo(() => threads.map(({ root }) => ({ commentId: root.id, anchor: root.anchor })), [threads])
   const visible = filter === 'all' ? threads : threads.filter(({ root }) => root.status !== 'resolved')
+  // Claude replies on the version Thomas commented on, so unresolved threads from older versions follow him to the newer one.
+  const carried = useMemo(() => (data?.drafts ?? []).filter((d) => viewing !== undefined && d.version < viewing).reverse()
+    .map((d) => ({ draft: d, threads: commentThreads(data!.comments.filter((c) => c.draftId === d.id)).filter(({ root }) => root.status !== 'resolved') }))
+    .filter((group) => group.threads.length > 0), [data, viewing])
   const openByDraft = useMemo(() => {
     const counts = new Map<string, number>()
     for (const comment of data?.comments ?? []) if (comment.status === 'open') counts.set(comment.draftId, (counts.get(comment.draftId) ?? 0) + 1)
@@ -113,6 +117,11 @@ export function ReviewPage({ slug, version }: { slug: string; version?: number }
           </div>
           {visible.length === 0 ? <p className="review-muted">{threads.length === 0 ? 'No comments yet.' : 'Nothing unresolved.'}</p> : visible.map((thread) => <CommentCard key={thread.root.id} thread={thread} onSeek={seek} onChanged={refresh} />)}
         </section>
+        {carried.map(({ draft: earlier, threads: earlierThreads }) => <section key={earlier.id} className="review-comments-content" aria-label={`Unresolved on v${earlier.version}`}>
+          <h3 className="review-earlier-head">Unresolved on v{earlier.version} <Badge variant="secondary">{earlierThreads.length}</Badge></h3>
+          <p className="review-muted">Timestamps refer to v{earlier.version}. Clicking one opens that version.</p>
+          {earlierThreads.map((thread) => <CommentCard key={thread.root.id} thread={thread} onSeek={() => setVersionInHash(slug, earlier.version)} onChanged={refresh} />)}
+        </section>)}
       </aside>
     </div>}
   </main>

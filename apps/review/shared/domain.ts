@@ -7,7 +7,7 @@ export type CommentStatus = (typeof COMMENT_STATUSES)[number]
 export type Author = 'thomas' | 'claude'
 
 const TRANSITIONS: Readonly<Record<CommentStatus, readonly CommentStatus[]>> = {
-  open: ['addressed'],
+  open: ['addressed', 'resolved'],
   addressed: ['open', 'resolved'],
   resolved: ['open'],
 }

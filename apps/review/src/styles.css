@@ -53,6 +53,7 @@ body { margin: 0; min-width: 320px; min-height: 100vh; color: var(--foreground);
 .review-comments-content { display: grid; gap: 10px; align-content: start; }
 .review-comments-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .review-comments-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; }
+.review-earlier-head { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 15px; }
 .review-comment { min-width: 0; gap: 10px; padding: 14px; overflow-wrap: anywhere; }
 .review-comment[data-status='resolved'] { opacity: .65; }
 .review-comment > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
