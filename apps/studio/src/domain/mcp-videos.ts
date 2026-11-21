@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { parseContentType, parseDisplayName, parseMediaId } from './media'
-import type { Draft } from './reviews'
+import { documentText } from '../server/rich-document'
+import { anchorStartMs, type Draft, type ReviewComment } from './reviews'
 import {
   parseProduction,
   parsePublishDate,
@@ -89,6 +90,17 @@ export const listDraftVersionsInputSchema = z.object({
   video_id: z.string(),
 }).strict()
 
+export const createGuestLinkInputSchema = z.object({
+  video_id: z.string(),
+  draft_id: z.string().optional(),
+}).strict()
+
+export const listVideoCommentsInputSchema = z.object({
+  video_id: z.string(),
+  draft_id: z.string().optional(),
+  include_resolved: z.boolean().optional(),
+}).strict()
+
 export type McpDraftVersionView = Readonly<{
   id: string
   version: number
@@ -101,6 +113,7 @@ export type McpDraftVersionView = Readonly<{
   stream_uid: string | null
   download_url: string
   download_expires_at: number
+  guest_url: string | null
 }>
 
 export function mcpVideoView(video: Video): McpVideoView {
@@ -174,10 +187,69 @@ export function parseListDraftVersionsInput(value: unknown): VideoId {
   return parseVideoId(parseSchema(listDraftVersionsInputSchema, value).video_id)
 }
 
+export function parseCreateGuestLinkInput(value: unknown): { videoId: VideoId; draftId?: string } {
+  const input = parseSchema(createGuestLinkInputSchema, value)
+  return {
+    videoId: parseVideoId(input.video_id),
+    draftId: input.draft_id === undefined ? undefined : parseMediaId(input.draft_id),
+  }
+}
+
+export function parseListVideoCommentsInput(value: unknown): {
+  videoId: VideoId
+  draftId?: string
+  includeResolved: boolean
+} {
+  const input = parseSchema(listVideoCommentsInputSchema, value)
+  return {
+    videoId: parseVideoId(input.video_id),
+    draftId: input.draft_id === undefined ? undefined : parseMediaId(input.draft_id),
+    includeResolved: input.include_resolved ?? true,
+  }
+}
+
+export function guestReviewUrl(origin: string, token: string): string {
+  return `${new URL(origin).origin}/shared-reviews/${token}`
+}
+
+export type McpCommentAuthor =
+  | Readonly<{ type: 'user'; name: string }>
+  | Readonly<{ type: 'guest'; name: string; email: string }>
+
+export type McpCommentView = Readonly<{
+  id: string
+  draft_id: string
+  draft_version: number
+  timestamp_ms: number
+  body: string
+  author: McpCommentAuthor
+  created_at: number
+  resolved_at: number | null
+  parent_id: string | null
+}>
+
+export function mcpCommentView(comment: ReviewComment, draftVersion: number): McpCommentView {
+  const author: McpCommentAuthor = comment.author.guest === true
+    ? { type: 'guest', name: comment.author.name, email: comment.author.email }
+    : { type: 'user', name: comment.author.name }
+  return {
+    id: comment.id,
+    draft_id: comment.draftId,
+    draft_version: draftVersion,
+    timestamp_ms: anchorStartMs(comment.anchor),
+    body: documentText(comment.body),
+    author,
+    created_at: comment.createdAt,
+    resolved_at: comment.resolvedAt,
+    parent_id: comment.parentId,
+  }
+}
+
 export function mcpDraftVersionView(
   draft: Draft,
   downloadUrl: string,
   expiresAt: number,
+  origin: string,
 ): McpDraftVersionView {
   return {
     id: draft.id,
@@ -191,6 +263,7 @@ export function mcpDraftVersionView(
     stream_uid: draft.stream.uid,
     download_url: downloadUrl,
     download_expires_at: expiresAt,
+    guest_url: draft.shareToken ? guestReviewUrl(origin, draft.shareToken) : null,
   }
 }
 

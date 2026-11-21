@@ -101,7 +101,10 @@ export const createDraftReviewLink = createServerFn({ method: 'POST' })
   .validator(parseDraftShareRequest)
   .handler(async ({ data }) => {
     const session = await mutationSession()
-    return (await import('./reviews.server')).createDraftShare(data.videoId, data.draftId, session.user.id)
+    const share = await (await import('./reviews.server')).createDraftShare(
+      data.videoId, data.draftId, session.user.id,
+    )
+    return share.token
   })
 
 export const revokeDraftReviewLink = createServerFn({ method: 'POST' })

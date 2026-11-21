@@ -94,6 +94,38 @@ function parseListItem(value: unknown, count: { value: number }, depth: number):
   return { type: 'listItem', content: input.content.map((block) => parseBlock(block, count, depth + 1)) }
 }
 
+function inlineText(node: RichInline): string {
+  switch (node.type) {
+    case 'text':
+      return node.text
+    case 'hardBreak':
+      return '\n'
+    default: {
+      const exhaustive: never = node
+      return exhaustive
+    }
+  }
+}
+
+function blockText(node: RichBlock): string {
+  switch (node.type) {
+    case 'paragraph':
+    case 'heading':
+      return (node.content ?? []).map(inlineText).join('')
+    case 'bulletList':
+    case 'orderedList':
+      return node.content.map((item) => item.content.map(blockText).join('\n')).join('\n')
+    default: {
+      const exhaustive: never = node
+      return exhaustive
+    }
+  }
+}
+
+export function documentText(document: RichDocument): string {
+  return document.content.map(blockText).join('\n')
+}
+
 export function emptyRichDocument(): RichDocument {
   return { type: 'doc', content: [{ type: 'paragraph' }] }
 }

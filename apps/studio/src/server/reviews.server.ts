@@ -366,17 +366,21 @@ function shareToken(): string {
   return [...crypto.getRandomValues(new Uint8Array(32))].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
-export async function createDraftShare(videoId: string, draftId: string, userId: string): Promise<string> {
+export async function createDraftShare(
+  videoId: string,
+  draftId: string,
+  userId: string,
+): Promise<{ token: string; createdAt: number }> {
   await draftDuration(videoId, draftId)
   await bindings.DB.prepare(
     `INSERT OR IGNORE INTO draft_review_share (draft_id, video_id, token, created_by_user_id, created_at)
      VALUES (?, ?, ?, ?, ?)`,
   ).bind(draftId, videoId, shareToken(), userId, Date.now()).run()
   const share = await bindings.DB.prepare(
-    'SELECT token FROM draft_review_share WHERE draft_id = ? AND video_id = ?',
-  ).bind(draftId, videoId).first<{ token: string }>()
+    'SELECT token, created_at FROM draft_review_share WHERE draft_id = ? AND video_id = ?',
+  ).bind(draftId, videoId).first<{ token: string; created_at: number }>()
   if (!share) throw new ReviewError(404, 'Draft not found.')
-  return share.token
+  return { token: share.token, createdAt: share.created_at }
 }
 
 export async function revokeDraftShare(videoId: string, draftId: string): Promise<void> {
