@@ -14,18 +14,24 @@ import {
 import { parseMediaId } from '#/domain/media'
 import {
   applyVideoPatch,
+  createGuestLinkInputSchema,
   createVideoInputSchema,
   finalizeVideoUploadInputSchema,
   getVideoInputSchema,
+  guestReviewUrl,
   linkedOrganicId,
   listDraftVersionsInputSchema,
+  listVideoCommentsInputSchema,
   listVideosInputSchema,
+  mcpCommentView,
   mcpDraftVersionView,
   mcpVideoView,
+  parseCreateGuestLinkInput,
   parseCreateVideoToolInput,
   parseFinalizeVideoUploadInput,
   parseGetVideoInput,
   parseListDraftVersionsInput,
+  parseListVideoCommentsInput,
   parseListVideosInput,
   parseRequestVideoUploadInput,
   requestVideoUploadInputSchema,
@@ -40,7 +46,7 @@ import {
   getDraftOriginal,
   requestVideoUpload,
 } from './media.server'
-import { listDrafts } from './reviews.server'
+import { createDraftShare, listComments, listDrafts } from './reviews.server'
 import {
   createVideo as createStudioVideo,
   getVideo as getStudioVideo,
@@ -103,7 +109,7 @@ async function mcpDraftVersions(videoId: ReturnType<typeof parseGetVideoInput>, 
   const drafts = await listDrafts(videoId)
   return Promise.all(drafts.map(async (draft) => {
     const download = await signedDraftOriginalUrl(draft.file.id, now)
-    return mcpDraftVersionView(draft, download.url, download.exp)
+    return mcpDraftVersionView(draft, download.url, download.exp, bindings.APP_ORIGIN)
   }))
 }
 
@@ -343,7 +349,7 @@ const mcpHandler = createMcpHandler((ctx) => {
       try {
         const draft = await finalizeVideoUpload(parseFinalizeVideoUploadInput(raw))
         const download = await signedDraftOriginalUrl(draft.file.id, Date.now())
-        return jsonTool(mcpDraftVersionView(draft, download.url, download.exp))
+        return jsonTool(mcpDraftVersionView(draft, download.url, download.exp, bindings.APP_ORIGIN))
       } catch (error) {
         return toolCaught(error)
       }
@@ -363,6 +369,66 @@ const mcpHandler = createMcpHandler((ctx) => {
         const video = await getStudioVideo(videoId)
         if (!video) return jsonTool({ error: 'Video not found.' }, true)
         return jsonTool({ drafts: await mcpDraftVersions(videoId, Date.now()) })
+      } catch (error) {
+        return toolCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'create_guest_link',
+    {
+      description: 'Create a guest review link for a draft version. Reuses the active link when one already exists.',
+      inputSchema: createGuestLinkInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:write')) return missingScope('videos:write')
+      try {
+        if (!userId) throw new Error('Token is missing its owner.')
+        const input = parseCreateGuestLinkInput(raw)
+        const drafts = await listDrafts(input.videoId)
+        if (drafts.length === 0) return jsonTool({ error: 'Video has no drafts.' }, true)
+        const draft = input.draftId
+          ? drafts.find((entry) => entry.id === input.draftId)
+          : drafts[0]
+        if (!draft) return jsonTool({ error: 'Draft not found.' }, true)
+        const share = await createDraftShare(input.videoId, draft.id, userId)
+        return jsonTool({
+          share_id: draft.id,
+          url: guestReviewUrl(bindings.APP_ORIGIN, share.token),
+          draft_id: draft.id,
+          draft_version: draft.version,
+          created_at: share.createdAt,
+        })
+      } catch (error) {
+        return toolCaught(error)
+      }
+    },
+  )
+
+  server.registerTool(
+    'list_video_comments',
+    {
+      description: 'List review comments on a video, oldest first. Filter to one draft version or hide resolved threads.',
+      inputSchema: listVideoCommentsInputSchema,
+    },
+    async (raw) => {
+      if (!isMcpScope(scopes, 'videos:read')) return missingScope('videos:read')
+      try {
+        const input = parseListVideoCommentsInput(raw)
+        const drafts = await listDrafts(input.videoId)
+        const selected = input.draftId
+          ? drafts.filter((draft) => draft.id === input.draftId)
+          : drafts
+        if (input.draftId && selected.length === 0) return jsonTool({ error: 'Draft not found.' }, true)
+        const versions = new Map(selected.map((draft) => [draft.id, draft.version]))
+        const comments = (await Promise.all(selected.map((draft) => (
+          listComments(input.videoId, draft.id, !input.includeResolved)
+        )))).flat()
+        comments.sort((left, right) => left.createdAt - right.createdAt || left.id.localeCompare(right.id))
+        return jsonTool({
+          comments: comments.map((comment) => mcpCommentView(comment, versions.get(comment.draftId) ?? 0)),
+        })
       } catch (error) {
         return toolCaught(error)
       }
